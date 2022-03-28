@@ -47,7 +47,7 @@ async function check(dingToken = '') {
         process.exit(1)
     })
     // await checker.getEventByEpoch() // c bridge U mint
-    // await checker.getEventByEpoch(39138515)// multi chain U
+    // await checker.getEventByEpoch(39138515)// multi chain U // 0xfe97e85d13abd9c1c33384e796f10b73905637ce
     // await checker.getEventByEpoch(39345260) // multi chain dai // 0x74eaE367d018A5F29be559752e4B67d01cc6b151
     let cursorKey = `${EPOCH_PREFIX_KEY}${tokenAddr}`; // it's the next epoch.
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021

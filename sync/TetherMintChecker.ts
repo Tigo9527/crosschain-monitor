@@ -17,7 +17,7 @@ export const E_SPACE_C_BRIDGE = '0x4F9e3186513224cf152016ccd86019E7B9A3c809'
 export const E_SPACE_USDT = '0xfe97E85d13ABD9c1c33384E796F10B73905637cE'
 export const E_SPACE_DAI = '0x74eaE367d018A5F29be559752e4B67d01cc6b151'
 
-export const addressMap = {
+export const addressMap:{[k:string]: string} = {
     [E_SPACE_C_BRIDGE]: 'E_SPACE_C_BRIDGE', // impl 0xe254a9637a4cb07777fa07a6eb4892eb07e2db94, cross space bridge
     [E_SPACE_ANY_SWAP_USDT]: 'AnyswapV6ERC20_USDT', // vault 0x373590a576ccb8143f377db5f1c16f9f8528a8b4, it's not a contract
     [E_SPACE_ANY_SWAP_DAI]: 'AnyswapV6ERC20_DAI', //
