@@ -39,8 +39,8 @@ export function addressName(addr = '', unknown = 'unknown') {
 }
 export class EventChecker {
     notifyMint = true
-    provider: BaseProvider;
-    private ethereumProvider: BaseProvider;
+    public provider: BaseProvider;
+    public ethereumProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string;
     public name = ''

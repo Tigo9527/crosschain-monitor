@@ -59,8 +59,14 @@ async function check(dingToken = '') {
     // await checker.getEventByEpoch(39345260) // multi chain dai // 0x74eaE367d018A5F29be559752e4B67d01cc6b151
     let cursorKey = `${EPOCH_PREFIX_KEY}${tokenAddr}`; // it's the next epoch.
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
+    let maxEpoch = 0;
     async function repeat() {
         try {
+            while (epoch >= maxEpoch - 40) {
+                await sleep(5_000)
+                maxEpoch = await checker.provider.getBlockNumber()
+                console.log(`max epoch at ${maxEpoch}`)
+            }
             await checker.getEventByEpoch(epoch) // burn
             epoch++
             await updateConfig(cursorKey, epoch.toString()) // it's the next epoch.
