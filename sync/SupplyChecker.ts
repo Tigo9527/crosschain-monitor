@@ -31,12 +31,14 @@ export class SupplyChecker {
     }
     async check(dingToken:string) {
         console.log(`-- ${new Date().toISOString()}`)
+        let delay = 60_000
         try {
             await this.checkUnsafe(dingToken)
         } catch (e) {
             console.log(`error check supply:`, e)
+            delay = 5_000
         }
-        setTimeout(()=>this.check(dingToken), 60_000) // check every minute
+        setTimeout(()=>this.check(dingToken), delay) // check every minute
     }
     async checkUnsafe(dingToken:string) {
         const minterRole = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6'
@@ -131,7 +133,7 @@ export class SupplyChecker {
 
 import 'dotenv/config'
 import {dingMsg, sleep} from "../lib/Tool";
-import {addressMap, addressName} from "./TetherMintChecker";
+import {addressMap, addressName} from "./MintChecker";
 async function main() {
     const dingToken = process.env.DING || ''
     const [,,cmd,tokenAddr, warningV] = process.argv

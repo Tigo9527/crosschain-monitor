@@ -2,7 +2,7 @@ import 'dotenv/config'
 import {ConfluxFetcher, EthereumFetcher} from "./fetcher/Fetcher";
 import {initDB} from "../lib/DBProvider";
 import {formatEther} from "ethers/lib/utils";
-import {EventChecker} from "./TetherMintChecker";
+import {EventChecker} from "./MintChecker";
 import {EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 
@@ -25,17 +25,25 @@ async function check(dingToken = '') {
     let checker: EventChecker;
     try {
         checker = new EventChecker('https://evm.confluxrpc.com', tokenAddr);
+        checker.notifyMint = false
         await checker.init()
     } catch (e) {
         console.log(`error startup`, e)
         process.exit(9)
         return;
     }
+    if (cmd === 'testDing') {
+        await dingMsg(`Test message, just ignore.`, dingToken)
+        process.exit(0)
+    }
+    checker.dingToken = dingToken || ''
     if (dingToken) {
-        checker.mintSourceTxNotFound = async (tx, ether) => {
+        checker.mintSourceTxNotFound = async (tx, fmtAmount) => {
             const txLink = `https://evm.confluxscan.net/tx/${tx}`
-            const msg = `Mint without ethereum tx, amount ${ether}, token ${checker.tokenAddr} ${checker.name}, ${txLink}`
-            return dingMsg(msg, dingToken)
+            const msg = `[${checker.name}] Mint without ethereum tx, amount ${fmtAmount}, token ${checker.tokenAddr}, ${txLink}`
+            return dingMsg(msg, dingToken).then(()=>{
+                process.exit(9)
+            })
         }
         checker.notify = async (mintOrBurn:string, token:string, amount: string)=>{
             const msg = `Found action: ${mintOrBurn} ${token} ${checker.name}, amount ${amount}`
