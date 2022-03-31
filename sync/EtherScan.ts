@@ -1,13 +1,13 @@
-import {formatEther, formatUnits, parseUnits} from "ethers/lib/utils";
+import {formatEther, formatUnits, parseEther, parseUnits} from "ethers/lib/utils";
 import {sleep} from "../lib/Tool";
+import {ethers, utils} from "ethers";
 
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
 
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
-export async function listTransfer(who:string) {
+export async function listTransfer(who: string, etherToken: string) {
     const apiKey = process.env.ETHER_SCAN_API_KEY || ""
-    //    &contractaddress=0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2
     // &startblock=0
     //     &endblock=27025780
 
@@ -16,6 +16,7 @@ export async function listTransfer(who:string) {
     const url = `${host}/api
    ?module=account
    &action=tokentx
+   &contractaddress=${etherToken}
    &address=${who}
    &page=1
    &offset=100
@@ -33,33 +34,123 @@ export async function listTransfer(who:string) {
         if (body?.status === '1') {
             return body
         }
-        console.log(`ether scan return unsatified content`, body)
+        console.log(`ether scan return unsatisfied content`, body)
         await sleep(6_000) // rate limit is 1/5sec
     }
     throw new Error(`fetch from ether scan api fail.`)
 }
-export async function fetchErc20Transfer(address: string, wantDripScale18: bigint) {
-    const body = await listTransfer(address)
+
+function scaleValue(row:any) {
+    const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
+    const scale18 = BigInt(value) * BigInt(Math.pow(10, 18 - tokenDecimal))
+    return {timeStamp, from, scale18};
+}
+async function matchDepositId(etherTxHash:string, expect: string) {
+    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash);
+    const {hash, data, from, chainId} = txInfo
+    // console.log(`raw tx`, data || txInfo)
+    // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
+    const MethodID = '0x23463624'
+    const headlessData = data.substring(MethodID.length)
+    const token = '0x'+headlessData.substring(64*0 + 24, 64*1)
+    const amount = BigInt('0x'+headlessData.substring(64*1, 64*2))
+    const mintChainId = BigInt('0x'+headlessData.substring(64*2, 64*3))
+    const mintAccount = '0x'+headlessData.substring(64*3 + 24, 64*4)
+    const nonce = BigInt('0x'+headlessData.substring(64*4, 64*5))
+    const hex = utils.solidityKeccak256(
+        //      0 sender  1 token    2 amount  3 mintChain 4 mintAcc  5 nonce  6 sourceChain
+        [ "address", "address","uint256","uint64",    "address",  "uint64", "uint64" ],
+        [from,       token,     amount,  mintChainId, mintAccount, nonce, chainId]
+    )
+    if (hex.toLowerCase() === expect.toLowerCase()) {
+        console.log(`deposit id matches. ether tx ${etherTxHash}`)
+        return true
+    }
+    console.log(`not match, from ${from}, token ${token}, amount ${amount}, mint chain ${mintChainId
+    }, nonce ${nonce}, source chain ${chainId}`)
+    console.log(`actual ${hex} vs ${expect} expect`)
+    return false
+}
+export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
+                                         beforeTimeSec: number, refId:string) {
+    const body = await listTransfer(address, etherToken)
+    const filtered = []
+    const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
+    const feeDelta = wantDripScale18 * 5n / 1000n;  // 千5
+    let includeFee = wantDripScale18 + feeDelta;
     for(let row of body.result) {
-        const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
-        const scale18 = BigInt(value) * BigInt(Math.pow(10,18 - tokenDecimal))
-        if (scale18 === wantDripScale18) {
-            console.log(`Match ${scale18} vs ${wantDripScale18}`)
-            return row;
+        const {timeStamp, from, scale18} = scaleValue(row);
+        if (scale18 >= wantDripScale18 && scale18 <= includeFee
+            && from === address
+            && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
+            filtered.push(row)
+            if (scale18 === wantDripScale18) {
+                console.log(`Match Exact ${scale18} vs ${wantDripScale18}`)
+                if (await matchDepositId(row.transactionHash, refId) ) {
+                    return row;
+                }
+            }
         }
-        console.log(`not match ${scale18} vs ${wantDripScale18}`)
+        // console.log(`not match ${scale18} vs ${wantDripScale18
+        // } ${scale18 >= wantDripScale18
+        // } \n ${scale18} <= ${includeFee} ${scale18 < includeFee
+        // } \n ${from} vs ${address} ${from === address
+        // } \n ${timeStamp} < ${beforeTimeSec} ${timeStamp < beforeTimeSec
+        // } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
+        // }`)
+    }
+    if (filtered.length === 1) {
+        let similar = filtered[0];
+        const {timeStamp, from, scale18} = scaleValue(similar);
+        console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
+            parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
+        if (await matchDepositId(similar.hash, refId) ) {
+            return similar
+        }
+    }
+    for (let row of filtered) {
+        if (await matchDepositId(row.hash, refId) ) {
+            return row
+        }
     }
     console.log(`fetchErc20Transfer from ether scan, account ${address
-    }, wantDripScale18 ${wantDripScale18} ${formatEther(wantDripScale18)}`)
-    console.log(`${body.result.map((row:any)=>{
+    }, wantDripScale18 ${wantDripScale18} ${formatEther(wantDripScale18)}`);
+    console.log(`${filtered.filter((row:any)=>row.from === address).map((row:any)=>{
         const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
         const fmtUnit = formatUnits(BigInt(value), parseInt(tokenDecimal))
-        return `${new Date(parseInt(timeStamp)*1000).toISOString()} ${from} -> ${to} of ${contractAddress} [${tokenName}] x ${value}(${fmtUnit})`
+        return `${new Date(parseInt(timeStamp)*1000).toISOString()} ${from} -> ${to
+        } \n ${contractAddress} [${tokenName}] x ${value} (${fmtUnit})`
     }).join('\n')}`);
     return null;
 }
 async function main() {
-    await fetchErc20Transfer('0x27ee985d1e446ec71c277c89cd877ec4eeaa236c', 9n)
+    // await calcDepositId('0x68340813ec95ea0c39e69dff7ee330cde44b91785e8f4df83166df8be64d849c'
+    // ,'0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469')
+    await main1()
+}
+async function main1() {
+    // https://cn.etherscan.com/tx/0x68340813ec95ea0c39e69dff7ee330cde44b91785e8f4df83166df8be64d849c#eventlog
+    // bytes32 depId = keccak256(
+    //     // len = 20 + 20 + 32 + 8 + 20 + 8 + 8 = 128
+    //     abi.encodePacked(msg.sender, _token, _amount, _mintChainId, _mintAccount, _nonce, uint64(block.chainid))
+    // );
+    const hex = utils.solidityKeccak256(
+        //      0 sender  1 token    2 amount  3 mintChain 4 mintAcc  5 nonce  6 sourceChain
+        [ "address", "address","uint256","uint64","address", "uint64", "uint64" ],
+               // 0 sender                                      1 token
+        [ '0x27ee985d1e446ec71c277c89cd877ec4eeaa236c', '0x6b175474e89094c44da98b954eedeac495271d0f',
+            // 2 amount       3 chain id  4 mint acc
+            21000000000000000000n, 1030, '0x27ee985d1e446ec71c277c89cd877ec4eeaa236c',
+            // 5 nonce, 6 sourceChain
+            BigInt('0x17fd07a9e89'),       1
+        ])
+    console.log(`got       ${hex}`)
+    console.log('should be 0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469')
+    await fetchErc20Transfer('0x27ee985d1e446ec71c277c89cd877ec4eeaa236c',
+        20999855374966449675n,//
+        // parseEther("21").toBigInt(),
+        '0x6B175474E89094C44Da98b954EedeAC495271d0F', 1648470450,
+        '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469')
 }
 if (module === require.main) {
     require('dotenv/config')

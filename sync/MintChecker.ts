@@ -23,6 +23,14 @@ export const E_SPACE_ANY_SWAP_DAI = '0x80A16016cC4A2E6a2CACA8a4a498b1699fF0f844'
 export const E_SPACE_C_BRIDGE = '0x4F9e3186513224cf152016ccd86019E7B9A3c809'
 export const E_SPACE_USDT = '0xfe97E85d13ABD9c1c33384E796F10B73905637cE'
 export const E_SPACE_DAI = '0x74eaE367d018A5F29be559752e4B67d01cc6b151'
+export const E_SPACE_USDC = '0x6963efed0ab40f6c3d7bda44a05dcf1437c44372'
+export const E_SPACE_WBTC = '0x1f545487c62e5acfea45dcadd9c627361d1616d8'
+
+export const TOKEN_BIND = new Map<string, string>()
+TOKEN_BIND.set(E_SPACE_USDT.toLowerCase(), ETHEREUM_USDT_TOKEN)
+TOKEN_BIND.set(E_SPACE_DAI.toLowerCase(), ETHEREUM_DAI_TOKEN)
+TOKEN_BIND.set(E_SPACE_USDC.toLowerCase(), ETHEREUM_USDC_TOKEN)
+TOKEN_BIND.set(E_SPACE_WBTC.toLowerCase(), ETHEREUM_WBTC_TOKEN)
 
 export const addressMap:{[k:string]: string} = {
     [E_SPACE_C_BRIDGE]: 'E_SPACE_C_BRIDGE', // impl 0xe254a9637a4cb07777fa07a6eb4892eb07e2db94, cross space bridge
@@ -236,10 +244,13 @@ export class EventChecker {
                     const pureData = eSpaceLog.data.substring(2)
                     const account = '0x'+pureData.substring(64*2 + 24, 64*3)
                     const amount = BigInt('0x'+pureData.substring(64*3, 64*4))
+                    const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
+                    const refId = '0x'+pureData.substring(64*5, 64*6)
                     // const [mintId,token,account,amount,refChainId,refId, depositor] = eSpaceLog.topics
                     const fmtAmt = formatEther(amount)
                     console.log(`[${this.name}] celer mint, account ${account}, amount ${amount} ${fmtAmt}`)
-                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei, blockNumber, transactionHash)
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
+                        blockNumber, transactionHash, refId)
                 }
             }
             if (found) {
@@ -249,8 +260,10 @@ export class EventChecker {
             await this.mintSourceTxNotFound(transactionHash, mintV);
         }
     }
-    async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number, transactionHash:string) {
-        const row = await fetchErc20Transfer(account, wei)
+    async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
+                           transactionHash:string, refId:string) {
+        const {timestamp} = await this.provider.getBlock(blockNumber)
+        const row = await fetchErc20Transfer(account, wei, this.tokenAddr, timestamp, refId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
