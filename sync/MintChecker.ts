@@ -32,6 +32,10 @@ TOKEN_BIND.set(E_SPACE_DAI.toLowerCase(), ETHEREUM_DAI_TOKEN)
 TOKEN_BIND.set(E_SPACE_USDC.toLowerCase(), ETHEREUM_USDC_TOKEN)
 TOKEN_BIND.set(E_SPACE_WBTC.toLowerCase(), ETHEREUM_WBTC_TOKEN)
 
+export function getBindToken(eSpace: string) {
+    return TOKEN_BIND.get(eSpace.toLowerCase())
+}
+
 export const addressMap:{[k:string]: string} = {
     [E_SPACE_C_BRIDGE]: 'E_SPACE_C_BRIDGE', // impl 0xe254a9637a4cb07777fa07a6eb4892eb07e2db94, cross space bridge
     [E_SPACE_ANY_SWAP_USDT]: 'AnyswapV6ERC20_USDT', // vault 0x373590a576ccb8143f377db5f1c16f9f8528a8b4, it's not a contract
@@ -263,7 +267,7 @@ export class EventChecker {
     async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
                            transactionHash:string, refId:string) {
         const {timestamp} = await this.provider.getBlock(blockNumber)
-        const row = await fetchErc20Transfer(account, wei, TOKEN_BIND.get(this.tokenAddr)!, timestamp, refId)
+        const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
