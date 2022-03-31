@@ -1,5 +1,5 @@
 import {Contract, ethers} from "ethers";
-import {BaseProvider} from "@ethersproject/providers/src.ts/base-provider";
+import {BaseProvider} from "@ethersproject/providers"
 import {Conflux, Contract as CfxContract} from "js-conflux-sdk";
 
 export interface IFetcher {

@@ -1,5 +1,5 @@
 import {Contract, ethers, utils} from "ethers";
-import {BaseProvider} from "@ethersproject/providers/src.ts/base-provider";
+import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, parseEther} from "ethers/lib/utils";
 export class SupplyChecker {
     confluxProvider: BaseProvider;

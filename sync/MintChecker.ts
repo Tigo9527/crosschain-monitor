@@ -1,8 +1,10 @@
 import {Contract, ethers, utils} from "ethers";
-import {BaseProvider} from "@ethersproject/providers/src.ts/base-provider";
+import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "ethers/lib/utils";
 import {Bill} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
+import {fetchErc20Transfer} from "./EtherScan";
+import {Provider} from "js-conflux-sdk";
 export const ZERO = '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -79,7 +81,7 @@ export class EventChecker {
     async init() {
         console.log(`init conflux provider ...`)
         const st = await this.provider.getNetwork()
-        console.log(`conflux network ${st.chainId}`)
+        console.log(`conflux network ${st.chainId}, block number `, await this.provider.getBlockNumber())
 
         console.log(`init ethereum provider ...`)
         console.log(`ethereum `, await this.ethereumProvider.getNetwork().then(st=>st.chainId))
@@ -128,11 +130,14 @@ export class EventChecker {
         // console.log(`max block number is`, blockNumber)
         process.stderr.write(`\r\u001b[2K ---- fetch by epoch ${epoch} ----\t`)
         let filter = {
-            fromBlock: epoch, toBlock: epoch,
+            fromBlock: epoch, toBlock: epoch, limit: 5000,
             address: this.tokenAddr,
             topics: [utils.id("Transfer(address,address,uint256)"),]
         };
-        const logs = await this.provider.getLogs(filter)
+        const logs = await this.provider.getLogs(filter).catch(err=>{
+            console.log(`get logs fail:`, filter)
+            throw err;
+        })
         // console.log(`get logs, epoch ${epoch} , of address ${filter.address}`, logs)
         await this.checkMintEvents(logs);
     }
@@ -205,17 +210,12 @@ export class EventChecker {
                     eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
                     const newSupply = await this.calcSupply(eSpaceLog.address, wei*sign, this.tokenAddr)
                     await Bill.create({
-                        blockNumber,
-                        drip: wei,
-                        ethereumDrip: 0n, ethereumFormatUnit: 0, ethereumTx: '', ethereumTxFrom: '',
+                        blockNumber, drip: wei, ethereumDrip: 0n, ethereumFormatUnit: 0, ethereumTx: '', ethereumTxFrom: '',
                         ethereumTxTo: '', ethereumTxToken: '',
-                        formatUnit: -parseFloat(mintV),
-                        minterAddr: eSpaceLog.address,
+                        formatUnit: -parseFloat(mintV), minterAddr: eSpaceLog.address,
                         minterName: addressName(eSpaceLog.address),
-                        minterSupply: newSupply.drip,
-                        minterSupplyFormat: parseFloat(newSupply.unit),
-                        tokenAddr: this.tokenAddr,
-                        tokenName: addressName(this.tokenAddr),
+                        minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
+                        tokenAddr: this.tokenAddr, tokenName: addressName(this.tokenAddr),
                         tx: transactionHash
                     })
                     found = true;
@@ -228,6 +228,16 @@ export class EventChecker {
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     });
+                } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
+                    // celer
+                    // Mint(bytes32 mintId, address token, address account, uint256 amount, uint64 refChainId, bytes32 refId, address depositor)
+                    const pureData = eSpaceLog.data.substring(2)
+                    const account = '0x'+pureData.substring(64*2 + 24, 64*3)
+                    const amount = BigInt('0x'+pureData.substring(64*3, 64*4))
+                    // const [mintId,token,account,amount,refChainId,refId, depositor] = eSpaceLog.topics
+                    const fmtAmt = formatEther(amount)
+                    console.log(`[${this.name}] celer mint, account ${account}, amount ${amount} ${fmtAmt}`)
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei, blockNumber, transactionHash)
                 }
             }
             if (found) {
@@ -236,6 +246,25 @@ export class EventChecker {
             // not found corresponding tx on ethereum.
             await this.mintSourceTxNotFound(transactionHash, mintV);
         }
+    }
+    async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number, transactionHash:string) {
+        const row = await fetchErc20Transfer(account, wei)
+        if (row) {
+            const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
+                contractAddress, value, tokenName, tokenDecimal} = row
+            const newSupply = await this.calcSupply(minter, BigInt(diff), this.tokenAddr)
+            await Bill.create({
+                blockNumber, drip: wei, ethereumDrip: value, ethereumFormatUnit: parseFloat(formatUnits(BigInt(value), parseInt(tokenDecimal))),
+                ethereumTx: txHashEth, ethereumTxFrom: txEthReceiptFrom, ethereumTxTo: txEthTo,
+                ethereumTxToken: contractAddress, formatUnit: parseFloat(formatEther(wei)),
+                minterAddr: minter, minterName: addressName(minter),
+                minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
+                tokenAddr: this.tokenAddr, tokenName: addressName(this.tokenAddr),
+                tx: transactionHash
+            })
+            return true;
+        }
+        return false;
     }
     async searchEvmTx(obj:any) {
         const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber} = obj
@@ -264,7 +293,7 @@ export class EventChecker {
                 ethereumTx: txHashEth,
                 ethereumTxFrom: txEthReceiptFrom,
                 ethereumTxTo: txEthTo,
-                ethereumTxToken: '',
+                ethereumTxToken: 'Raw ETH',
                 formatUnit: parseFloat(mintV),
                 minterAddr: eSpaceLog.address,
                 minterName: addressName(eSpaceLog.address),

@@ -1,7 +1,7 @@
 import {Sequelize, Model, DataTypes} from "sequelize";
 
 export interface IToken {
-    id: number
+    id?: number
     name: string
     chainId: number
     address: string

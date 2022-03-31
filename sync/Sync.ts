@@ -24,7 +24,7 @@ async function check(dingToken = '') {
     }
     let checker: EventChecker;
     try {
-        checker = new EventChecker('https://evm.confluxrpc.com', tokenAddr);
+        checker = new EventChecker(eSpaceRpc, tokenAddr);
         checker.notifyMint = false
         await checker.init()
     } catch (e) {
@@ -111,7 +111,9 @@ async function start() {
     // const r = await ef.fetchTx('0x8b9b1b78624c5139affe7c88c1c5ac63439ce5ac8075d53492fb81c580962fa3')
     // console.log(`receipt is`, r)
 }
-
+let eSpaceRpc = 'https://evm.confluxrpc.com'
+eSpaceRpc = 'http://evm-internal.confluxrpc.com'
+eSpaceRpc = 'http://localhost:32537'
 if (module === require.main) {
     main().then()
 }
