@@ -186,7 +186,7 @@ export class Bill extends Model<IBill> implements IBill {
         }, {
             sequelize: seq, tableName: 'bill',
             indexes: [
-                {name: 'idx_minter', fields: ['minterName', 'blockNumber']}
+                {name: 'idx_token_minter', fields: ['tokenAddr', 'minterAddr']},
             ]
         })
     }

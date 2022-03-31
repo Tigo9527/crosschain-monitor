@@ -4,7 +4,6 @@ import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "e
 import {Bill, Config, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
-import {Provider} from "js-conflux-sdk";
 export const ZERO = '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -70,6 +69,7 @@ export class EventChecker {
     public notify = async (mintOrBurn:string, token:string, amount: string) => {
         console.log(`notify ${mintOrBurn}, ${token}, ${amount}`)
     }
+    public confluxContract!: Contract;
 
     constructor(url: string, tokenAddr:string) {
         this.provider = ethers.getDefaultProvider(url)
@@ -99,18 +99,22 @@ export class EventChecker {
         console.log(`ethereum `, await this.ethereumProvider.getNetwork().then(st=>st.chainId))
     }
     async getMintRoles() {
-        const token = this.tokenAddr || '0xfe97e85d13abd9c1c33384e796f10b73905637ce'
+        const token = this.tokenAddr
         const abi = [
             'function getRoleMemberCount(bytes32 role) view returns (uint256)',
             'function getRoleMember(bytes32 role,uint256 index) view returns (address)',
             'function name() view returns (string memory)',
             'function decimals() public view returns (uint8)',
+            'function totalSupply() view returns (uint256)',
+            'function minterSupply(address who) view returns (tuple(uint256 cap, uint256 total))',
         ]
         const minterRole = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6'
         const c = new Contract(token, abi, this.provider);
+        this.confluxContract = c;
         this.ethereumContract = new Contract(token, abi, this.ethereumProvider);
         try {
             const name = await c.name()
+            addressMap[this.tokenAddr] = name;
             await addAddress(this.tokenAddr, name)
             console.log(`token ${token}, name [${name}].`)
             this.name = name;
@@ -123,9 +127,6 @@ export class EventChecker {
         this.minterSet.clear()
         for(let idx=0; idx<roleCount; idx++) {
             const minter = await c.getRoleMember(minterRole, idx)
-            // @ts-ignore
-            console.log(`minter ${idx} is ${minter} ${addressName(minter)}`);
-            this.minterSet.add(minter)
             // auto detect contract name
             try {
                 const copyC = c.attach(minter)
@@ -134,6 +135,8 @@ export class EventChecker {
             } catch (e) {
                 //
             }
+            console.log(`minter ${idx} is ${minter} ${addressName(minter)}`);
+            this.minterSet.add(minter)
         }
         console.log(`minter count ${this.minterSet.size}, token ${token}`)
     }

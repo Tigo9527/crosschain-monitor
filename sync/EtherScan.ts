@@ -74,7 +74,7 @@ async function matchDepositId(etherTxHash:string, expect: string) {
 export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
                                          beforeTimeSec: number, refId:string) {
     const body = await listTransfer(address, etherToken)
-    const filtered = []
+    const filtered:any[] = []
     const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
     const feeDelta = wantDripScale18 * 5n / 1000n;  // 千5
     let includeFee = wantDripScale18 + feeDelta;

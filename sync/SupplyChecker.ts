@@ -45,7 +45,7 @@ export class SupplyChecker {
         const roleCount = await this.contract.getRoleMemberCount(minterRole)
         console.log(`minter role count ${roleCount}`)
         // fetch all minters
-        const minters = []
+        const minters:any[] = []
         for(let i=0; i<roleCount; i++) {
             const minter = await this.contract.getRoleMember(minterRole, i)
             minters.push(minter)
@@ -62,7 +62,7 @@ export class SupplyChecker {
         const totalSupply = await this.contract.totalSupply()
         console.log(`total supply [${this.name}] is ${totalSupply} or ${formatEther(totalSupply)}`)
         // checker supply
-        const supplyList = []
+        const supplyList:any[] = []
         for(let i=0; i<roleCount; i++) {
             const minter = minters[i]
             const supply = await this.contract.minterSupply(minter)
