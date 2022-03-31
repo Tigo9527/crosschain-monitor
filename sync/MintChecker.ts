@@ -52,7 +52,7 @@ export class EventChecker {
     public provider: BaseProvider;
     public ethereumProvider: BaseProvider;
     dingToken = ''
-    public tokenAddr: string;
+    public tokenAddr: string = '';
     public name = ''
     public minterSet = new Set<string>()
     ethereumContract!: Contract
@@ -263,7 +263,7 @@ export class EventChecker {
     async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
                            transactionHash:string, refId:string) {
         const {timestamp} = await this.provider.getBlock(blockNumber)
-        const row = await fetchErc20Transfer(account, wei, this.tokenAddr, timestamp, refId)
+        const row = await fetchErc20Transfer(account, wei, TOKEN_BIND.get(this.tokenAddr)!, timestamp, refId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
