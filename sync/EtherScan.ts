@@ -18,7 +18,7 @@ export async function listTransfer(who:string) {
    &action=tokentx
    &address=${who}
    &page=1
-   &offset=5
+   &offset=100
    &sort=desc
    &apikey=${apiKey}`.replace(/[\n ]*/g,'')
     console.log(`url ${url}`)
@@ -44,6 +44,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
         const scale18 = BigInt(value) * BigInt(Math.pow(10,18 - tokenDecimal))
         if (scale18 === wantDripScale18) {
+            console.log(`Match ${scale18} vs ${wantDripScale18}`)
             return row;
         }
         console.log(`not match ${scale18} vs ${wantDripScale18}`)

@@ -183,7 +183,7 @@ export class EventChecker {
             const {from, to, blockNumber} = receipt
             let wei = BigInt(data);
             let mintV = formatEther(wei);
-            console.log(`[${this.name}] mint at tx ${transactionHash}, value ${mintV}`)
+            console.log(`[${this.name}] ${action} at tx ${transactionHash}, value ${mintV}`)
             if (this.notifyMint) {
                 await this.notify(action, this.tokenAddr, mintV)
             }
@@ -206,7 +206,9 @@ export class EventChecker {
                     continue;
                 }
                 if (
-                    // LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount)
+                    // Burn(bytes32 burnId, address token, address account, uint256 amount, address withdrawAccount) // celer
+                    eTopic === '0x75f1bf55bb1de41b63a775dc7d4500f01114ee62b688a6b11d34f4692c1f3d43' ||
+                    // LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount) // multi chain
                     eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
                     const newSupply = await this.calcSupply(eSpaceLog.address, wei*sign, this.tokenAddr)
                     await Bill.create({
