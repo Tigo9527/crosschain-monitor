@@ -1,7 +1,7 @@
 import {Contract, ethers, utils} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "ethers/lib/utils";
-import {Bill} from "../lib/Models";
+import {Bill, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
 import {Provider} from "js-conflux-sdk";
@@ -346,6 +346,47 @@ export class EventChecker {
             }
         }
         return found;
+    }
+}
+
+const superagent = require('superagent')
+export async function listMintBurnFromScan(token: string) {
+    const zero = '0x0000000000000000000000000000000000000000'
+    const limit = 100
+    const resultList:any[] = []
+    do {
+        let url = `https://evm.confluxscan.net/v1/transfer?address=${token
+        }&from=${zero}&limit=${limit}&skip=0&to=${zero}&transferType=ERC20`;
+        console.log(`fetch from scan \n`, url)
+        const result = await superagent.get(url).then((res: { body: any; }) => res.body || res)
+        // console.log(result)
+        const {total, list} = result
+        resultList.push(...list)
+        if (list.length < limit) {
+            break;
+        }
+    } while (true)
+    resultList.sort((a,b)=>a.epochNumber - b.epochNumber)
+    return resultList;
+}
+export async function importFromScan(checker: EventChecker, cursorKey: string) {
+    const recordsInDb = await Bill.findOne({where:{tokenAddr: checker.tokenAddr}, raw: true})
+    if (recordsInDb) {
+        console.log(`Records found in db, can not import.`, recordsInDb)
+        process.exit(9)
+    }
+    const list = await listMintBurnFromScan(checker.tokenAddr).catch(err=>{
+        console.log(`error fetch list from scan`, err.message)
+        console.log(err)
+        process.exit(9)
+    });
+    let idx = 0
+    for(const row of list) {
+        idx ++
+        console.log(`import ${idx} of ${list.length}`)
+        const {epochNumber:epoch} = row
+        await checker.getEventByEpoch(epoch) // burn
+        await updateConfig(cursorKey, (epoch+1).toString()) // it's the next epoch.
     }
 }
 

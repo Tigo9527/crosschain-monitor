@@ -2,8 +2,8 @@ import 'dotenv/config'
 import {ConfluxFetcher, EthereumFetcher} from "./fetcher/Fetcher";
 import {initDB} from "../lib/DBProvider";
 import {formatEther} from "ethers/lib/utils";
-import {EventChecker} from "./MintChecker";
-import {EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
+import {EventChecker, importFromScan} from "./MintChecker";
+import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 
 async function main() {
@@ -13,6 +13,30 @@ async function main() {
     //
     await check(DING)
 }
+
+function setupNotify(dingToken: string, checker: EventChecker) {
+    if (dingToken) {
+        checker.mintSourceTxNotFound = async (tx, fmtAmount) => {
+            const txLink = `https://evm.confluxscan.net/tx/${tx}`
+            const msg = `[${checker.name}] Mint without ethereum tx, amount ${fmtAmount}, token ${checker.tokenAddr}, ${txLink}`
+            return dingMsg(msg, dingToken).then(() => {
+                process.exit(9)
+            })
+        }
+        checker.notify = async (mintOrBurn: string, token: string, amount: string) => {
+            const msg = `Found action: ${mintOrBurn} ${token} ${checker.name}, amount ${amount}`
+            await dingMsg(msg, dingToken)
+        }
+    }
+}
+
+async function testDing(cmd: string, dingToken: string) {
+    if (cmd === 'testDing') {
+        await dingMsg(`Test message, just ignore.`, dingToken)
+        process.exit(0)
+    }
+}
+
 async function check(dingToken = '') {
     // usdt first at 38659021; dai first at 38835560
     let [,,cmd,tokenAddr, startEpoch] = process.argv
@@ -32,32 +56,20 @@ async function check(dingToken = '') {
         process.exit(9)
         return;
     }
-    if (cmd === 'testDing') {
-        await dingMsg(`Test message, just ignore.`, dingToken)
-        process.exit(0)
-    }
+    await testDing(cmd, dingToken);
     checker.dingToken = dingToken || ''
-    if (dingToken) {
-        checker.mintSourceTxNotFound = async (tx, fmtAmount) => {
-            const txLink = `https://evm.confluxscan.net/tx/${tx}`
-            const msg = `[${checker.name}] Mint without ethereum tx, amount ${fmtAmount}, token ${checker.tokenAddr}, ${txLink}`
-            return dingMsg(msg, dingToken).then(()=>{
-                process.exit(9)
-            })
-        }
-        checker.notify = async (mintOrBurn:string, token:string, amount: string)=>{
-            const msg = `Found action: ${mintOrBurn} ${token} ${checker.name}, amount ${amount}`
-            await dingMsg(msg, dingToken)
-        }
-    }
+    setupNotify(dingToken, checker);
     await checker.getMintRoles().catch(err=>{
         console.log(`getMintRoles fail`, err)
         process.exit(1)
     })
-    // await checker.getEventByEpoch() // c bridge U mint
-    // await checker.getEventByEpoch(39138515)// multi chain U // 0xfe97e85d13abd9c1c33384e796f10b73905637ce
-    // await checker.getEventByEpoch(39345260) // multi chain dai // 0x74eaE367d018A5F29be559752e4B67d01cc6b151
     let cursorKey = `${EPOCH_PREFIX_KEY}${tokenAddr}`; // it's the next epoch.
+    if (cmd === 'importFromScan') {
+        await importFromScan(checker, cursorKey)
+        await Bill.sequelize?.close
+        console.log(`Done.`)
+        process.exit()
+    }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpoch = 0;
     async function repeat() {
@@ -113,5 +125,6 @@ async function start() {
 }
 let eSpaceRpc = process.env.E_SPACE_RPC || 'https://evm.confluxrpc.com'
 if (module === require.main) {
+    // command: check or importFromScan
     main().then()
 }
