@@ -160,7 +160,7 @@ export class EventChecker {
             minterSupply: newSupply.drip,
             minterSupplyFormat: parseFloat(newSupply.unit),
             tokenAddr: this.tokenAddr,
-            tokenName: addressName(this.tokenAddr),
+            tokenName: this.name,
             tx: transactionHash
         })
     }
@@ -217,7 +217,7 @@ export class EventChecker {
                         formatUnit: -parseFloat(mintV), minterAddr: eSpaceLog.address,
                         minterName: addressName(eSpaceLog.address),
                         minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
-                        tokenAddr: this.tokenAddr, tokenName: addressName(this.tokenAddr),
+                        tokenAddr: this.tokenAddr, tokenName: this.name,
                         tx: transactionHash
                     })
                     found = true;
@@ -261,7 +261,7 @@ export class EventChecker {
                 ethereumTxToken: contractAddress, formatUnit: parseFloat(formatEther(wei)),
                 minterAddr: minter, minterName: addressName(minter),
                 minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
-                tokenAddr: this.tokenAddr, tokenName: addressName(this.tokenAddr),
+                tokenAddr: this.tokenAddr, tokenName: this.name,
                 tx: transactionHash
             })
             return true;
@@ -302,7 +302,7 @@ export class EventChecker {
                 minterSupply: newSupply.drip,
                 minterSupplyFormat: parseFloat(newSupply.unit),
                 tokenAddr: this.tokenAddr,
-                tokenName: addressName(this.tokenAddr),
+                tokenName: this.name,
                 tx: transactionHash
             })
             return true;
@@ -339,7 +339,7 @@ export class EventChecker {
                     minterSupply: newSupply.drip,
                     minterSupplyFormat: parseFloat(newSupply.unit),
                     tokenAddr: this.tokenAddr,
-                    tokenName: addressName(this.tokenAddr),
+                    tokenName: this.name,
                     tx: transactionHash
                 })
                 found = true;
