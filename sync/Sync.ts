@@ -111,9 +111,7 @@ async function start() {
     // const r = await ef.fetchTx('0x8b9b1b78624c5139affe7c88c1c5ac63439ce5ac8075d53492fb81c580962fa3')
     // console.log(`receipt is`, r)
 }
-let eSpaceRpc = 'https://evm.confluxrpc.com'
-eSpaceRpc = 'http://evm-internal.confluxrpc.com'
-eSpaceRpc = 'http://localhost:32537'
+let eSpaceRpc = process.env.E_SPACE_RPC || 'https://evm.confluxrpc.com'
 if (module === require.main) {
     main().then()
 }
