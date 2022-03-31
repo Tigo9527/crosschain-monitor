@@ -1,7 +1,7 @@
 import {Contract, ethers, utils} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "ethers/lib/utils";
-import {Bill, updateConfig} from "../lib/Models";
+import {Bill, Config, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
 import {Provider} from "js-conflux-sdk";
@@ -386,7 +386,8 @@ export async function importFromScan(checker: EventChecker, cursorKey: string) {
         console.log(`import ${idx} of ${list.length}`)
         const {epochNumber:epoch} = row
         await checker.getEventByEpoch(epoch) // burn
-        await updateConfig(cursorKey, (epoch+1).toString()) // it's the next epoch.
+        // it's the next epoch.
+        await Config.upsert({name: cursorKey, config: (epoch+1).toString()})
     }
 }
 
