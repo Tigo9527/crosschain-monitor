@@ -77,7 +77,7 @@ function TokenSupply() {
     const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}})
     useEffect(()=>{
         async function rpc() {
-            const json = await fetch(`http://localhost:3003/supply`).then(res=>res.json())
+            const json = await fetch(`/supply`).then(res=>res.json())
             console.log(json)
             setInfo(json)
         }
