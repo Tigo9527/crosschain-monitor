@@ -21,7 +21,7 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
             key: 'minterSupply',
             render: (text, row) => (
                 <>
-                    {text}
+                    <span style={{color: 'gray'}}>{text}</span>
                     <div/>
                     {row.minterSupplyFormat}
                 </>
@@ -64,10 +64,10 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     ];
     return (
         <React.Fragment>
-            <a target={`_blank`} href={`https://evm.confluxscan.net/token/${addr}`}>{addr}</a>
             <Tag>{addressMap[addr]}</Tag>
+            <a target={`_blank`} href={`https://evm.confluxscan.net/token/${addr}`}>{addr}</a>
             <div/>
-            Minter Count [{minters?.length || 0}] <Tag>totalSupply</Tag>: {totalSupply} | {totalUnit}
+            Minter Count [{minters?.length || 0}] <Tag>TotalSupply</Tag>: <span style={{color:'gray'}}>{totalSupply}</span> | {totalUnit}
             <Table pagination={false} columns={columns} dataSource={minters} />
         </React.Fragment>
     )
@@ -101,44 +101,32 @@ function TokenSupply() {
     return (
         <React.Fragment>
             <Divider/>
-           [ {process.env.REACT_APP_HOST}]
-            <Row>
-                <Col span={12}>
-            <Tag color="blue">Off chain</Tag>
             {
                 Object.keys(info.tokens).map(k=>{
                     return (
-                        <React.Fragment>
-                            <Divider key={'d'+k}/>
+                    <>
+                    <Row>
+                        <Col span={12}>
+                            <Tag color="blue">Off chain</Tag>
                             <MinterTable key={k} addr={k}
                                          addressMap={info.addressMap}
                                          totalSupply={info.tokens[k].map(r => BigInt(r.minterSupply)).reduce((a, b) => a + b).toString()}
                                          totalUnit={info.tokens[k].map(r => parseFloat(r.minterSupplyFormat)).reduce((a, b) => a + b)}
                                          minters={info.tokens[k]}/>
-                        </React.Fragment>
-                    )
-                })
-            }
-                </Col>
-                <Col span={1}/>
-                <Col span={11}>
-            <Tag color="geekblue">On chain</Tag>
-            {
-                Object.keys(info.onChain).map(k=>{
-                    return (
-                        <React.Fragment>
-                        <Divider key={'dc'+k}/>
-                        <MinterTable key={'onChain'+k} addr={k}
-                                     addressMap={info.addressMap}
+                        </Col>
+                        <Col span={12}>
+                            <Tag color="geekblue">On chain</Tag>
+                            <MinterTable key={'onChain'+k} addr={k}
+                                         addressMap={info.addressMap}
                                          totalSupply={info.onChain[k]['totalSupply']}
                                          totalUnit={info.onChain[k]['totalUnit']}
                                          minters={transformOnChain(info.onChain[k])}/>
-                        </React.Fragment>
+                        </Col>
+                    </Row>
+                    </>
                     )
                 })
             }
-                </Col>
-            </Row>
         </React.Fragment>
     )
 }
