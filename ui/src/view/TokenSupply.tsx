@@ -1,4 +1,4 @@
-import {Table, Tag, Space, Divider} from 'antd';
+import {Table, Tag, Space, Divider, Row, Col} from 'antd';
 import React, {useEffect, useState} from "react";
 function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     minters.forEach(row=>row.key = row.minterAddr)
@@ -7,26 +7,26 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
             title: 'Minter Addr',
             dataIndex: 'minterAddr',
             key: 'name',
-            width: '20%',
-            render: text => <a href={`https://evm.confluxscan.net/address/${text}`} target='_blank'>{text}</a>,
-        },{
-            title: 'minterName',
-            dataIndex: 'minterName',
-            key: 'minterName',
-            width: '20%',
-            return: text => addressMap[text] || text
+            render: (text, row) => (
+                <>
+                    {addressMap[row.minterName] || row.minterName}
+                    <div/>
+                    <a href={`https://evm.confluxscan.net/address/${text}`} target='_blank'>{text}</a>
+                </>
+            ),
         },
         {
             title: 'minterSupply',
             dataIndex: 'minterSupply',
-            width: '20%',
-            key: 'age',
-        },
-        {
-            title: 'minterSupplyFormat',
-            dataIndex: 'minterSupplyFormat',
-            key: 'minterSupplyFormat',
-        },
+            key: 'minterSupply',
+            render: (text, row) => (
+                <>
+                    {text}
+                    <div/>
+                    {row.minterSupplyFormat}
+                </>
+            ),
+        }
         // {
         //     title: 'Action',
         //     key: 'action',
@@ -64,11 +64,10 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     ];
     return (
         <React.Fragment>
-            <Space>
             <a target={`_blank`} href={`https://evm.confluxscan.net/token/${addr}`}>{addr}</a>
-            <Space/>
-            <Tag>{addressMap[addr]}</Tag> Minter Count [{minters?.length || 0}] <Tag>totalSupply</Tag>: {totalSupply} | {totalUnit}
-            </Space>
+            <Tag>{addressMap[addr]}</Tag>
+            <div/>
+            Minter Count [{minters?.length || 0}] <Tag>totalSupply</Tag>: {totalSupply} | {totalUnit}
             <Table pagination={false} columns={columns} dataSource={minters} />
         </React.Fragment>
     )
@@ -77,7 +76,9 @@ function TokenSupply() {
     const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}})
     useEffect(()=>{
         async function rpc() {
-            const json = await fetch(`/supply`).then(res=>res.json())
+            let url = `http://localhost:3003/supply`;
+            url = '/supply'
+            const json = await fetch(url, {mode: "cors"}).then(res=>res.json())
             console.log(json)
             setInfo(json)
         }
@@ -100,6 +101,9 @@ function TokenSupply() {
     return (
         <React.Fragment>
             <Divider/>
+           [ {process.env.REACT_APP_HOST}]
+            <Row>
+                <Col span={12}>
             <Tag color="blue">Off chain</Tag>
             {
                 Object.keys(info.tokens).map(k=>{
@@ -115,7 +119,9 @@ function TokenSupply() {
                     )
                 })
             }
-            <Divider/>
+                </Col>
+                <Col span={1}/>
+                <Col span={11}>
             <Tag color="geekblue">On chain</Tag>
             {
                 Object.keys(info.onChain).map(k=>{
@@ -131,6 +137,8 @@ function TokenSupply() {
                     )
                 })
             }
+                </Col>
+            </Row>
         </React.Fragment>
     )
 }
