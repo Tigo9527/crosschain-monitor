@@ -123,6 +123,7 @@ function TokenSupply() {
                                          minters={transformOnChain(info.onChain[k])}/>
                         </Col>
                     </Row>
+                        <Divider/>
                     </>
                     )
                 })
