@@ -3,8 +3,10 @@ import {initDB} from "../lib/DBProvider";
 import {Bill} from "../lib/Models";
 import {QueryTypes} from "sequelize";
 
+const cors = require('cors');
 const express = require('express')
 const app = express()
+app.use(cors())
 
 import {BaseProvider} from "@ethersproject/providers"
 import {ethers} from "ethers";
