@@ -392,6 +392,32 @@ export async function listMintBurnFromScan(token: string) {
     resultList.sort((a,b)=>a.epochNumber - b.epochNumber)
     return resultList;
 }
+export async function addMinterPlaceHolder(checker: EventChecker) {
+    await checker.getMintRoles()
+    for( let minter of checker.minterSet ) {
+        const bean = await Bill.findOne({where: {minterAddr: minter, tokenAddr: checker.tokenAddr}})
+        if (bean) {
+            console.log(`minter has record, ${minter}, epoch ${bean.blockNumber}`)
+            continue
+        }
+        await Bill.create({
+            minterAddr: minter,
+            minterName: addressName(minter),
+            tokenAddr: checker.tokenAddr,
+            tokenName: checker.name,
+            tx: 'PLACE_HOLDER_'+minter, // unique constraints
+            // defaults
+            blockNumber: 0,drip: 0n,ethereumDrip: 0n,ethereumFormatUnit: 0,ethereumTx: "",ethereumTxFrom: "",
+            ethereumTxTo: "",ethereumTxToken: "",formatUnit: 0,
+            minterSupply: 0n,minterSupplyFormat: 0,
+        }).then(()=>{
+            console.log(`create place holder for ${minter}, token ${checker.name}`)
+        })
+        .catch(err=>{
+            console.log(`create fail`, err)
+        })
+    }
+}
 export async function importFromScan(checker: EventChecker, cursorKey: string) {
     const recordsInDb = await Bill.findOne({where:{tokenAddr: checker.tokenAddr}, raw: true})
     if (recordsInDb) {

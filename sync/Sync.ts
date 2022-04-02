@@ -2,7 +2,7 @@ import 'dotenv/config'
 import {ConfluxFetcher, EthereumFetcher} from "./fetcher/Fetcher";
 import {initDB} from "../lib/DBProvider";
 import {formatEther} from "ethers/lib/utils";
-import {EventChecker, importFromScan} from "./MintChecker";
+import {addMinterPlaceHolder, EventChecker, importFromScan} from "./MintChecker";
 import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 
@@ -69,6 +69,9 @@ async function check(dingToken = '') {
         await Bill.sequelize?.close
         console.log(`Done.`)
         process.exit()
+    } else if (cmd === 'addMinterPlaceHolder') {
+        await addMinterPlaceHolder(checker)
+        process.exit(0)
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpoch = 0;
@@ -125,6 +128,6 @@ async function start() {
 }
 let eSpaceRpc = process.env.E_SPACE_RPC || 'https://evm.confluxrpc.com'
 if (module === require.main) {
-    // command: check or importFromScan
+    // command: check or importFromScan or addMinterPlaceHolder
     main().then()
 }

@@ -61,6 +61,7 @@ async function getMinters(addressList:string[]) {
     }
     return map
 }
+
 async function getSupplyInfo() {
     const tokens = await listSupply();
     const onChain = await getMinters([...Object.keys(tokens)])
