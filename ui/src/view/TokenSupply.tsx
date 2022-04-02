@@ -1,5 +1,7 @@
 import {Table, Tag, Space, Divider, Row, Col} from 'antd';
 import React, {useEffect, useState} from "react";
+import {formatEther} from "ethers/lib/utils";
+import {LoadingOutlined, CheckOutlined, WarningOutlined} from "@ant-design/icons";
 function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     minters.forEach(row=>row.key = row.minterAddr)
     const columns = [
@@ -16,7 +18,7 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
             ),
         },
         {
-            title: 'minterSupply',
+            title: 'minterSupply [off chain]',  width: '20%',
             dataIndex: 'minterSupply',
             key: 'minterSupply',
             render: (text, row) => (
@@ -24,6 +26,29 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
                     <span style={{color: 'gray'}}>{text}</span>
                     <div/>
                     {row.minterSupplyFormat}
+                </>
+            ),
+        },
+        {
+            title: 'minterSupply [on chain]',  width: '20%',
+            dataIndex: 'onChain.minterSupply',
+            key: 'onChain.minterSupply',
+            render: (text, row) => (
+                <>
+                    <span style={{color: 'gray'}}>{row.onChain.total}</span>
+                    <div/>
+                    {row.onChain.totalUnit}
+                </>
+            ),
+        },{
+            title: '', key: 'check', width: '10%',
+            render: (_, row) => (
+                <>
+                    {
+                        row.minterSupply === row.onChain.total ?
+                            <CheckOutlined style={{fontSize:'2em', color: "green"}} /> :
+                            <WarningOutlined style={{fontSize:'2em', color: "darkred"}} />
+                    }
                 </>
             ),
         }
@@ -64,25 +89,41 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     ];
     return (
         <React.Fragment>
-            <Tag>{addressMap[addr]}</Tag>
-            <a target={`_blank`} href={`https://evm.confluxscan.net/token/${addr}`}>{addr}</a>
-            <div/>
-            Minter Count [{minters?.length || 0}] <Tag>TotalSupply</Tag>: <span style={{color:'gray'}}>{totalSupply}</span> | {totalUnit}
             <Table pagination={false} columns={columns} dataSource={minters} />
         </React.Fragment>
     )
 }
 function TokenSupply() {
-    const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}})
+    const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}, supplyOffChain:{}})
+    const [loading, setLoading] = useState(true)
     useEffect(()=>{
         async function rpc() {
             let url = `http://localhost:3003/supply`;
-            url = '/supply'
+            if (process.env.NODE_ENV !== 'development') {
+                url = '/supply'
+            }
             const json = await fetch(url, {mode: "cors"}).then(res=>res.json())
+            json.supplyOffChain = {}
+            //
+            Object.keys(json.tokens).forEach(tk=>{
+                const sum = json.tokens[tk].map(r => BigInt(r.minterSupply)).reduce((a, b) => a + b)
+                const fmt = formatEther(sum)
+                json.supplyOffChain[tk] = {total: sum.toString(), unit: fmt}
+
+                json.tokens[tk].forEach(minter=>{
+                    minter.onChain = json.onChain[tk][minter.minterAddr]
+                })
+                json.tokens[tk].push({
+                    minterAddr: '', minterName: '*',
+                    minterSupply: sum.toString(), minterSupplyFormat: fmt,
+                    onChain: {total: json.onChain[tk].totalSupply, totalUnit: json.onChain[tk].totalUnit},
+                })
+            })
             console.log(json)
             setInfo(json)
         }
-        rpc().then()
+        setLoading(true)
+        rpc().then(()=>setLoading(false))
     }, [])
     const transformOnChain = (obj) => {
         const arr:any[] = []
@@ -100,31 +141,34 @@ function TokenSupply() {
     }
     return (
         <React.Fragment>
-            <Divider/>
+            <Divider key={'dk1'}/>
+            {loading ? <LoadingOutlined key={'loading1'} /> : null}
             {
                 Object.keys(info.tokens).map(k=>{
                     return (
-                    <>
-                    <Row>
-                        <Col span={12}>
-                            <Tag color="blue">Off chain</Tag>
+                    <React.Fragment key={'rf'+k}>
+                    <Row key={'row'+k}>
+                        <Col span={24} key={'col1'}>
+                            <Tag>{info.addressMap[k]}</Tag>
+                            <a target={`_blank`} href={`https://evm.confluxscan.net/token/${k}`}>{k}</a>
+                            <div style={{padding: '10px'}} />
                             <MinterTable key={k} addr={k}
                                          addressMap={info.addressMap}
-                                         totalSupply={info.tokens[k].map(r => BigInt(r.minterSupply)).reduce((a, b) => a + b).toString()}
-                                         totalUnit={info.tokens[k].map(r => parseFloat(r.minterSupplyFormat)).reduce((a, b) => a + b)}
+                                         totalSupply={0}
+                                         totalUnit={0}
                                          minters={info.tokens[k]}/>
                         </Col>
-                        <Col span={12}>
-                            <Tag color="geekblue">On chain</Tag>
-                            <MinterTable key={'onChain'+k} addr={k}
-                                         addressMap={info.addressMap}
-                                         totalSupply={info.onChain[k]['totalSupply']}
-                                         totalUnit={info.onChain[k]['totalUnit']}
-                                         minters={transformOnChain(info.onChain[k])}/>
-                        </Col>
+                        {/*<Col span={12}>*/}
+                        {/*    <Tag color="geekblue">On chain</Tag>*/}
+                        {/*    <MinterTable key={'onChain'+k} addr={k}*/}
+                        {/*                 addressMap={info.addressMap}*/}
+                        {/*                 totalSupply={info.onChain[k]['totalSupply']}*/}
+                        {/*                 totalUnit={info.onChain[k]['totalUnit']}*/}
+                        {/*                 minters={transformOnChain(info.onChain[k])}/>*/}
+                        {/*</Col>*/}
                     </Row>
-                        <Divider/>
-                    </>
+                        <div key={'div'+k} style={{padding: '10px'}} />
+                    </React.Fragment>
                     )
                 })
             }
