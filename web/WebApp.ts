@@ -1,13 +1,17 @@
 import 'dotenv/config'
 import {initDB} from "../lib/DBProvider";
-import {Bill} from "../lib/Models";
-import {QueryTypes} from "sequelize";
+import {Bill, Config, EPOCH_PREFIX_KEY} from "../lib/Models";
+import {QueryTypes, Op} from "sequelize";
 
 const cors = require('cors');
 const express = require('express')
 const app = express()
 app.use(cors())
 
+app.get('/test-error', function (req,res,next) {
+    // throw new Error(`test-error`)
+    next(new Error(`fire error handler`))
+})
 import {BaseProvider} from "@ethersproject/providers"
 import {ethers} from "ethers";
 import {addressMap, EventChecker} from "../sync/MintChecker";
@@ -23,6 +27,11 @@ async function init_DB() {
 
 app.get('/', function (req, res) {
     res.send('Hello World')
+})
+app.get('/sync-info', async (req,res)=>{
+    const list = await Config.findAll({where: {name: {[Op.like]: `${EPOCH_PREFIX_KEY}%`}}})
+    const block = await rpc.getBlock(rpc.getBlockNumber())
+    res.send({list, block})
 })
 
 async function listSupply() {
@@ -49,7 +58,7 @@ async function getMinters(addressList:string[]) {
     const map = {}
     for(const token of addressList) {
         const ck = new EventChecker(process.env.E_SPACE_RPC!, token)
-        await ck.getMintRoles()
+        await ck.getMintRoles(false)
         let totalSupply = await ck.confluxContract.totalSupply();
         const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply)}
         for(const minter of ck.minterSet) {
@@ -67,10 +76,20 @@ async function getSupplyInfo() {
     const onChain = await getMinters([...Object.keys(tokens)])
     return {tokens, onChain, addressMap}
 }
-app.get('/supply', async (req, res) => {
-    res.send(await getSupplyInfo())
+app.get('/supply', async (req, res, next) => {
+    await getSupplyInfo().then(data=>res.send(data)).catch(next)
+})
+//================
+app.use((err, req, res, next) => {
+    console.error(`handle ${req.url}`, err)
+    res.send({code: 500, message: `${err}`, stack: err.stack})
 })
 init_DB().then(() => {
-    getSupplyInfo().then(console.log)
-    app.listen(3003)
+    getSupplyInfo().then(console.log).catch(err=>{
+        console.log(`startup check fail`, err)
+    })
+    const port = parseInt(process.env.WEB_PORT || '3003')
+    app.listen(port, ()=>{
+        console.log(`listen at ${port}`)
+    })
 })

@@ -125,6 +125,41 @@ export async function getNumber(name: string, defaultV: number, save = true ) {
 export async function updateConfig(name: string, conf: string) {
     return Config.update({config: conf},{where: {name}})
 }
+export interface IDelayedMint {
+    id?:number
+    blockNumber: number
+    mintId: string; refId:string;
+    minter: string; minterName:string;
+    tx: string; token:string; receiver: string; amount: bigint
+    amountFormat: number
+}
+export class DelayedMint extends Model<IDelayedMint> implements IDelayedMint {
+    id?:number
+    blockNumber!: number
+    mintId!: string; refId!:string;
+    minter!: string; minterName!:string;
+    tx!: string; token!:string; receiver!: string; amount!: bigint
+    amountFormat!: number
+    static register(seq: Sequelize) {
+        DelayedMint.init({
+            id: {type: DataTypes.BIGINT({}), autoIncrement: true, primaryKey: true},
+            blockNumber: {type: DataTypes.BIGINT({})},
+            mintId: {type: DataTypes.STRING(66), allowNull: false, unique: true},
+            refId: {type: DataTypes.STRING(66), allowNull: false, unique: true},
+            minter: {type: DataTypes.STRING(42), allowNull: false},
+            minterName: {type: DataTypes.STRING(32), allowNull: false},
+            tx: {type: DataTypes.STRING(66), allowNull: false, unique: true},
+            token: {type: DataTypes.STRING(42), allowNull: false},
+            receiver: {type: DataTypes.STRING(42), allowNull: false},
+            amount: {type: DataTypes.DECIMAL(65, 0), allowNull: false},
+            amountFormat: {type: DataTypes.DECIMAL(47, 18), allowNull: false},
+        }, {
+            sequelize: seq,
+            tableName: 'delayedMint',
+
+        })
+    }
+}
 export interface IBill {
     id?:number
     blockNumber?:number

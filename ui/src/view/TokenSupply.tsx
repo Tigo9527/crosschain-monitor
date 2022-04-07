@@ -1,7 +1,7 @@
-import {Table, Tag, Space, Divider, Row, Col} from 'antd';
+import {Table, Tag, Space, Divider, Row, Col, message, Affix, Button} from 'antd';
 import React, {useEffect, useState} from "react";
 import {formatEther} from "ethers/lib/utils";
-import {LoadingOutlined, CheckOutlined, WarningOutlined} from "@ant-design/icons";
+import {LoadingOutlined, CheckOutlined, WarningOutlined, ReloadOutlined} from "@ant-design/icons";
 function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     minters.forEach(row=>row.key = row.minterAddr)
     const columns = [
@@ -96,13 +96,18 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
 function TokenSupply() {
     const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}, supplyOffChain:{}})
     const [loading, setLoading] = useState(true)
-    useEffect(()=>{
+    const fetchData = ()=>{
         async function rpc() {
             let url = `http://localhost:3003/supply`;
             if (process.env.NODE_ENV !== 'development') {
                 url = '/supply'
             }
             const json = await fetch(url, {mode: "cors"}).then(res=>res.json())
+            if (json.code === 500) {
+                message.error(json.message)
+                console.log(`rpc fail`, json)
+                return
+            }
             json.supplyOffChain = {}
             //
             Object.keys(json.tokens).forEach(tk=>{
@@ -124,7 +129,8 @@ function TokenSupply() {
         }
         setLoading(true)
         rpc().then(()=>setLoading(false))
-    }, [])
+    }
+    useEffect(fetchData, [])
     const transformOnChain = (obj) => {
         const arr:any[] = []
         Object.keys(obj).forEach(k=>{
@@ -141,8 +147,11 @@ function TokenSupply() {
     }
     return (
         <React.Fragment>
-            <Divider key={'dk1'}/>
-            {loading ? <LoadingOutlined key={'loading1'} /> : null}
+            <Affix offsetTop={10} key={'affix1'}>
+                <Button type="primary" onClick={fetchData}>
+                    {loading ? <LoadingOutlined key={'loading1'} /> : <ReloadOutlined key={'btn2'}/>}
+                </Button>
+            </Affix>
             {
                 Object.keys(info.tokens).map(k=>{
                     return (

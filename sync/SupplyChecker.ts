@@ -139,7 +139,8 @@ async function main() {
     const [,,cmd,tokenAddr, warningV] = process.argv
     const warningUnit = parseFloat(warningV || '0')
     // 0xfe97e85d13abd9c1c33384e796f10b73905637ce USDT conflux
-    const checker = new SupplyChecker('https://evm.confluxrpc.com', tokenAddr)
+    let rpcUrl = process.env.E_SPACE_RPC || 'https://evm.confluxrpc.com';
+    const checker = new SupplyChecker(rpcUrl, tokenAddr)
     checker.delayAfterWarning = 10 * 60_000; // wait for 10 minutes after warning
     await checker.init()
     checker.warningUnit = warningUnit

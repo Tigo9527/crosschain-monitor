@@ -46,7 +46,11 @@ function scaleValue(row:any) {
     return {timeStamp, from, scale18};
 }
 async function matchDepositId(etherTxHash:string, expect: string) {
-    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash);
+    console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
+    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash).catch(err=>{
+        console.log(`ethers getTransaction fail`, err)
+        throw err
+    });
     const {hash, data, from, chainId} = txInfo
     // console.log(`raw tx`, data || txInfo)
     // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
@@ -73,7 +77,12 @@ async function matchDepositId(etherTxHash:string, expect: string) {
 }
 export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
                                          beforeTimeSec: number, refId:string) {
-    const body = await listTransfer(address, etherToken)
+    if (!etherToken) {
+        console.log(`ether token is invalid, [${etherToken}]`)
+        return null;
+    }
+    const body = await listTransfer(address, etherToken);
+    // console.log(`ether scan result:` , body)
     const filtered:any[] = []
     const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
     const feeDelta = wantDripScale18 * 5n / 1000n;  // 千5
@@ -86,7 +95,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             filtered.push(row)
             if (scale18 === wantDripScale18) {
                 console.log(`Match Exact ${scale18} vs ${wantDripScale18}`)
-                if (await matchDepositId(row.transactionHash, refId) ) {
+                if (await matchDepositId(row.hash, refId) ) {
                     return row;
                 }
             }
@@ -110,10 +119,11 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     }
     for (let row of filtered) {
         if (await matchDepositId(row.hash, refId) ) {
+            console.log(`matchDepositId one by one, hit`)
             return row
         }
     }
-    console.log(`fetchErc20Transfer from ether scan, account ${address
+    console.log(`fetchErc20Transfer from ether scan, NOT MATCH, account ${address
     }, wantDripScale18 ${wantDripScale18} ${formatEther(wantDripScale18)}`);
     console.log(`${filtered.filter((row:any)=>row.from === address).map((row:any)=>{
         const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row

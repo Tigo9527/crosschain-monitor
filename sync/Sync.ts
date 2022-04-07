@@ -2,7 +2,7 @@ import 'dotenv/config'
 import {ConfluxFetcher, EthereumFetcher} from "./fetcher/Fetcher";
 import {initDB} from "../lib/DBProvider";
 import {formatEther} from "ethers/lib/utils";
-import {addMinterPlaceHolder, EventChecker, importFromScan} from "./MintChecker";
+import {addMinterPlaceHolder, ETHEREUM_USDT_TOKEN, EventChecker, importFromScan, TOKEN_BIND} from "./MintChecker";
 import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 
@@ -11,6 +11,9 @@ async function main() {
     const DING = process.env.DING
     await initDB(dbUrl, false)
     //
+    if (process.env.DEBUG_BIND_TO_USDT) {
+        TOKEN_BIND.set(process.env.DEBUG_BIND_TO_USDT.toLowerCase(), ETHEREUM_USDT_TOKEN)
+    }
     await check(DING)
 }
 
@@ -55,6 +58,11 @@ async function check(dingToken = '') {
         console.log(`error startup`, e)
         process.exit(9)
         return;
+    }
+    if (cmd === 'testCelerDelayTransfer') {
+        TOKEN_BIND.set(checker.tokenAddr.toLowerCase(), ETHEREUM_USDT_TOKEN)
+        await checker.checkCelerDelayEvent(parseInt(startEpoch))
+        process.exit(0)
     }
     await testDing(cmd, dingToken);
     checker.dingToken = dingToken || ''
@@ -131,3 +139,7 @@ if (module === require.main) {
     // command: check or importFromScan or addMinterPlaceHolder
     main().then()
 }
+
+
+
+// https://github.com/anyswap/CrossChain-Bridge/wiki/Crosschain-events#crosschain-deposit-arrive

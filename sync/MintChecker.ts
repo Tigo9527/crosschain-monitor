@@ -1,7 +1,7 @@
 import {Contract, ethers, utils} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "ethers/lib/utils";
-import {Bill, Config, updateConfig} from "../lib/Models";
+import {Bill, Config, DelayedMint, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
 export const ZERO = '0x0000000000000000000000000000000000000000'
@@ -35,7 +35,11 @@ TOKEN_BIND.set(E_SPACE_WBTC.toLowerCase(), ETHEREUM_WBTC_TOKEN)
 TOKEN_BIND.set(E_SPACE_ETH.toLowerCase(), ETHEREUM_WETH_TOKEN)
 
 export function getBindToken(eSpace: string) {
-    return TOKEN_BIND.get(eSpace.toLowerCase())
+    let newVar = TOKEN_BIND.get(eSpace.toLowerCase());
+    if (!newVar) {
+        console.log(`!!!!! ethereum token not found for [${eSpace}]`)
+    }
+    return newVar;
 }
 
 export const addressMap:{[k:string]: string} = {
@@ -59,6 +63,7 @@ export class EventChecker {
     public ethereumProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
+    public celerAddr: string = '';
     public name = ''
     public minterSet = new Set<string>()
     ethereumContract!: Contract
@@ -73,6 +78,7 @@ export class EventChecker {
         console.log(`notify ${mintOrBurn}, ${token}, ${amount}`)
     }
     public confluxContract!: Contract;
+    private celerContract!: Contract;
 
     constructor(url: string, tokenAddr:string) {
         this.provider = ethers.getDefaultProvider(url)
@@ -100,8 +106,20 @@ export class EventChecker {
 
         console.log(`init ethereum provider ...`)
         console.log(`ethereum `, await this.ethereumProvider.getNetwork().then(st=>st.chainId))
+        //
+        const celerAbi = [
+            'function delayedTransfers(bytes32 id) view returns (tuple(address receiver,address token,uint256 amount,uint256 timestamp))',
+        ]
+
+        let celerAddress = process.env.CELER_ADDRESS || '';
+        if (!celerAddress) {
+            console.log(`Please config [CELER_ADDRESS] in .env`)
+            process.exit(8)
+        }
+        this.celerAddr = celerAddress
+        this.celerContract = new Contract(celerAddress, celerAbi, this.provider);
     }
-    async getMintRoles() {
+    async getMintRoles(exitOnError=true) {
         const token = this.tokenAddr
         const abi = [
             'function getRoleMemberCount(bytes32 role) view returns (uint256)',
@@ -123,7 +141,11 @@ export class EventChecker {
             this.name = name;
         } catch (e) {
             console.log(`get token name fail, address ${this.tokenAddr}`, e)
-            process.exit(2)
+            if (exitOnError) {
+                process.exit(2)
+            } else {
+                throw e
+            }
         }
         const roleCount = await c.getRoleMemberCount(minterRole)
         console.log(`minter role count ${roleCount}`)
@@ -158,6 +180,67 @@ export class EventChecker {
         })
         // console.log(`get logs, epoch ${epoch} , of address ${filter.address}`, logs)
         await this.checkMintEvents(logs);
+        await this.checkCelerDelayEvent(epoch)
+    }
+    async checkCelerDelayEvent(epoch: number) {
+        let filter = {
+            fromBlock: epoch, toBlock: epoch, limit: 5000,
+            address: process.env.CELER_ADDRESS,
+            // DelayedTransferAdded(bytes32 id)
+            // topics: ['0xcbcfffe5102114216a85d3aceb14ad4b81a3935b1b5c468fadf3889eb9c5dce6']
+            // Mint(bytes32 mintId, address token, address account, uint256 amount, uint64 refChainId, bytes32 refId, address depositor)
+            // topics: ['0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a']
+        };
+        const logs = await this.provider.getLogs(filter).catch(err=>{
+            console.log(`get logs fail:`, filter)
+            throw err;
+        })
+        // console.log(`log count ${logs.length}, epoch ${epoch}`)
+        // if delayed, check on ethereum, save it, and confirm when minting in eSpace contract.
+        // if not delayed, check by mint event in eSpace token.
+        const mintMap = new Map<string, any>()
+        const delayedMap = new Map<string, any>()
+        for (const log of logs) {
+            // console.log(`celer delay event`, log)
+            const topic = log.topics[0]
+            if (topic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
+                // Mint(bytes32 mintId, address token, address account, uint256 amount, uint64 refChainId, bytes32 refId, address depositor)
+                const pureData = log.data.substring(2)
+                const mintId = '0x'+pureData.substring(64*0, 64*1)
+                const token = '0x'+pureData.substring(64*1 + 24, 64*2)
+                mintMap.set(mintId, log)
+                console.log(`mint event , id`, mintId)
+            } else if (topic === '0xcbcfffe5102114216a85d3aceb14ad4b81a3935b1b5c468fadf3889eb9c5dce6') {
+                // DelayedTransferAdded(bytes32 id)
+                delayedMap.set(log.data, log) // mint id -> log
+                console.log(`delay event, mint id `, log.data)
+            }
+        }
+        for (let mintId_ of delayedMap.keys()) {
+            const mintLog = mintMap.get(mintId_)
+            const {mintId, token, amount, account, refId, refChainId, fmtAmt} = EventChecker.parseCelerMint(mintLog.data)
+            if (token.toLowerCase() !== this.tokenAddr.toLowerCase()) {
+                console.log(`found token ${token}, want ${this.tokenAddr}`)
+                // continue
+            }
+            console.log(`celer delayed mint tx ${mintLog.transactionHash}`);
+            console.log(`celer delayed transfer info`, {account, token, amount, refId})
+            let epochAnchor = epoch
+            const hit = await this.searchCelerEvmTx(this.celerAddr, account, amount, amount, amount,
+                epochAnchor, mintLog.transactionHash, refId, false)
+            if (hit) {
+                console.log(`save delayed mint.`)
+                await DelayedMint.create({
+                    blockNumber: mintLog.blockNumber, refId,
+                    receiver:account, mintId, minter: this.celerAddr, minterName: 'celer',
+                token, amount, amountFormat: parseFloat(formatEther(amount.toString())),
+                tx: mintLog.transactionHash,}).catch(err=>{
+                    console.log(`save DelayedMint fail`, err)
+                })
+            } else {
+                await this.mintSourceTxNotFound(mintLog.transactionHash, formatEther(amount));
+            }
+        }
     }
     async calcSupply(minterAddr:string, diff: bigint, tokenAddr: string) {
         const pre = await Bill.findOne({where: {minterAddr, tokenAddr}, order:[['blockNumber', 'desc']]})
@@ -249,18 +332,30 @@ export class EventChecker {
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     });
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
-                    // celer
-                    // Mint(bytes32 mintId, address token, address account, uint256 amount, uint64 refChainId, bytes32 refId, address depositor)
-                    const pureData = eSpaceLog.data.substring(2)
-                    const account = '0x'+pureData.substring(64*2 + 24, 64*3)
-                    const amount = BigInt('0x'+pureData.substring(64*3, 64*4))
-                    const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
-                    const refId = '0x'+pureData.substring(64*5, 64*6)
+                    // celer case A:  mint
                     // const [mintId,token,account,amount,refChainId,refId, depositor] = eSpaceLog.topics
-                    const fmtAmt = formatEther(amount)
-                    console.log(`[${this.name}] celer mint, account ${account}, amount ${amount} ${fmtAmt}`)
+                    const {mintId, token, amount, account, refId, refChainId, fmtAmt} = EventChecker.parseCelerMint(eSpaceLog.data)
+                    if (token.toLowerCase() !== this.tokenAddr.toLowerCase()) {
+                        console.log(`not for current token, found [${token}], want ${this.tokenAddr}`)
+                        continue
+                    }
+                    console.log(`[${this.name}] celer mint, account ${account}, amount ${amount} ${fmtAmt}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
-                        blockNumber, transactionHash, refId)
+                        blockNumber, transactionHash, refId, true)
+                } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
+                    // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
+                    const pureData = eSpaceLog.data.substring(2)
+                    // console.log(`DelayedTransferExecuted log data`, pureData)
+                    const mintId = '0x'+pureData.substring(64*0, 64*1)
+                    console.log(`DelayedTransferExecuted `, mintId)
+                    const delayed = await DelayedMint.findOne({where: {mintId}})
+                    if (!delayed) {
+                        console.log(`DelayedTransferExecuted, former information not found`)
+                        continue
+                    }
+                    const {receiver: account, amount, refId, blockNumber: delayedAtBlock} = delayed;
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
+                        delayedAtBlock, transactionHash, refId, true)
                 }
             }
             if (found) {
@@ -270,23 +365,43 @@ export class EventChecker {
             await this.mintSourceTxNotFound(transactionHash, mintV);
         }
     }
+    static parseCelerMint(data:string) {
+        // Mint(bytes32 mintId, address token, address account, uint256 amount, uint64 refChainId, bytes32 refId, address depositor)
+        const pureData = data.substring(2)
+        const mintId = '0x'+pureData.substring(64*0, 64*1)
+        const token = '0x'+pureData.substring(64*1 + 24, 64*2)
+        const account = '0x'+pureData.substring(64*2 + 24, 64*3)
+        const amount = BigInt('0x'+pureData.substring(64*3, 64*4))
+        const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
+        const refId = '0x'+pureData.substring(64*5, 64*6)
+        const fmtAmt = formatEther(amount)
+        return {mintId, token, amount, account, refId, refChainId, fmtAmt}
+    }
     async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
-                           transactionHash:string, refId:string) {
-        const {timestamp} = await this.provider.getBlock(blockNumber)
+                           transactionHash:string, refId:string, save: boolean) {
+        let timestamp;
+        if (process.env.DEBUG_TIMESTAMP) {
+            timestamp = 1648469937;//new Date('').getTime() / 1000 // test
+        } else {
+            const {timestamp: t0} = await this.provider.getBlock(blockNumber)
+            timestamp = t0
+        }
         const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
             const newSupply = await this.calcSupply(minter, BigInt(diff), this.tokenAddr)
-            await Bill.create({
-                blockNumber, drip: wei, ethereumDrip: value, ethereumFormatUnit: parseFloat(formatUnits(BigInt(value), parseInt(tokenDecimal))),
-                ethereumTx: txHashEth, ethereumTxFrom: txEthReceiptFrom, ethereumTxTo: txEthTo,
-                ethereumTxToken: contractAddress, formatUnit: parseFloat(formatEther(wei)),
-                minterAddr: minter, minterName: addressName(minter),
-                minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
-                tokenAddr: this.tokenAddr, tokenName: this.name,
-                tx: transactionHash
-            })
+            if (save) {
+                await Bill.create({
+                    blockNumber, drip: wei, ethereumDrip: value, ethereumFormatUnit: parseFloat(formatUnits(BigInt(value), parseInt(tokenDecimal))),
+                    ethereumTx: txHashEth, ethereumTxFrom: txEthReceiptFrom, ethereumTxTo: txEthTo,
+                    ethereumTxToken: contractAddress, formatUnit: parseFloat(formatEther(wei)),
+                    minterAddr: minter, minterName: addressName(minter),
+                    minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
+                    tokenAddr: this.tokenAddr, tokenName: this.name,
+                    tx: transactionHash
+                })
+            }
             return true;
         }
         return false;
