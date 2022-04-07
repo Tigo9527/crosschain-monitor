@@ -37,6 +37,9 @@ async function testDing(cmd: string, dingToken: string) {
     if (cmd === 'testDing') {
         await dingMsg(`Test message, just ignore.`, dingToken)
         process.exit(0)
+    } else if (cmd === 'testDevDing') {
+        await dingMsg(`Test [DEV] message, just ignore.`, process.env.DEV_DING || dingToken)
+        process.exit(0)
     }
 }
 
@@ -83,6 +86,7 @@ async function check(dingToken = '') {
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpoch = 0;
+    let preErrorEpoch = 0
     async function repeat() {
         try {
             while (epoch >= maxEpoch - 40) {
@@ -90,14 +94,21 @@ async function check(dingToken = '') {
                 maxEpoch = await checker.provider.getBlockNumber()
                 console.log(`max epoch at ${maxEpoch}`)
             }
-            await checker.getEventByEpoch(epoch) // burn
+            await checker.getEventByEpoch(epoch) //
             epoch++
             await updateConfig(cursorKey, epoch.toString()) // it's the next epoch.
+            if (preErrorEpoch == epoch - 1) {
+                dingMsg(`[${checker.name}] previous error at epoch [${preErrorEpoch
+                }] has been resolved automatically.`, process.env.DEV_DING || dingToken)
+                    .catch(undefined)
+            }
         } catch (e) {
             console.log(`Process event fail at epoch/block ${epoch}`, e)
-            if (dingToken) {
-                await dingMsg(`Process fail at ${epoch}. ${e}` , dingToken)
+            if (dingToken && preErrorEpoch != epoch) {
+                await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}` ,
+                    process.env.DEV_DING || dingToken)
             }
+            preErrorEpoch = epoch
             await sleep(5_000);
         }
         setTimeout(repeat, 0)
