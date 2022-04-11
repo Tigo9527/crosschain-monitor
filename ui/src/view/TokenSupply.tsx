@@ -1,12 +1,13 @@
-import {Table, Tag, Space, Divider, Row, Col, message, Affix, Button} from 'antd';
+import {Table, Tag, Space, Divider, Row, Col, message, Affix, Button, Switch} from 'antd';
 import React, {useEffect, useState} from "react";
 import {formatEther} from "ethers/lib/utils";
 import {LoadingOutlined, CheckOutlined, WarningOutlined, ReloadOutlined} from "@ant-design/icons";
+import {getHost} from "../common/Util";
 function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
     minters.forEach(row=>row.key = row.minterAddr)
     const columns = [
         {
-            title: 'Minter Addr',
+            title: 'Minter Addr',  width: '20%',
             dataIndex: 'minterAddr',
             key: 'name',
             render: (text, row) => (
@@ -41,13 +42,16 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
                 </>
             ),
         },{
-            title: '', key: 'check', width: '10%',
+            title: '', key: 'check', width: '20%',
             render: (_, row) => (
                 <>
                     {
                         row.minterSupply === row.onChain.total ?
-                            <CheckOutlined style={{fontSize:'2em', color: "green"}} /> :
-                            <WarningOutlined style={{fontSize:'2em', color: "darkred"}} />
+                            <><CheckOutlined style={{fontSize: '2em', color: "green"}}/></>
+                            :
+                            <><WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
+                                {' '}Diff: {formatEther((BigInt(row.minterSupply) - BigInt(row.onChain.total)))}
+                            </>
                     }
                 </>
             ),
@@ -96,12 +100,10 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
 function TokenSupply() {
     const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}, supplyOffChain:{}})
     const [loading, setLoading] = useState(true)
+    const [showAllMinter, setShowAllMinter] = useState(false)
     const fetchData = ()=>{
         async function rpc() {
-            let url = `http://localhost:3003/supply`;
-            if (process.env.NODE_ENV !== 'development') {
-                url = '/supply'
-            }
+            let url = `${getHost()}/supply`;
             const json = await fetch(url, {mode: "cors"}).then(res=>res.json())
             if (json.code === 500) {
                 message.error(json.message)
@@ -147,11 +149,16 @@ function TokenSupply() {
     }
     return (
         <React.Fragment>
-            <Affix offsetTop={10} key={'affix1'}>
-                <Button type="primary" onClick={fetchData}>
-                    {loading ? <LoadingOutlined key={'loading1'} /> : <ReloadOutlined key={'btn2'}/>}
-                </Button>
-            </Affix>
+            <Row style={{alignItems: 'baseline'}}>
+                <Col key={'c1'} span={4}>Show Minter Detail: <Switch onChange={(c) => {
+                    setShowAllMinter(c)
+                }}/></Col>
+                <Col key={'c2'} span={2}><Affix offsetTop={10} key={'affix1'}>
+                    <Button type="primary" onClick={fetchData}>
+                        {loading ? <LoadingOutlined key={'loading1'}/> : <ReloadOutlined key={'btn2'}/>}
+                    </Button>
+                </Affix></Col>
+            </Row>
             {
                 Object.keys(info.tokens).map(k=>{
                     return (
@@ -165,7 +172,7 @@ function TokenSupply() {
                                          addressMap={info.addressMap}
                                          totalSupply={0}
                                          totalUnit={0}
-                                         minters={info.tokens[k]}/>
+                                         minters={showAllMinter ? info.tokens[k] : info.tokens[k].slice(-1)}/>
                         </Col>
                         {/*<Col span={12}>*/}
                         {/*    <Tag color="geekblue">On chain</Tag>*/}

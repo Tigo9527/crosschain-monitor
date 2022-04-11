@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {Affix, Button, Table, Tag} from "antd";
 import {LoadingOutlined, CheckOutlined, WarningOutlined, ReloadOutlined} from "@ant-design/icons";
+import {getHost} from "../common/Util";
 
 const SyncInfo = ()=>{
     const [list, setList] = useState([])
@@ -45,10 +46,7 @@ const SyncInfo = ()=>{
     ]
     const fetchData = ()=>{
         setLoading(true)
-        let host = ``;
-        if (process.env.NODE_ENV === 'development') {
-            host = `http://localhost:3003`
-        }
+        let host = getHost();
         const f = async ()=>
         {
             const json = await fetch(`${host}/sync-info`, {mode: "cors"}).then(res => res.json())
