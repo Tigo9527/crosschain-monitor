@@ -81,14 +81,14 @@ class CfxPoolMonitor {
 async function main() {
     let evmUrl = process.env.E_SPACE_RPC || ''
     const evm = new CfxPoolMonitor(evmUrl, '0xb12c13e66ade1f72f71834f2fc5082db8c091358')
-    evm.dingToken = process.env.DING || ''
+    evm.dingToken = process.env.DING_CFX || ''
     evm.linkScan = 'https://evm.confluxscan.net/token/'
     await evm.init()
     await evm.repeat()
 
     const bsc = new CfxPoolMonitor('https://bsc-dataseed.binance.org/',
         '0x994Cd2BFdeBA7663fB561948Ae85882AB9E4F20c')
-    bsc.dingToken = process.env.DING || ''
+    bsc.dingToken = process.env.DING_CFX || ''
     bsc.linkScan = 'https://bscscan.com/token/'
     await bsc.init()
     await bsc.repeat()
