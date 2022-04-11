@@ -491,10 +491,12 @@ const superagent = require('superagent')
 export async function listMintBurnFromScan(token: string) {
     const zero = '0x0000000000000000000000000000000000000000'
     const limit = 100
+    let skip = 0
     const resultList:any[] = []
     do {
         let url = `https://evm.confluxscan.net/v1/transfer?address=${token
-        }&from=${zero}&limit=${limit}&skip=0&to=${zero}&transferType=ERC20`;
+        }&from=${zero}&limit=${limit}&skip=${skip}&to=${zero}&transferType=ERC20`;
+        skip += limit
         console.log(`fetch from scan \n`, url)
         const result = await superagent.get(url).then((res: { body: any; }) => res.body || res)
         // console.log(result)
