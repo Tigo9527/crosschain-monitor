@@ -5,6 +5,7 @@ import {formatEther} from "ethers/lib/utils";
 import {addMinterPlaceHolder, ETHEREUM_USDT_TOKEN, EventChecker, importFromScan, TOKEN_BIND} from "./MintChecker";
 import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
+import {checkDB, replayDB} from "./Tool";
 
 async function main() {
     const dbUrl = process.env.DB_URL
@@ -65,6 +66,12 @@ async function check(dingToken = '') {
     if (cmd === 'testCelerDelayTransfer') {
         TOKEN_BIND.set(checker.tokenAddr.toLowerCase(), ETHEREUM_USDT_TOKEN)
         await checker.checkCelerDelayEvent(parseInt(startEpoch))
+        process.exit(0)
+    } else if (cmd === 'replayDB') {
+        await replayDB(checker)
+        process.exit(0)
+    } else if (cmd === 'checkDB') {
+        await checkDB(checker)
         process.exit(0)
     }
     await testDing(cmd, dingToken);

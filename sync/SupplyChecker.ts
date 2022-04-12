@@ -1,3 +1,4 @@
+import {QueryTypes, DataTypes, Model, Op} from "sequelize";
 import {Contract, ethers, utils} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, parseEther} from "ethers/lib/utils";
@@ -130,10 +131,33 @@ export class SupplyChecker {
         }
     }
 }
+async function compareWithScan(checker:EventChecker) {
+    const scanDB = process.env.SCAN_DB
+    let log = false
+    const sequelize = new Sequelize(scanDB!, {
+        logging: log ? console.log : false
+    });
+    Erc20Transfer.register(sequelize)
+    Hex40Map.register(sequelize)
+    //
+    const contractId = await Hex40Map.findOne({where: {hex: checker.tokenAddr.substring(2)}}).then(res=>res!.id)
+    const zeroId = await Hex40Map.findOne({where: {hex: ZERO.substring(2)}}).then(res=>res!.id)
+    const mintBurnList = await Erc20Transfer.findAll({
+        where: {contractId, [Op.or]:[
+                {fromId: zeroId}, {toId: zeroId}
+            ]},
+        order: [['epoch','asc'],['blockIndex','asc'],['txIndex','asc'],['txLogIndex','asc']]
+    })
+    console.log(`mintBurnList at scan`, mintBurnList.length)
+
+}
 
 import 'dotenv/config'
 import {dingMsg, sleep} from "../lib/Tool";
-import {addressMap, addressName} from "./MintChecker";
+import {addressMap, addressName, EventChecker, ZERO, ZERO_FULL} from "./MintChecker";
+import {Bill} from "../lib/Models";
+import {Sequelize} from "sequelize";
+import {Erc20Transfer, Hex40Map} from "../lib/Transfer";
 async function main() {
     const dingToken = process.env.DING || ''
     const [,,cmd,tokenAddr, warningV] = process.argv
