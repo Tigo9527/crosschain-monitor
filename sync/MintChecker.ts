@@ -243,7 +243,7 @@ export class EventChecker {
         }
     }
     async calcSupply(minterAddr:string, diff: bigint, tokenAddr: string) {
-        const pre = await Bill.findOne({where: {minterAddr, tokenAddr}, order:[['blockNumber', 'desc']]})
+        const pre = await Bill.findOne({where: {minterAddr, tokenAddr}, order:[['id', 'desc']]})
         const drip = BigInt(pre?.minterSupply || 0) + diff
         return {
             drip, unit: formatEther(drip),
