@@ -10,7 +10,9 @@ enum AlertState {
 class CfxPoolMonitor {
     private provider: BaseProvider;
     private contract!: Contract;
+    private originTokenContract!: Contract;
     private token: string;
+    private originToken: string;
     public dingToken = '';
     public linkScan = '';
     name!: string;
@@ -18,10 +20,11 @@ class CfxPoolMonitor {
     alertState: AlertState = AlertState.Normal
     preNotifyHour = -1
 
-    constructor(evmRpcUrl:string, token: string) {
+    constructor(evmRpcUrl:string, token: string, originToken:string) {
         this.provider = ethers.getDefaultProvider(evmRpcUrl)
         //
         this.token = token
+        this.originToken = originToken
     }
     async init() {
         let network = await this.provider.getNetwork()
@@ -29,10 +32,12 @@ class CfxPoolMonitor {
 
         const abi = [
             'function totalSupply() view returns (uint256)',
+            'function balanceOf(address) view returns (uint256)',
             'function name() view returns (string memory)',
             'function symbol() view returns (string memory)',
         ]
         this.contract = new Contract(this.token, abi, this.provider)
+        this.originTokenContract = new Contract(this.originToken, abi, this.provider)
         this.name = await this.contract.name()
         this.symbol = await this.contract.symbol()
         console.log(`token ${this.token} name [${this.name}] [${this.symbol}]`, )
@@ -42,27 +47,36 @@ class CfxPoolMonitor {
     linkToken() {
         return `\n${this.linkScan}${this.token}`
     }
+    wrapDrip(v:any) {
+        return parseInt(formatEther(v).split(".")[0]).toLocaleString()
+    }
     async checkSupply() {
+        const liquidity = await this.originTokenContract.balanceOf(this.token)
+        const liquidityFormat = formatEther(liquidity)
+        console.log(`liquidity`, liquidity.toBigInt(), liquidityFormat)
+        //
         const sup = await this.contract.totalSupply()
         console.log(`totalSupply [${this.name}][${this.symbol}] ${sup}, ${formatEther(sup)}`)
-        let threshold = (500_000).toString();
-        if (sup < parseEther(threshold).toBigInt()) {
+        let threshold = parseEther((500_000).toString()).toBigInt()
+        if (sup < threshold || liquidity < threshold) {
             if (this.alertState === AlertState.Normal) {
                 this.alertState = AlertState.Warning
-                await dingMsg(`WARNING: [${this.name}][${this.symbol}] totalSupply ${formatEther(sup)} < ${threshold
+                await dingMsg(`WARNING: [${this.name}][${this.symbol
+                }] totalSupply ${this.wrapDrip(sup)} liquidity ${this.wrapDrip(liquidity)} < ${threshold
                 } ${this.linkToken()}`,
                     this.dingToken)
             }
         } else if (this.alertState === AlertState.Warning) {
-            await dingMsg(`RECOVERY: [${this.name}][${this.symbol}] totalSupply ${formatEther(sup)} >= ${threshold
+            await dingMsg(`RECOVERY: [${this.name}][${this.symbol}] totalSupply ${this.wrapDrip(sup)
+            } liquidity ${this.wrapDrip(liquidity)} >= ${threshold
             } ${this.linkToken()}`,
                 this.dingToken)
             this.alertState = AlertState.Normal
         }
         const curHour = new Date().getHours()
         if (curHour != this.preNotifyHour) {
-            await dingMsg(`INFO: [${this.name}][${this.symbol}] totalSupply ${formatEther(sup)
-            } ${this.linkToken()}`, this.dingToken)
+            await dingMsg(`INFO: [${this.name}][${this.symbol}] totalSupply ${this.wrapDrip(sup)
+            } liquidity ${this.wrapDrip(liquidity)} ${this.linkToken()}`, this.dingToken)
             this.preNotifyHour = curHour
         }
         return sup;
@@ -77,17 +91,58 @@ class CfxPoolMonitor {
         setTimeout(()=>this.repeat(), 60_000)
     }
 }
-
+async function rpc() {
+    const coder = ethers.utils.defaultAbiCoder
+    // const data = '0x252dba420000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000018000000000000000000000000014b2d3bc65e74dae1030eafd8ac30c533c976a9b0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a08231000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c09135800000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000418160ddd00000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a082310000000000000000000000003eecaa466e87a46b737aeedfe951bcc8403a4e1e00000000000000000000000000000000000000000000000000000000'
+    const data = '0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000018000000000000000000000000014b2d3bc65e74dae1030eafd8ac30c533c976a9b0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a08231000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c09135800000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000418160ddd00000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a082310000000000000000000000003eecaa466e87a46b737aeedfe951bcc8403a4e1e00000000000000000000000000000000000000000000000000000000'
+    const p = coder.decode(['tuple(address, bytes)[]'], data)
+    console.log(p)
+}
+async function rpcEvm() {
+    const p = new ethers.providers.JsonRpcProvider('https://evm.confluxrpc.com/')
+    const result = await p.send('eth_call', [
+        {
+            "data": "0x252dba420000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000018000000000000000000000000014b2d3bc65e74dae1030eafd8ac30c533c976a9b0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a08231000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c09135800000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000418160ddd00000000000000000000000000000000000000000000000000000000000000000000000000000000b12c13e66ade1f72f71834f2fc5082db8c0913580000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a082310000000000000000000000003eecaa466e87a46b737aeedfe951bcc8403a4e1e00000000000000000000000000000000000000000000000000000000",
+            "to": "0xae8e9f3ea6a5b462b0ae29aa1a3f6ac072365d9d"
+        },
+            "latest"
+        ])
+    const pure = result.substring(2)
+    let idx=0;
+    while(idx<pure.length) {
+        let v = pure.substring(idx, idx+64);
+        console.log(v, BigInt('0x'+v))
+        idx+=64
+    }
+}
+async function rpcBsc() {
+    const p = new ethers.providers.JsonRpcProvider('https://bsc-dataseed1.ninicoin.io/')
+    // const p = ethers.getDefaultProvider('https://bsc-dataseed1.ninicoin.io/')
+    const result = await p.send('eth_call', [{
+        "data": "0x252dba4200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000180000000000000000000000000045c4324039da91c52c55df5d785385aab073dcf0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a08231000000000000000000000000994cd2bfdeba7663fb561948ae85882ab9e4f20c00000000000000000000000000000000000000000000000000000000000000000000000000000000994cd2bfdeba7663fb561948ae85882ab9e4f20c0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000418160ddd00000000000000000000000000000000000000000000000000000000000000000000000000000000994cd2bfdeba7663fb561948ae85882ab9e4f20c0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002470a082310000000000000000000000003eecaa466e87a46b737aeedfe951bcc8403a4e1e00000000000000000000000000000000000000000000000000000000",
+        "to": "0xa9193376d09c7f31283c54e56d013fcf370cd9d9"
+    }, 'latest'])
+    const pure = result.substring(2)
+    let idx=0;
+    while(idx<pure.length) {
+        let v = pure.substring(idx, idx+64);
+        console.log(v, BigInt('0x'+v))
+        idx+=64
+    }
+    // console.log(`result is `, result)
+}
 async function main() {
     let evmUrl = process.env.E_SPACE_RPC || ''
-    const evm = new CfxPoolMonitor(evmUrl, '0xb12c13e66ade1f72f71834f2fc5082db8c091358')
+    const evm = new CfxPoolMonitor(evmUrl, '0xb12c13e66ade1f72f71834f2fc5082db8c091358'
+        , '0x14b2D3bC65e74DAE1030EAFd8ac30c533c976A9b')
     evm.dingToken = process.env.DING_CFX || ''
     evm.linkScan = 'https://evm.confluxscan.net/token/'
     await evm.init()
     await evm.repeat()
 
     const bsc = new CfxPoolMonitor('https://bsc-dataseed.binance.org/',
-        '0x994Cd2BFdeBA7663fB561948Ae85882AB9E4F20c')
+        '0x994Cd2BFdeBA7663fB561948Ae85882AB9E4F20c',
+        '0x045c4324039dA91c52C55DF5D785385Aab073DcF')
     bsc.dingToken = process.env.DING_CFX || ''
     bsc.linkScan = 'https://bscscan.com/token/'
     await bsc.init()
@@ -95,4 +150,5 @@ async function main() {
 }
 if (module === require.main) {
     main().then()
+    // rpcEvm().then()
 }

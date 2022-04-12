@@ -54,15 +54,21 @@ async function listSupply() {
     return map;
 }
 
-async function getMinters(addressList:string[]) {
+const checkerCache = new Map<string, EventChecker>()
+async function getMinters(tokens: object){
     const map = {}
-    for(const token of addressList) {
-        const ck = new EventChecker(process.env.E_SPACE_RPC!, token)
-        await ck.getMintRoles(false)
+    for(const token of Object.keys(tokens)) {
+        let ck = checkerCache.get(token)
+        if (!ck) {
+            ck = new EventChecker(process.env.E_SPACE_RPC!, token)
+            await ck.getMintRoles(false)
+            checkerCache.set(token, ck)
+        }
         let totalSupply = await ck.confluxContract.totalSupply();
         const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply)}
         for(const minter of ck.minterSet) {
-            const supply = await ck.confluxContract.minterSupply(minter)
+            const supply = await ck.confluxContract.minterSupply(minter, {blockTag: tokens[token].blockNumber})
+            // const supply = await ck.confluxContract.minterSupply(minter, {blockTag: 1})
             const totalUnit = formatEther(supply.total)
             supInfo[minter] = {total: supply.total.toBigInt().toString(), totalUnit}
         }
@@ -73,10 +79,11 @@ async function getMinters(addressList:string[]) {
 
 async function getSupplyInfo() {
     const tokens = await listSupply();
-    const onChain = await getMinters([...Object.keys(tokens)])
+    const onChain = await getMinters(tokens)
     return {tokens, onChain, addressMap}
 }
 app.get('/supply', async (req, res, next) => {
+    console.log(`---- /supply`)
     await getSupplyInfo().then(data=>res.send(data)).catch(next)
 })
 //================
