@@ -313,7 +313,7 @@ export class EventChecker {
                     eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
                     const newSupply = await this.calcSupply(eSpaceLog.address, wei*sign, this.tokenAddr)
                     await Bill.create({
-                        blockNumber, drip: wei, ethereumDrip: 0n, ethereumFormatUnit: 0, ethereumTx: '', ethereumTxFrom: '',
+                        blockNumber, drip: -wei, ethereumDrip: 0n, ethereumFormatUnit: 0, ethereumTx: '', ethereumTxFrom: '',
                         ethereumTxTo: '', ethereumTxToken: '',
                         formatUnit: -parseFloat(mintV), minterAddr: eSpaceLog.address,
                         minterName: addressName(eSpaceLog.address),
@@ -555,5 +555,8 @@ export async function importFromScan(checker: EventChecker, cursorKey: string) {
         // it's the next epoch.
         await Config.upsert({name: cursorKey, config: (epoch+1).toString()})
     }
+}
+async function importFromFile(checker: EventChecker, cursorKey: string) {
+
 }
 
