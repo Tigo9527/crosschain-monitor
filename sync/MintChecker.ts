@@ -65,6 +65,7 @@ export class EventChecker {
     public tokenAddr: string = '';
     public celerAddr: string = '';
     public name = ''
+    public multiChainMPC = '0x373590a576ccb8143f377db5f1c16f9f8528a8b4'
     public minterSet = new Set<string>()
     ethereumContract!: Contract
     decimalInfo = new Map<string, number>()
@@ -427,6 +428,10 @@ export class EventChecker {
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
                 return false;
             }
+            if ( (txEthTo||'').toLowerCase() !== this.multiChainMPC.toLowerCase()) {
+                console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${this.multiChainMPC}, actual ${txEthTo}`)
+                return false;
+            }
             const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
             await Bill.create({
                 blockNumber, drip: wei, ethereumDrip: txEth.value.toBigInt(), ethereumFormatUnit: parseFloat(fmtValueInTx),
@@ -446,12 +451,21 @@ export class EventChecker {
             return true;
         }
         //
+        const bindToken = (getBindToken(this.tokenAddr) || '').toLowerCase()
         for (let ethereumLog of txEthLogs) {
+            if (bindToken !== ethereumLog.address.toLowerCase()) {
+                console.log(`[${this.name}] It's not bind token. want ${bindToken}, actual ${ethereumLog.address}`)
+                continue
+            }
             if (!ETHEREUM_TOKENS.has(ethereumLog.address)) {
                 console.log(`[${this.name}] It's not in ethereum token whitelist. ${ethereumLog.address}`)
                 continue
             }
             const [topic, sender, receiver] = ethereumLog.topics
+            if ( hexStripZeros(receiver||'').toLowerCase() !== this.multiChainMPC.toLowerCase()) {
+                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${this.multiChainMPC}, actual ${receiver}`)
+                continue
+            }
             // Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
             if (topic === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
                 let ethDrip = BigInt(ethereumLog.data);
