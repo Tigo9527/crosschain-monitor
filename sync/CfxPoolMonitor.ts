@@ -92,7 +92,7 @@ class CfxPoolMonitor {
                 messages = []
                 await dingMsg(join, this.dingToken)
             }
-            // this.preNotifyHour = curHour
+            this.preNotifyHour = curHour
         }
         return sup;
     }
