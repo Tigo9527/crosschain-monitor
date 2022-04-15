@@ -7,6 +7,7 @@ import {dingMsg} from "../lib/Tool";
 enum AlertState {
     Normal, Warning,
 }
+let messages:string[] = []
 class CfxPoolMonitor {
     provider: BaseProvider;
     private contract!: Contract;
@@ -64,28 +65,34 @@ class CfxPoolMonitor {
         //
         const sup = await this.contract.totalSupply()
         console.log(`totalSupply [${this.name}][${this.symbol}] ${sup}, ${formatEther(sup)}`)
-        let limitUnit = 500_000_00000;
+        let limitUnit = 500_000//_00000;
         let threshold = parseEther(limitUnit.toString()).toBigInt()
         if (sup < threshold || liquidity < threshold || extraValue < threshold) {
             if (this.alertState === AlertState.Normal) {
                 this.alertState = AlertState.Warning
                 await dingMsg(`WARNING: [${this.name}][${this.symbol
-                }] totalSupply ${wrapDrip(sup)} liquidity ${wrapDrip(liquidity)} ${this.linkToken()} ${extraInfo
+                }] totalSupply ${wrapDrip(sup)} liquidity ${wrapDrip(liquidity)} ${extraInfo
                 }  \nThreshold ${limitUnit.toLocaleString()}`,
                     this.dingToken)
             }
         } else if (this.alertState === AlertState.Warning) {
             await dingMsg(`RECOVERY: [${this.name}][${this.symbol}] totalSupply ${wrapDrip(sup)
-            } liquidity ${wrapDrip(liquidity)} >= ${threshold
-            } ${this.linkToken()}`,
+            } liquidity ${wrapDrip(liquidity)} ${extraInfo} \nThreshold ${threshold
+            }}`,
                 this.dingToken)
             this.alertState = AlertState.Normal
         }
         const curHour = new Date().getHours()
         if (curHour != this.preNotifyHour) {
-            await dingMsg(`INFO: [${this.name}][${this.symbol}] totalSupply ${wrapDrip(sup)
-            } liquidity ${wrapDrip(liquidity)} ${this.linkToken()} ${extraInfo}`, this.dingToken)
-            this.preNotifyHour = curHour
+            const msg = `INFO: [${this.name}][${this.symbol}] totalSupply ${wrapDrip(sup)
+            } liquidity ${wrapDrip(liquidity)} ${extraInfo}`
+            messages.push(msg)
+            if (messages.length >= 2) {
+                const join = messages.join('\n')
+                messages = []
+                await dingMsg(join, this.dingToken)
+            }
+            // this.preNotifyHour = curHour
         }
         return sup;
     }
@@ -143,7 +150,7 @@ async function reportRawCfx(provider: BaseProvider, who) {
     return provider.getBalance(who)
         .then(res=>{
             return {
-                info: `${who} holds ${wrapDrip(res)} cfx`,
+                info: `CFX Bridge ${wrapAddr(who)} holds ${wrapDrip(res)} cfx`,
                 value: res.toBigInt(),
             }
         })
@@ -168,15 +175,18 @@ async function main() {
     bsc.moreFun = ()=>bsc.originTokenContract.balanceOf(extraCfxHolder)
         .then(res=> {
             return {
-                info: `${extraCfxHolder} holds ${wrapDrip(res)} bCfx`,
+                info: `bCFX Bridge ${wrapAddr(extraCfxHolder)} holds ${wrapDrip(res)} bCfx`,
                 value: res.toBigInt()
             }
         })
     await bsc.init()
     await bsc.repeat()
 }
+function wrapAddr(addr) {
+    return `${addr?.substring(0, 6)}...${addr?.slice(-4)}`
+}
 function wrapDrip(v:any) {
-return parseInt(formatEther(v).split(".")[0]).toLocaleString()
+    return parseInt(formatEther(v).split(".")[0]).toLocaleString()
 }
 if (module === require.main) {
     main().then()
