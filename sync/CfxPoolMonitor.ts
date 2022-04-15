@@ -8,13 +8,14 @@ enum AlertState {
     Normal, Warning,
 }
 class CfxPoolMonitor {
-    private provider: BaseProvider;
+    provider: BaseProvider;
     private contract!: Contract;
-    private originTokenContract!: Contract;
+    originTokenContract!: Contract;
     private token: string;
     private originToken: string;
     public dingToken = '';
     public linkScan = '';
+    public moreFun = async ()=> {return {info: '', value: 0n}}
     name!: string;
     private symbol: string = '';
     alertState: AlertState = AlertState.Normal
@@ -47,36 +48,43 @@ class CfxPoolMonitor {
     linkToken() {
         return `\n${this.linkScan}${this.token}`
     }
-    wrapDrip(v:any) {
-        return parseInt(formatEther(v).split(".")[0]).toLocaleString()
-    }
+
     async checkSupply() {
+        let extraValue = 0n;
+        const extraInfo = await this.moreFun().then(data=>{
+            const {info, value} = data
+            extraValue = value
+            console.log('extra info ', info)
+            return info ? `\n${info}` : ''
+        })
+        //
         const liquidity = await this.originTokenContract.balanceOf(this.token)
         const liquidityFormat = formatEther(liquidity)
         console.log(`liquidity`, liquidity.toBigInt(), liquidityFormat)
         //
         const sup = await this.contract.totalSupply()
         console.log(`totalSupply [${this.name}][${this.symbol}] ${sup}, ${formatEther(sup)}`)
-        let threshold = parseEther((500_000).toString()).toBigInt()
-        if (sup < threshold || liquidity < threshold) {
+        let limitUnit = 500_000_00000;
+        let threshold = parseEther(limitUnit.toString()).toBigInt()
+        if (sup < threshold || liquidity < threshold || extraValue < threshold) {
             if (this.alertState === AlertState.Normal) {
                 this.alertState = AlertState.Warning
                 await dingMsg(`WARNING: [${this.name}][${this.symbol
-                }] totalSupply ${this.wrapDrip(sup)} liquidity ${this.wrapDrip(liquidity)} < ${threshold
-                } ${this.linkToken()}`,
+                }] totalSupply ${wrapDrip(sup)} liquidity ${wrapDrip(liquidity)} ${this.linkToken()} ${extraInfo
+                }  \nThreshold ${limitUnit.toLocaleString()}`,
                     this.dingToken)
             }
         } else if (this.alertState === AlertState.Warning) {
-            await dingMsg(`RECOVERY: [${this.name}][${this.symbol}] totalSupply ${this.wrapDrip(sup)
-            } liquidity ${this.wrapDrip(liquidity)} >= ${threshold
+            await dingMsg(`RECOVERY: [${this.name}][${this.symbol}] totalSupply ${wrapDrip(sup)
+            } liquidity ${wrapDrip(liquidity)} >= ${threshold
             } ${this.linkToken()}`,
                 this.dingToken)
             this.alertState = AlertState.Normal
         }
         const curHour = new Date().getHours()
         if (curHour != this.preNotifyHour) {
-            await dingMsg(`INFO: [${this.name}][${this.symbol}] totalSupply ${this.wrapDrip(sup)
-            } liquidity ${this.wrapDrip(liquidity)} ${this.linkToken()}`, this.dingToken)
+            await dingMsg(`INFO: [${this.name}][${this.symbol}] totalSupply ${wrapDrip(sup)
+            } liquidity ${wrapDrip(liquidity)} ${this.linkToken()} ${extraInfo}`, this.dingToken)
             this.preNotifyHour = curHour
         }
         return sup;
@@ -131,12 +139,24 @@ async function rpcBsc() {
     }
     // console.log(`result is `, result)
 }
+async function reportRawCfx(provider: BaseProvider, who) {
+    return provider.getBalance(who)
+        .then(res=>{
+            return {
+                info: `${who} holds ${wrapDrip(res)} cfx`,
+                value: res.toBigInt(),
+            }
+        })
+}
+
 async function main() {
     let evmUrl = process.env.E_SPACE_RPC || ''
     const evm = new CfxPoolMonitor(evmUrl, '0xb12c13e66ade1f72f71834f2fc5082db8c091358'
         , '0x14b2D3bC65e74DAE1030EAFd8ac30c533c976A9b')
     evm.dingToken = process.env.DING_CFX || ''
     evm.linkScan = 'https://evm.confluxscan.net/token/'
+    let extraCfxHolder = '0xf55460b8bc81ea65d7ae0aea2383ef69c8f2c62e';
+    evm.moreFun = ()=>reportRawCfx(evm.provider, extraCfxHolder)
     await evm.init()
     await evm.repeat()
 
@@ -145,8 +165,18 @@ async function main() {
         '0x045c4324039dA91c52C55DF5D785385Aab073DcF')
     bsc.dingToken = process.env.DING_CFX || ''
     bsc.linkScan = 'https://bscscan.com/token/'
+    bsc.moreFun = ()=>bsc.originTokenContract.balanceOf(extraCfxHolder)
+        .then(res=> {
+            return {
+                info: `${extraCfxHolder} holds ${wrapDrip(res)} bCfx`,
+                value: res.toBigInt()
+            }
+        })
     await bsc.init()
     await bsc.repeat()
+}
+function wrapDrip(v:any) {
+return parseInt(formatEther(v).split(".")[0]).toLocaleString()
 }
 if (module === require.main) {
     main().then()
