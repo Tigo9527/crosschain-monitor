@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import {FieldType, InfluxDB} from "influx";
 import {listSupply} from "../lib/Models";
+import {getPrice, getPriceCache, initPrices} from "../lib/Binance";
 
 function connectInflux({host, database, username, password}) {
     const influx = new InfluxDB({
@@ -14,6 +15,8 @@ function connectInflux({host, database, username, password}) {
                     minterAddr: FieldType.STRING,
                     minterName: FieldType.STRING,
                     minterSupplyFormat: FieldType.FLOAT,
+                    minterSupplyMarketValue: FieldType.FLOAT,
+
                     tokenAddr: FieldType.STRING,
                     tokenName: FieldType.STRING,
                     biz: FieldType.STRING,
@@ -46,11 +49,22 @@ async function setInfluxDB() {
 
 export async function setupInfluxWorker() {
     const inf = await setInfluxDB();
+    await initPrices()
     // await test(inf);
     await copyAll(inf)
     setInterval(()=>{
         copyAll(inf)
     }, 1000 * 60); // 1 minute
+}
+function getPriceM({tokenName}) {
+    tokenName = tokenName || ''
+    if (tokenName.includes('BTC')) {
+        return getPriceCache('BTCUSDT')
+    } else if (tokenName.includes('ETH')) {
+        return getPriceCache('ETHUSDT')
+    } else {
+        return 1
+    }
 }
 async function copyAll(inf: InfluxDB) {
     const map = await listSupply()
@@ -58,6 +72,8 @@ async function copyAll(inf: InfluxDB) {
     for(const token of Object.keys(map)) {
         const minterArr = map[token]
         for (const minter of minterArr) {
+            // @ts-ignore
+            minter['minterSupplyMarketValue'] = minter.minterSupplyFormat * getPriceM(minter!)
             const bean = {
                 measurement, tags: {biz: token},
                 fields: minter
