@@ -16,7 +16,7 @@ async function main() {
     if (process.env.DEBUG_BIND_TO_USDT) {
         TOKEN_BIND.set(process.env.DEBUG_BIND_TO_USDT.toLowerCase(), ETHEREUM_USDT_TOKEN)
     }
-    await setupInfluxWorker()
+    // await setupInfluxWorker()
     await check(DING)
 }
 
