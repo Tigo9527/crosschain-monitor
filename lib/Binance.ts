@@ -17,7 +17,7 @@ export async function initPrices() {
     // await getPrice('DAIUSDT')
     console.log(`prices`, preset)
 
-    setInterval(()=>initPrices(), 60_000)
+    setTimeout(()=>initPrices(), 60_000)
 }
 export async function getPrice(symbol:string) {
     let proxy = process.env.PROXY
