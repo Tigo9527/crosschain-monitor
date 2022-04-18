@@ -30,7 +30,7 @@ export async function listTransfer(who: string, etherToken: string) {
         const body = await (proxy ? superagent.get(url)
             .proxy(proxy) : superagent.get(url))
             .then((res: any) => res.body)
-        // console.log(`result `, body)
+        console.log(`ether scan api result length:`, body?.result?.length)
         if (body?.status === '1') {
             return body
         }
@@ -130,7 +130,8 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const fmtUnit = formatUnits(BigInt(value), parseInt(tokenDecimal))
         return `${new Date(parseInt(timeStamp)*1000).toISOString()} ${from} -> ${to
         } \n ${contractAddress} [${tokenName}] x ${value} (${fmtUnit})`
-    }).join('\n')}`);
+    }).join('\n')} `);
+    console.log(` ether scan api result length ${body.result.length}`)
     return null;
 }
 async function main() {
