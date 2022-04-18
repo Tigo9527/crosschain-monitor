@@ -20,10 +20,10 @@ function connectInflux({host, database, username, password}) {
 
                     tokenAddr: FieldType.STRING,
                     tokenName: FieldType.STRING,
-                    biz: FieldType.STRING,
+                    // biz: FieldType.STRING,
                 },
                 tags: [
-                    'biz'
+                    'tokenName', 'minterName'
                 ]
             }
         ]
@@ -32,7 +32,7 @@ function connectInflux({host, database, username, password}) {
 }
 
 async function query(inf: InfluxDB, t: string, where:string) {
-    const sql = `select * from ${t} where ${where}`
+    const sql = `select * from ${t} where ${where} limit 5`
     console.log(`sql : ${sql}`)
     const result = await inf.query(sql)
     console.log(` result :`, result)
@@ -76,7 +76,7 @@ async function copyAll(inf: InfluxDB) {
             // @ts-ignore
             minter['minterSupplyMarketValue'] = minter.minterSupplyFormat * getPriceM(minter!)
             const bean = {
-                measurement, tags: {biz: token},
+                measurement, tags: {tokenName: minter.tokenName, minterName: minter.minterName},
                 fields: minter
             }
             metrics.push(bean)
@@ -89,7 +89,12 @@ const measurement = 'cross_chain_minter';
 async function main() {
     const dbUrl = process.env.DB_URL
     await initDB(dbUrl, false)
-    // setupInfluxWorker().then()
+    const[,,cmd] = process.argv
+    if (cmd === 'query') {
+        const inf = await setInfluxDB()
+        await query(inf, measurement, '1=1')
+        return
+    }
     await setupInfluxWorker()
 }
 if (module === require.main) {
