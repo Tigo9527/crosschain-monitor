@@ -1,4 +1,4 @@
-import {Sequelize, Model, DataTypes} from "sequelize";
+import {Sequelize, Model, DataTypes, QueryTypes} from "sequelize";
 
 export interface IToken {
     id?: number
@@ -226,6 +226,27 @@ export class Bill extends Model<IBill> implements IBill {
         })
     }
 }
+
+export async function listSupply() {
+    const sql = `
+ select blockNumber,minterAddr, minterName, minterSupplyFormat, tokenAddr, tokenName, minterSupply 
+ from bill main where id in 
+ (select max(id) from bill group by tokenAddr, minterAddr) order by tokenAddr, minterAddr;`
+
+    const list: any[] = await Bill.sequelize!.query(sql, {type: QueryTypes.SELECT}).catch(err => {
+        console.log(`error query supply`, err)
+        return []
+    })
+    const map = {}
+    list.forEach(row => {
+        row.minterSupply = BigInt(row.minterSupply).toString()
+        const arr = map[row.tokenAddr] || []
+        arr.push(row)
+        map[row.tokenAddr] = arr
+    })
+    return map;
+}
+
 export class SupplyTask {
     name: string
     address!: string

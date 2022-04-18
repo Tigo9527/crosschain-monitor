@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import {initDB} from "../lib/DBProvider";
-import {Bill, Config, EPOCH_PREFIX_KEY} from "../lib/Models";
+import {Bill, Config, EPOCH_PREFIX_KEY, listSupply} from "../lib/Models";
 import {QueryTypes, Op} from "sequelize";
 
 const cors = require('cors');
@@ -33,26 +33,6 @@ app.get('/sync-info', async (req,res)=>{
     const block = await rpc.getBlock(rpc.getBlockNumber())
     res.send({list, block})
 })
-
-async function listSupply() {
-    const sql = `
- select blockNumber,minterAddr, minterName, minterSupplyFormat, tokenAddr, tokenName, minterSupply 
- from bill main where id in 
- (select max(id) from bill group by tokenAddr, minterAddr) order by tokenAddr, minterAddr;`
-
-    const list: any[] = await Bill.sequelize!.query(sql, {type: QueryTypes.SELECT}).catch(err => {
-        console.log(`error query supply`, err)
-        return []
-    })
-    const map = {}
-    list.forEach(row => {
-        row.minterSupply = BigInt(row.minterSupply).toString()
-        const arr = map[row.tokenAddr] || []
-        arr.push(row)
-        map[row.tokenAddr] = arr
-    })
-    return map;
-}
 
 const checkerCache = new Map<string, EventChecker>()
 async function getMinters(tokens: object){

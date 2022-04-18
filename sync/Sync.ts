@@ -6,6 +6,7 @@ import {addMinterPlaceHolder, ETHEREUM_USDT_TOKEN, EventChecker, importFromScan,
 import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 import {checkDB, replayDB} from "./Tool";
+import {setupInfluxWorker} from "./InfluxWorker";
 
 async function main() {
     const dbUrl = process.env.DB_URL
@@ -15,6 +16,7 @@ async function main() {
     if (process.env.DEBUG_BIND_TO_USDT) {
         TOKEN_BIND.set(process.env.DEBUG_BIND_TO_USDT.toLowerCase(), ETHEREUM_USDT_TOKEN)
     }
+    await setupInfluxWorker()
     await check(DING)
 }
 
