@@ -2,6 +2,7 @@ import 'dotenv/config'
 import {FieldType, InfluxDB} from "influx";
 import {listSupply} from "../lib/Models";
 import {getPrice, getPriceCache, initPrices} from "../lib/Binance";
+import {initDB} from "../lib/DBProvider";
 
 function connectInflux({host, database, username, password}) {
     const influx = new InfluxDB({
@@ -85,9 +86,12 @@ async function copyAll(inf: InfluxDB) {
     console.log(`write influx ${metrics.length}`)
 }
 const measurement = 'cross_chain_minter';
-if (module === require.main) {
+async function main() {
+    const dbUrl = process.env.DB_URL
+    await initDB(dbUrl, false)
     // setupInfluxWorker().then()
-    setInfluxDB().then(inf=>{
-        query(inf, measurement, '1=1')
-    })
+    await setupInfluxWorker()
+}
+if (module === require.main) {
+    main().then()
 }
