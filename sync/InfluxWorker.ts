@@ -20,6 +20,7 @@ function connectInflux({host, database, username, password}) {
 
                     tokenAddr: FieldType.STRING,
                     tokenName: FieldType.STRING,
+                    tokenPrice: FieldType.FLOAT,
                     // biz: FieldType.STRING,
                 },
                 tags: [
@@ -75,6 +76,7 @@ async function copyAll(inf: InfluxDB) {
         for (const minter of minterArr) {
             // @ts-ignore
             minter['minterSupplyMarketValue'] = minter.minterSupplyFormat * getPriceM(minter!)
+            minter['tokenPrice'] = getPriceM(minter!)
             const bean = {
                 measurement, tags: {tokenName: minter.tokenName, minterName: minter.minterName},
                 fields: minter
