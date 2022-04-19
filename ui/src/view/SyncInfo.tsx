@@ -62,11 +62,9 @@ const SyncInfo = ()=>{
     useEffect(fetchData,[])
     return (
         <React.Fragment>
-            <Affix offsetBottom={10} key={'affix-2'}>
                 <Button type="primary" onClick={fetchData}>
                     {loading ? <LoadingOutlined key={'loading1'} /> : <ReloadOutlined/>}
-                </Button>
-            </Affix>
+                </Button>{' '}
             Latest block time: {new Date(block.timestamp*1000).toISOString()}, number: {block.number}
             <Table key={'tb-3'} pagination={false} columns={columns} dataSource={list} />
         </React.Fragment>

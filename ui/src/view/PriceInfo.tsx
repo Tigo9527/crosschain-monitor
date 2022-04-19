@@ -33,11 +33,9 @@ const PriceInfo = ()=>{
     useEffect(fetchData,[])
     return (
         <React.Fragment>
-            <Affix offsetBottom={10} key={'affix-2'}>
                 <Button type="primary" onClick={fetchData}>
                     {loading ? <LoadingOutlined key={'loading1'} /> : <ReloadOutlined/>} PriceInfo
                 </Button>
-            </Affix>
             <Table key={'tb-3'} pagination={false} columns={columns} dataSource={list} />
         </React.Fragment>
     )

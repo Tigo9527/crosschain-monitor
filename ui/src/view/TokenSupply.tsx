@@ -178,16 +178,18 @@ function TokenSupply() {
     }
     return (
         <React.Fragment>
-            <Row style={{alignItems: 'baseline'}}>
+            <Affix offsetTop={10} key={'affix1'}>
+            <Row style={{alignItems: 'baseline', backgroundColor:'white'}}>
                 <Col key={'c1'} span={4}>Show Minter Detail: <Switch onChange={(c) => {
                     setShowAllMinter(c)
                 }}/></Col>
-                <Col key={'c2'} span={2}><Affix offsetTop={10} key={'affix1'}>
+                <Col key={'c2'} span={2}>
                     <Button type="primary" onClick={fetchData}>
                         {loading ? <LoadingOutlined key={'loading1'}/> : <ReloadOutlined key={'btn2'}/>}
                     </Button>
-                </Affix></Col>
+                </Col>
             </Row>
+            </Affix>
             {
                 Object.keys(info.tokens).map(k=>{
                     return (
