@@ -11,10 +11,13 @@ export const ETHEREUM_DAI_TOKEN =  '0x6B175474E89094C44Da98b954EedeAC495271d0F'
 export const ETHEREUM_USDC_TOKEN = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
 export const ETHEREUM_WBTC_TOKEN = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'
 export const ETHEREUM_WETH_TOKEN = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+//
+export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955'
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN,
+    BSC_USD,
 ]);
 
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -33,6 +36,16 @@ TOKEN_BIND.set(E_SPACE_DAI.toLowerCase(), ETHEREUM_DAI_TOKEN)
 TOKEN_BIND.set(E_SPACE_USDC.toLowerCase(), ETHEREUM_USDC_TOKEN)
 TOKEN_BIND.set(E_SPACE_WBTC.toLowerCase(), ETHEREUM_WBTC_TOKEN)
 TOKEN_BIND.set(E_SPACE_ETH.toLowerCase(), ETHEREUM_WETH_TOKEN)
+
+export const FOREIGN_TOKEN_TO_LOCAL = new Map<string, string>()
+FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
+export function mapForeignTokenToLocal(foreign:string) {
+    let local = FOREIGN_TOKEN_TO_LOCAL.get(foreign.toLowerCase())
+    if (!local) {
+        console.log(`!!!!! map foreign token to local, not found ${foreign}`)
+    }
+    return local
+}
 
 export function getBindToken(eSpace: string) {
     let newVar = TOKEN_BIND.get(eSpace.toLowerCase());
@@ -61,6 +74,7 @@ export class EventChecker {
     notifyMint = true
     public provider: BaseProvider;
     public ethereumProvider: BaseProvider;
+    public bscProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
     public celerAddr: string = '';
@@ -84,6 +98,7 @@ export class EventChecker {
     constructor(url: string, tokenAddr:string) {
         this.provider = ethers.getDefaultProvider(url)
         this.ethereumProvider = ethers.getDefaultProvider();
+        this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string) {
@@ -107,6 +122,9 @@ export class EventChecker {
 
         console.log(`init ethereum provider ...`)
         console.log(`ethereum `, await this.ethereumProvider.getNetwork().then(st=>st.chainId))
+
+        console.log(`init bsc provider ...`)
+        console.log(`ethereum `, await this.bscProvider.getNetwork().then(st=>st.chainId))
         //
         const celerAbi = [
             'function delayedTransfers(bytes32 id) view returns (tuple(address receiver,address token,uint256 amount,uint256 timestamp))',
@@ -303,7 +321,7 @@ export class EventChecker {
                 if (eventSource.toLowerCase() === this.tokenAddr.toLowerCase()) {
                     continue;
                 }
-                if(!this.minterSet.has(eventSource)) {
+                if(!this.minterSet.has(eventSource) && eventSource !== '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA') {
                     console.log(`event source contract not in minterSet. ${eventSource}`);
                     continue;
                 }
@@ -327,11 +345,21 @@ export class EventChecker {
                     //  event LogSwapin(bytes32 indexed txhash, address indexed account, uint amount);
                     eTopic === '0x05d0634fe981be85c22e2942a880821b70095d84e152c3ea3c17a4e4250d9d61'
                 ) {
-                    const [,txHashEth, txFromEth] = eSpaceLog.topics
+                    const [, txHashEth, txFromEth] = eSpaceLog.topics
                     console.log(`ethereum tx hash ${txHashEth} from ${hexStripZeros(txFromEth)}`)
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
-                    });
+                    }, this.ethereumProvider, this.multiChainMPC);
+                } else if (eTopic === '0xaac9ce45fe3adf5143598c4f18a369591a20a3384aedaf1b525d29127e1fcd55') {
+                    // bsc for now
+                    // LogAnySwapIn(index_topic_1 bytes32 txhash, index_topic_2 address token, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
+                    // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
+                    const [, txHashEth, token, to,] = eSpaceLog.topics
+                    const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256','uint256','uint256'], eSpaceLog.data)
+                    console.log(`bsc tx hash ${txHashEth} from ${hexStripZeros(to)}, amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
+                    found = await this.searchEvmTx({
+                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
+                    }, this.bscProvider, '0x58340A102534080b9D3175F868aeA9f6aF986dD9');
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
                     // celer case A:  mint
                     // const [mintId,token,account,amount,refChainId,refId, depositor] = eSpaceLog.topics
@@ -407,13 +435,13 @@ export class EventChecker {
         }
         return false;
     }
-    async searchEvmTx(obj:any) {
+    async searchEvmTx(obj:any, ethereumProvider: BaseProvider, mpc: string) {
         const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber} = obj
         let found = false
         //
-        const txEth = await this.ethereumProvider.getTransaction(txHashEth)
+        const txEth = await ethereumProvider.getTransaction(txHashEth)
         const fmtValueInTx = formatEther(txEth.value)
-        const txEthReceipt = await this.ethereumProvider.getTransactionReceipt(txHashEth)
+        const txEthReceipt = await ethereumProvider.getTransactionReceipt(txHashEth)
         if (txEthReceipt.status != 1) {
             console.log(`transaction on ethereum is failed. ${txHashEth}, status ${txEthReceipt.status}`)
         }
@@ -428,8 +456,8 @@ export class EventChecker {
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
                 return false;
             }
-            if ( (txEthTo||'').toLowerCase() !== this.multiChainMPC.toLowerCase()) {
-                console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${this.multiChainMPC}, actual ${txEthTo}`)
+            if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase()) {
+                console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${mpc}, actual ${txEthTo}`)
                 return false;
             }
             const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
@@ -453,7 +481,12 @@ export class EventChecker {
         //
         const bindToken = (getBindToken(this.tokenAddr) || '').toLowerCase()
         for (let ethereumLog of txEthLogs) {
-            if (bindToken !== ethereumLog.address.toLowerCase()) {
+            const [topic, sender, receiver] = ethereumLog.topics
+            if (topic !== '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+                continue
+            }
+            const localToken = mapForeignTokenToLocal(ethereumLog.address) || ''
+            if (bindToken !== ethereumLog.address.toLowerCase() && localToken !== this.tokenAddr.toLowerCase()) {
                 console.log(`[${this.name}] It's not bind token. want ${bindToken}, actual ${ethereumLog.address}`)
                 continue
             }
@@ -461,15 +494,23 @@ export class EventChecker {
                 console.log(`[${this.name}] It's not in ethereum token whitelist. ${ethereumLog.address}`)
                 continue
             }
-            const [topic, sender, receiver] = ethereumLog.topics
-            if ( hexStripZeros(receiver||'').toLowerCase() !== this.multiChainMPC.toLowerCase()) {
-                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${this.multiChainMPC}, actual ${receiver}`)
+            if ( hexStripZeros(receiver||'').toLowerCase() !== mpc.toLowerCase()) {
+                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc}, actual ${receiver}`)
                 continue
             }
             // Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
-            if (topic === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+            // if (topic === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+            {
                 let ethDrip = BigInt(ethereumLog.data);
-                const v = formatUnits(ethDrip, await this.getDecimal(ethereumLog.address))// USDT with decimals 6
+                console.log(`try get decimal from ${ethereumLog.address}`)
+                let decimals = await this.getDecimal(ethereumLog.address).catch(err=>{
+                    if (ethereumLog.address === BSC_USD) {
+                        console.log(`fix bsc usd decimals to 18`, err.message)
+                        return 18
+                    }
+                    throw err
+                });
+                const v = formatUnits(ethDrip, decimals)// USDT with decimals 6
                 if (parseUnits(v, 18).toBigInt() < wei) {
                     console.log(`[${this.name}] On ethereum, transfer value ${v} < ${mintV} , token ${ethereumLog.address}`)
                     continue
