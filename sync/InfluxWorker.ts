@@ -62,7 +62,7 @@ function getPriceM({tokenName}) {
     tokenName = tokenName || ''
     if (tokenName.includes('BTC')) {
         return getPriceCache('BTCUSDT')
-    } else if (tokenName.includes('ETH')) {
+    } else if (tokenName.includes('Ethereum')) {
         return getPriceCache('ETHUSDT')
     } else {
         return 1
