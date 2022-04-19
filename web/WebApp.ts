@@ -14,7 +14,7 @@ app.get('/test-error', function (req,res,next) {
 })
 import {BaseProvider} from "@ethersproject/providers"
 import {ethers} from "ethers";
-import {addressMap, EventChecker} from "../sync/MintChecker";
+import {addressMap, E_SPACE_USDT, EventChecker, GHOST_USDT_MINTER_1} from "../sync/MintChecker";
 import {formatEther} from "ethers/lib/utils";
 let rpc: BaseProvider
 async function init_DB() {
@@ -42,6 +42,9 @@ async function getMinters(tokens: object){
         if (!ck) {
             ck = new EventChecker(process.env.E_SPACE_RPC!, token)
             await ck.getMintRoles(false)
+            if (ck.tokenAddr === E_SPACE_USDT && !ck.minterSet.has(GHOST_USDT_MINTER_1)) {
+                ck.minterSet.add(GHOST_USDT_MINTER_1)
+            }
             checkerCache.set(token, ck)
         }
         let totalSupply = await ck.confluxContract.totalSupply();

@@ -19,7 +19,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN,
     BSC_USD,
 ]);
-
+export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
 export const E_SPACE_ANY_SWAP_DAI = '0x80A16016cC4A2E6a2CACA8a4a498b1699fF0f844'
 // case sensitive
@@ -321,7 +321,7 @@ export class EventChecker {
                 if (eventSource.toLowerCase() === this.tokenAddr.toLowerCase()) {
                     continue;
                 }
-                if(!this.minterSet.has(eventSource) && eventSource !== '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA') {
+                if(!this.minterSet.has(eventSource) && eventSource !== GHOST_USDT_MINTER_1) {
                     console.log(`event source contract not in minterSet. ${eventSource}`);
                     continue;
                 }
