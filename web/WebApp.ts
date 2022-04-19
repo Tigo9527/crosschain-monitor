@@ -16,6 +16,7 @@ import {BaseProvider} from "@ethersproject/providers"
 import {ethers} from "ethers";
 import {addressMap, E_SPACE_USDT, EventChecker, GHOST_USDT_MINTER_1} from "../sync/MintChecker";
 import {formatEther} from "ethers/lib/utils";
+import {getPrice} from "../lib/Binance";
 let rpc: BaseProvider
 async function init_DB() {
     const dbUrl = process.env.DB_URL
@@ -28,10 +29,21 @@ async function init_DB() {
 app.get('/', function (req, res) {
     res.send('Hello World')
 })
-app.get('/sync-info', async (req,res)=>{
-    const list = await Config.findAll({where: {name: {[Op.like]: `${EPOCH_PREFIX_KEY}%`}}})
-    const block = await rpc.getBlock(rpc.getBlockNumber())
-    res.send({list, block})
+app.get('/price-info', async (req,res, next)=>{
+    Promise.all([
+        getPrice('BTCUSDT'),
+        getPrice('ETHUSDT'),
+    ]).then(arr=>res.send({list: arr}))
+        .catch(e=>next(e))
+})
+app.get('/sync-info', async (req,res, next)=>{
+    try {
+        const list = await Config.findAll({where: {name: {[Op.like]: `${EPOCH_PREFIX_KEY}%`}}})
+        const block = await rpc.getBlock(rpc.getBlockNumber())
+        res.send({list, block})
+    } catch (e) {
+        next(e)
+    }
 })
 
 const checkerCache = new Map<string, EventChecker>()

@@ -29,6 +29,7 @@ export async function getPrice(symbol:string) {
     console.log(body)
     preset.set(symbol, parseFloat(body.price))
     //
+    return body
 }
 
 if (module === require.main) {

@@ -3,7 +3,7 @@ import React, {useEffect, useState} from "react";
 import {formatEther} from "ethers/lib/utils";
 import {LoadingOutlined, CheckOutlined, WarningOutlined, ReloadOutlined} from "@ant-design/icons";
 import {getHost} from "../common/Util";
-function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
+function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price}) {
     minters.forEach(row=>row.key = row.minterAddr)
     const columns = [
         {
@@ -26,7 +26,10 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
                 <>
                     <span style={{color: 'gray'}}>{text}</span>
                     <div/>
-                    {row.minterSupplyFormat}
+                    {parseFloat(row.minterSupplyFormat).toLocaleString()}
+                    <div/>
+                    <span style={{color:'blue'}}>{' $'}
+                        {(row.minterSupplyFormat * price).toLocaleString()}</span>
                 </>
             ),
         },
@@ -38,7 +41,10 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap}) {
                 <>
                     <span style={{color: 'gray'}}>{row.onChain.total}</span>
                     <div/>
-                    {row.onChain.totalUnit}
+                    {' '}{parseFloat(row.onChain.totalUnit).toLocaleString()}
+                    <div/>
+                    <span style={{color:'blue'}}>{' $'}
+                        {(row.onChain.totalUnit * price).toLocaleString()}</span>
                 </>
             ),
         },{
@@ -101,6 +107,29 @@ function TokenSupply() {
     const [info, setInfo] = useState({tokens: {}, onChain:{}, addressMap:{}, supplyOffChain:{}})
     const [loading, setLoading] = useState(true)
     const [showAllMinter, setShowAllMinter] = useState(false)
+    const [priceInfo, setPriceInfo] = useState({'BTCUSDT': 0.0, 'ETHUSDT': 0.0})
+    const getPrice = (name)=>{
+        if (name.includes('BTC')) {
+            return priceInfo['BTCUSDT']
+        } else if (name.includes('Ethereum')) {
+            return priceInfo['ETHUSDT']
+        } else {
+            return 1.0
+        }
+    }
+    useEffect(()=>{
+        const f = async ()=>
+        {
+            const json = await fetch(`${getHost()}/price-info`, {mode: "cors"}).then(res => res.json())
+            const map = {}
+            json.list.forEach(row=>{
+                map[row.symbol] = parseFloat(row.price)
+            })
+            // @ts-ignore
+            setPriceInfo(map)
+        };
+        f().then()
+    },[])
     const fetchData = ()=>{
         async function rpc() {
             let url = `${getHost()}/supply`;
@@ -165,10 +194,11 @@ function TokenSupply() {
                     <React.Fragment key={'rf'+k}>
                     <Row key={'row'+k}>
                         <Col span={24} key={'col1'}>
+                            Price: ${getPrice(info.addressMap[k])} { ' ' }
                             <Tag>{info.addressMap[k]}</Tag>
                             <a target={`_blank`} href={`https://evm.confluxscan.net/token/${k}`}>{k}</a>
                             <div style={{padding: '10px'}} />
-                            <MinterTable key={k} addr={k}
+                            <MinterTable key={k} addr={k} price={getPrice(info.addressMap[k])}
                                          addressMap={info.addressMap}
                                          totalSupply={0}
                                          totalUnit={0}

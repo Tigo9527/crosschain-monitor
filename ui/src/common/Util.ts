@@ -8,4 +8,5 @@ function getHost() {
     }
     return url;
 }
+// const priceMap
 export {getHost}

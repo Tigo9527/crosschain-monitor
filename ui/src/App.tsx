@@ -6,6 +6,7 @@ import { Collapse } from 'antd';
 import TokenSupply from "./view/TokenSupply";
 import Title from "antd/lib/typography/Title";
 import SyncInfo from "./view/SyncInfo";
+import PriceInfo from "./view/PriceInfo";
 
 const { Panel } = Collapse;
 
@@ -20,6 +21,9 @@ function App() {
                 </Panel>
                 <Panel header="Sync Info" key="2">
                     <SyncInfo/>
+                </Panel>
+                <Panel header="Price Info" key="3">
+                    <PriceInfo/>
                 </Panel>
             </Collapse>
         </div>
