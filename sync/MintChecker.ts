@@ -100,7 +100,7 @@ export class EventChecker {
         console.log(`-------------------------------------------------`)
     }
     public notify = async (mintOrBurn:string, token:string, amount: string) => {
-        console.log(`notify ${mintOrBurn}, ${token}, ${amount}`)
+        console.log(`notify ${mintOrBurn} , ${token} , ${amount}`)
     }
 
     constructor(url: string, tokenAddr:string) {
@@ -109,16 +109,16 @@ export class EventChecker {
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
         this.tokenAddr = tokenAddr
     }
-    async getDecimal(addr: string) {
+    async getDecimal(addr: string, provider: BaseProvider) {
         let v = this.decimalInfo.get(addr)
         if (!v) {
-            const copyC = this.ethereumContract.attach(addr)
+            const copyC = this.ethereumContract.attach(addr).connect(provider)
             v = await copyC.decimals()
             if (!v) {
                 console.log(`fetch decimals error, ${addr}`)
                 v = 18
             }
-            console.log(`fetch decimal got ${v}, ${addr}`);
+            console.log(`fetch decimal got ${v} , ${addr}`);
             this.decimalInfo.set(addr, v)
         }
         return v;
@@ -126,7 +126,7 @@ export class EventChecker {
     async init() {
         console.log(`init conflux provider ...`)
         const st = await this.provider.getNetwork()
-        console.log(`conflux network ${st.chainId}, block number `, await this.provider.getBlockNumber())
+        console.log(`conflux network ${st.chainId} , block number `, await this.provider.getBlockNumber())
 
         console.log(`init ethereum provider ...`)
         console.log(`ethereum `, await this.ethereumProvider.getNetwork().then(st=>st.chainId))
@@ -182,7 +182,7 @@ export class EventChecker {
             const name = await c.name()
             addressMap[this.tokenAddr] = name;
             await addAddress(this.tokenAddr, name)
-            console.log(`token ${token}, name [${name}].`)
+            console.log(`token ${token} , name [${name}].`)
             this.name = name;
         } catch (e) {
             console.log(`get token name fail, address ${this.tokenAddr}`, e)
@@ -217,7 +217,7 @@ export class EventChecker {
                 addAddress(child, cName)
             })
         }
-        console.log(`minter count ${this.minterSet.size}, token ${token}`)
+        console.log(`minter count ${this.minterSet.size} , token ${token}`)
     }
     async getEventByEpoch(epoch: number = 38659021) {
         // const blockNumber = await this.provider.getBlockNumber()
@@ -249,7 +249,7 @@ export class EventChecker {
             console.log(`get logs fail:`, filter)
             throw err;
         })
-        // console.log(`log count ${logs.length}, epoch ${epoch}`)
+        // console.log(`log count ${logs.length} , epoch ${epoch}`)
         // if delayed, check on ethereum, save it, and confirm when minting in eSpace contract.
         // if not delayed, check by mint event in eSpace token.
         const mintMap = new Map<string, any>()
@@ -274,7 +274,7 @@ export class EventChecker {
             const mintLog = mintMap.get(mintId_)
             const {mintId, token, amount, account, refId, refChainId, fmtAmt} = EventChecker.parseCelerMint(mintLog.data)
             if (token.toLowerCase() !== this.tokenAddr.toLowerCase()) {
-                console.log(`found token ${token}, want ${this.tokenAddr}`)
+                console.log(`found token ${token} , want ${this.tokenAddr}`)
                 // continue
             }
             console.log(`celer delayed mint tx ${mintLog.transactionHash}`);
@@ -297,7 +297,7 @@ export class EventChecker {
         }
     }
     async calcSupply(minterAddr:string, diff: bigint, tokenAddr: string) {
-        const pre = await Bill.findOne({where: {minterAddr, tokenAddr}, order:[['id', 'desc']]})
+        const pre = await Bill.findOne({where: {minterAddr, tokenAddr} , order:[['id', 'desc']]})
         const drip = BigInt(pre?.minterSupply || 0) + diff
         return {
             drip, unit: formatEther(drip),
@@ -338,7 +338,7 @@ export class EventChecker {
             const {from, to, blockNumber} = receipt
             let wei = BigInt(data);
             let mintV = formatEther(wei);
-            console.log(`[${this.name}] ${action} at tx ${transactionHash}, value ${mintV}`)
+            console.log(`[${this.name}] ${action} at tx ${transactionHash} , value ${mintV}`)
             if (this.notifyMint) {
                 await this.notify(action, this.tokenAddr, mintV)
             }
@@ -387,17 +387,17 @@ export class EventChecker {
                     console.log(`ethereum tx hash ${txHashEth} from ${hexStripZeros(txFromEth)}`)
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
-                    }, this.ethereumProvider, this.multiChainMPC);
+                    } , this.ethereumProvider, this.multiChainMPC);
                 } else if (eTopic === '0xaac9ce45fe3adf5143598c4f18a369591a20a3384aedaf1b525d29127e1fcd55') {
                     // LogAnySwapIn(index_topic_1 bytes32 txhash, index_topic_2 address token, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
                     // bsc for now
                     // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256','uint256','uint256'], eSpaceLog.data)
-                    console.log(`bsc tx hash ${txHashEth} from ${hexStripZeros(to)}, amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
+                    console.log(`bsc tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
-                    }, this.bscProvider, '')//skip check mpc on BSC . It's different on each pegged token.
+                    } , this.bscProvider, '')//skip check mpc on BSC . It's different on each pegged token.
                     // usdt is '0x58340A102534080b9D3175F868aeA9f6aF986dD9'); // eth is 0x230219b25395f14b84cf4dcd987e2daf5a71e4b
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
                     // celer case A:  mint
@@ -407,7 +407,7 @@ export class EventChecker {
                         console.log(`not for current token, found [${token}], want ${this.tokenAddr}`)
                         continue
                     }
-                    console.log(`[${this.name}] celer mint, account ${account}, amount ${amount} ${fmtAmt}`);
+                    console.log(`[${this.name}] celer mint, account ${account} , amount ${amount} ${fmtAmt}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
                         blockNumber, transactionHash, refId, true)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
@@ -482,12 +482,12 @@ export class EventChecker {
         const fmtValueInTx = formatEther(txEth.value)
         const txEthReceipt = await ethereumProvider.getTransactionReceipt(txHashEth)
         if (txEthReceipt.status != 1) {
-            console.log(`transaction on ethereum is failed. ${txHashEth}, status ${txEthReceipt.status}`)
+            console.log(`transaction on ethereum is failed. ${txHashEth} , status ${txEthReceipt.status}`)
         }
         const {from:txEthReceiptFrom, to: txEthTo, logs: txEthLogs} = txEthReceipt
         // console.log(`tx on ethereum, from ${txEthReceiptFrom} , logs`, txEthLogs[0])
         console.log(`tx on ethereum, from ${txEthReceiptFrom} to ${txEthTo} , logs count ${txEthLogs.length
-        }, status ${txEthReceipt.status} value ${fmtValueInTx}`)
+        } , status ${txEthReceipt.status} value ${fmtValueInTx}`)
 
         if (txEth.value.toBigInt() && this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57') {
             console.log(`It's ETH, value ${fmtValueInTx}`)
@@ -496,7 +496,7 @@ export class EventChecker {
                 return false;
             }
             if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase()) {
-                console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${mpc}, actual ${txEthTo}`)
+                console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${mpc} , actual ${txEthTo}`)
                 return false;
             }
             const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
@@ -527,7 +527,7 @@ export class EventChecker {
             const localToken = mapForeignTokenToLocal(ethereumLog.address) || ''
             if (bindToken !== ethereumLog.address.toLowerCase() && localToken !== this.tokenAddr.toLowerCase()) {
                 console.log(`[${this.name}] It's not binding, ${bindToken} vs ${ethereumLog.address
-                } , neither mapping [${localToken}] vs ${this.tokenAddr}, emit by contract [${ethereumLog.address}]`)
+                } , neither mapping [${localToken}] vs ${this.tokenAddr} , emit by contract [${ethereumLog.address}]`)
                 continue
             }
             if (!ETHEREUM_TOKENS.has(ethereumLog.address)) {
@@ -535,7 +535,7 @@ export class EventChecker {
                 continue
             }
             if (mpc && hexStripZeros(receiver||'').toLowerCase() !== mpc.toLowerCase()) {
-                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc}, actual ${receiver}`)
+                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} , actual ${receiver}`)
                 continue
             }
             // Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
@@ -543,13 +543,7 @@ export class EventChecker {
             {
                 let ethDrip = BigInt(ethereumLog.data);
                 console.log(`try get decimal from ${ethereumLog.address}`)
-                let decimals = await this.getDecimal(ethereumLog.address).catch(err=>{
-                    if (ethereumLog.address === BSC_USD || ethereumLog.address === BSC_ETH) {
-                        console.log(`fix bsc usd/eth decimals to 18`, err.message)
-                        return 18
-                    }
-                    throw err
-                });
+                let decimals = await this.getDecimal(ethereumLog.address, ethereumProvider)
                 const v = formatUnits(ethDrip, decimals)// USDT with decimals 6
                 if (parseUnits(v, 18).toBigInt() < wei) {
                     console.log(`[${this.name}] On ethereum, transfer value ${v} < ${mintV} , token ${ethereumLog.address}`)
@@ -609,7 +603,7 @@ export async function addMinterPlaceHolder(checker: EventChecker) {
     for( let minter of checker.minterSet ) {
         const bean = await Bill.findOne({where: {minterAddr: minter, tokenAddr: checker.tokenAddr}})
         if (bean) {
-            console.log(`minter has record, ${minter}, epoch ${bean.blockNumber}`)
+            console.log(`minter has record, ${minter} , epoch ${bean.blockNumber}`)
             continue
         }
         await Bill.create({
@@ -623,7 +617,7 @@ export async function addMinterPlaceHolder(checker: EventChecker) {
             ethereumTxTo: "",ethereumTxToken: "",formatUnit: 0,
             minterSupply: 0n,minterSupplyFormat: 0,
         }).then(()=>{
-            console.log(`create place holder for ${minter}, token ${checker.name}`)
+            console.log(`create place holder for ${minter} , token ${checker.name}`)
         })
         .catch(err=>{
             console.log(`create fail`, err)
@@ -631,7 +625,7 @@ export async function addMinterPlaceHolder(checker: EventChecker) {
     }
 }
 export async function importFromScan(checker: EventChecker, cursorKey: string) {
-    const recordsInDb = await Bill.findOne({where:{tokenAddr: checker.tokenAddr}, raw: true})
+    const recordsInDb = await Bill.findOne({where:{tokenAddr: checker.tokenAddr} , raw: true})
     if (recordsInDb) {
         console.log(`Records found in db, can not import.`, recordsInDb)
         process.exit(9)
