@@ -14,11 +14,12 @@ export const ETHEREUM_WETH_TOKEN = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
 //
 export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955' // pegged mc
 export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
+export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN,
-    BSC_USD, BSC_ETH
+    BSC_USD, BSC_ETH, BSC_BTC
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -41,6 +42,7 @@ TOKEN_BIND.set(E_SPACE_ETH.toLowerCase(), ETHEREUM_WETH_TOKEN)
 export const FOREIGN_TOKEN_TO_LOCAL = new Map<string, string>()
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(BSC_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
@@ -160,7 +162,7 @@ export class EventChecker {
                 console.log(` getMinterChildren error `, e)
                 throw e
             }
-            console.log(` getMinterChildren error `, e.message)
+            // console.log(` getMinterChildren error `, e.message)
             return []
         }
     }
@@ -209,7 +211,7 @@ export class EventChecker {
             this.minterSet.add(minter)
             //
             const childrenMinter = await this.getMinterChildren(minter)
-            console.log(`children of ${minter} is [${childrenMinter.join(' , ')}] ${childrenMinter.length}`)
+            console.log(`   children of ${minter} are [${childrenMinter.join(' , ')}] ${childrenMinter.length}`)
             childrenMinter.forEach(child=>{
                 this.minterSet.add(child)
                 let cName = `${addressName(minter, minter.substring(0,8))}_${minter.substring(0,8)}_child_${child.substring(0,8)}`;
@@ -217,7 +219,7 @@ export class EventChecker {
                 addAddress(child, cName)
             })
         }
-        console.log(`minter count ${this.minterSet.size} , token ${token}`)
+        console.log(` --- minter count ${this.minterSet.size} , token ${token} [${this.name}] ---`)
     }
     async getEventByEpoch(epoch: number = 38659021) {
         // const blockNumber = await this.provider.getBlockNumber()
