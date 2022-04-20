@@ -15,11 +15,12 @@ export const ETHEREUM_WETH_TOKEN = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
 export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955' // pegged mc
 export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
 export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
+export const BSC_USDC = '0xab6290bBd5C2d26881E8A7a10bC98552B9082E7f' // pegged mc
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN,
-    BSC_USD, BSC_ETH, BSC_BTC
+    BSC_USD, BSC_ETH, BSC_BTC, BSC_USDC
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -43,6 +44,7 @@ export const FOREIGN_TOKEN_TO_LOCAL = new Map<string, string>()
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(BSC_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
