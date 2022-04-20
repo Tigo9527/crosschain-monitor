@@ -53,6 +53,7 @@ async function getMinters(tokens: object){
         let ck = checkerCache.get(token)
         if (!ck) {
             ck = new EventChecker(process.env.E_SPACE_RPC!, token)
+            await ck.init()
             await ck.getMintRoles(false)
             if (ck.tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase() && !ck.minterSet.has(GHOST_USDT_MINTER_1)) {
                 ck.minterSet.add(GHOST_USDT_MINTER_1)

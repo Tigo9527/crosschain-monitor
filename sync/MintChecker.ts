@@ -19,7 +19,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN,
     BSC_USD,
 ]);
-export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
+// export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
 export const E_SPACE_ANY_SWAP_DAI = '0x80A16016cC4A2E6a2CACA8a4a498b1699fF0f844'
 // case sensitive
@@ -65,7 +65,7 @@ export const addressMap:{[k:string]: string} = {
     [ETHEREUM_WBTC_TOKEN]: 'ethereumWBTC',
     [E_SPACE_USDT]: 'E_SPACE_USDT',
     [E_SPACE_DAI]: 'E_SPACE_DAI',
-    [GHOST_USDT_MINTER_1]: 'bscAnySwap?',
+    // [GHOST_USDT_MINTER_1]: 'bscAnySwap?',
 }
 export function addressName(addr = '', unknown = 'unknown') {
     // @ts-ignore
@@ -85,6 +85,10 @@ export class EventChecker {
     ethereumContract!: Contract
     decimalInfo = new Map<string, number>()
 
+    public confluxContract!: Contract;
+    public eSpaceMultiChainAny20Contract!: Contract;
+    private celerContract!: Contract;
+
     public mintSourceTxNotFound = async (tx:string, ether:string)=>{
         console.log(`-------------------------------------------------`)
         console.log(`mintSourceTxNotFound, tx ${tx} , amount: ${ether}`)
@@ -93,8 +97,6 @@ export class EventChecker {
     public notify = async (mintOrBurn:string, token:string, amount: string) => {
         console.log(`notify ${mintOrBurn}, ${token}, ${amount}`)
     }
-    public confluxContract!: Contract;
-    private celerContract!: Contract;
 
     constructor(url: string, tokenAddr:string) {
         this.provider = ethers.getDefaultProvider(url)
@@ -138,6 +140,24 @@ export class EventChecker {
         }
         this.celerAddr = celerAddress
         this.celerContract = new Contract(celerAddress, celerAbi, this.provider);
+        const mChainAny20Abi = [
+            `function getAllMinters() public view returns (address[])`
+        ]
+        this.eSpaceMultiChainAny20Contract = new Contract(ZERO, mChainAny20Abi, this.provider)
+    }
+    async getMinterChildren(minter: string) : Promise<string[]>{
+        const any20 = await this.eSpaceMultiChainAny20Contract.attach(minter)
+        try {
+            const children = await any20.getAllMinters();
+            return children
+        } catch (e:any) {
+            if (!e.message.includes('call revert exception')) {
+                console.log(` getMinterChildren error `, e)
+                throw e
+            }
+            console.log(` getMinterChildren error `, e.message)
+            return []
+        }
     }
     async getMintRoles(exitOnError=true) {
         const token = this.tokenAddr
@@ -182,6 +202,15 @@ export class EventChecker {
             }
             console.log(`minter ${idx} is ${minter} ${addressName(minter)}`);
             this.minterSet.add(minter)
+            //
+            const childrenMinter = await this.getMinterChildren(minter)
+            console.log(`children of ${minter} is [${childrenMinter.join(' , ')}] ${childrenMinter.length}`)
+            childrenMinter.forEach(child=>{
+                this.minterSet.add(child)
+                let cName = `${addressName(minter, minter.substring(0,8))}_${minter.substring(0,8)}_child_${child.substring(0,8)}`;
+                addressMap[child] = cName
+                addAddress(child, cName)
+            })
         }
         console.log(`minter count ${this.minterSet.size}, token ${token}`)
     }
@@ -322,7 +351,8 @@ export class EventChecker {
                 if (eventSource.toLowerCase() === this.tokenAddr.toLowerCase()) {
                     continue;
                 }
-                if(!this.minterSet.has(eventSource) && eventSource !== GHOST_USDT_MINTER_1) {
+                // if(!this.minterSet.has(eventSource) && eventSource !== GHOST_USDT_MINTER_1) {
+                if(!this.minterSet.has(eventSource)) {
                     console.log(`event source contract not in minterSet. ${eventSource}`);
                     continue;
                 }
@@ -354,8 +384,8 @@ export class EventChecker {
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     }, this.ethereumProvider, this.multiChainMPC);
                 } else if (eTopic === '0xaac9ce45fe3adf5143598c4f18a369591a20a3384aedaf1b525d29127e1fcd55') {
-                    // bsc for now
                     // LogAnySwapIn(index_topic_1 bytes32 txhash, index_topic_2 address token, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
+                    // bsc for now
                     // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256','uint256','uint256'], eSpaceLog.data)
