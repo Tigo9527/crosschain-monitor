@@ -11,10 +11,13 @@ import PriceInfo from "./view/PriceInfo";
 const { Panel } = Collapse;
 
 function App() {
+    const {innerWidth, innerHeight} = window
+    const vertical = innerHeight > innerWidth
+    const padding = vertical ? '8px' : '10%'
   return (
     <div className="App">
         <Title key={'t1'} level={1} style={{paddingTop: '1em'}}>Cross chain tokens</Title>
-        <div key='divK1' style={{paddingLeft: '10%', paddingRight: '10%'}}>
+        <div key='divK1' style={{paddingLeft: padding, paddingRight: padding}}>
             <Collapse defaultActiveKey={['1']}>
                 <Panel header="Minter supply" key="1">
                     <TokenSupply/>

@@ -75,7 +75,7 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
     ];
 
     return (
-        <React.Fragment>
+        <React.Fragment key={'tb-1'}>
             <Table pagination={false} columns={columns} dataSource={minters} />
         </React.Fragment>
     )
@@ -92,15 +92,10 @@ function TokenSummary({tokens}) {
         }, {
             title: '', key: 'check',// width: '20%',
             render: (_, row) => (
-                <>
-                    {
                         row.match ?
-                            <><CheckOutlined style={{fontSize: '2em', color: "green"}}/></>
+                            <CheckOutlined style={{fontSize: '2em', color: "green"}}/>
                             :
-                            <><WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
-                            </>
-                    }
-                </>
+                            <WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
             ),
         }, {
             title: 'Price', //width: '20%',
@@ -117,9 +112,8 @@ function TokenSummary({tokens}) {
 
     ]
     return (
-        <React.Fragment>
-            Summary:
-            <Table pagination={false} columns={columns} dataSource={tokens} scroll={{x:400}}/>
+        <React.Fragment key={'tb-x'}>
+            <Table title={()=>'Summary'} key={'tb-x3'} pagination={false} columns={columns} dataSource={tokens} scroll={{x:400}}/>
         </React.Fragment>
     )
 }
