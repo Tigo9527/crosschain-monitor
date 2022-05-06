@@ -1,1 +1,13 @@
 GET http://localhost:3003/price-info
+###
+#POST https://evm.confluxrpc.com
+POST https://evm-internal.confluxrpc.com
+Content-Type: application/json
+
+{"jsonrpc":"2.0","method":"trace_block","params":[{"blockHash":"0xba671f8a7b897b75c4ffff94e271739d9874ba21499602d7877212b62aee164b"}],"id":1}
+###
+POST http://8.210.68.176:32537
+Content-Type: application/json
+
+{"jsonrpc":"2.0","method":"trace_block","params":[{"blockHash":"0xba671f8a7b897b75c4ffff94e271739d9874ba21499602d7877212b62aee164b"}],"id":1}
+###

@@ -74,32 +74,52 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
         // },
     ];
 
-    const data = [
-        {
-            key: '1',
-            name: 'John Brown',
-            age: 32,
-            address: 'New York No. 1 Lake Park',
-            tags: ['nice', 'developer'],
-        },
-        {
-            key: '2',
-            name: 'Jim Green',
-            age: 42,
-            address: 'London No. 1 Lake Park',
-            tags: ['loser'],
-        },
-        {
-            key: '3',
-            name: 'Joe Black',
-            age: 32,
-            address: 'Sidney No. 1 Lake Park',
-            tags: ['cool', 'teacher'],
-        },
-    ];
     return (
         <React.Fragment>
             <Table pagination={false} columns={columns} dataSource={minters} />
+        </React.Fragment>
+    )
+}
+function TokenSummary({tokens}) {
+    const columns = [
+        {
+            title: 'Name', //width: '20%',
+            dataIndex: 'name',
+            key: 'name',
+        }, {
+            title: 'Price', //width: '20%',
+            dataIndex: 'price',
+            key: 'price', align: 'right' as const,
+        }, {
+            title: 'Supply',// width: '20%',
+            dataIndex: 'supplyFmt',
+            key: 'supplyFmt', align: 'right' as const,
+            render: (text)=>{
+                return (parseFloat(text).toLocaleString())
+            }
+        }, {
+            title: 'Value',// width: '20%',
+            dataIndex: 'amt', key: 'amt', align: 'right' as const,
+        }, {
+            title: '', key: 'check',// width: '20%',
+            render: (_, row) => (
+                <>
+                    {
+                        row.match ?
+                            <><CheckOutlined style={{fontSize: '2em', color: "green"}}/></>
+                            :
+                            <><WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
+                            </>
+                    }
+                </>
+            ),
+        }
+
+    ]
+    return (
+        <React.Fragment>
+            Summary:
+            <Table pagination={false} columns={columns} dataSource={tokens} />
         </React.Fragment>
     )
 }
@@ -108,6 +128,8 @@ function TokenSupply() {
     const [loading, setLoading] = useState(true)
     const [showAllMinter, setShowAllMinter] = useState(false)
     const [priceInfo, setPriceInfo] = useState({'BTCUSDT': 0.0, 'ETHUSDT': 0.0})
+    const anyArr:any[] = []
+    const [tokenList, setTokenList] = useState(anyArr)
     const getPrice = (name)=>{
         if (name.includes('BTC')) {
             return priceInfo['BTCUSDT']
@@ -117,6 +139,26 @@ function TokenSupply() {
             return 1.0
         }
     }
+    function fillPrice() {
+        if (priceInfo.ETHUSDT < 1) {
+            return
+        }
+        if (Object.keys(info.tokens).length < 1) {
+            return
+        }
+        const arr: any[] = []
+        Object.keys(info.tokens).forEach(k=>{
+            // info.tokens[k].price = getPrice(info.addressMap[k])
+            const name = info.addressMap[k]
+            const sum = info.tokens[k].slice(-1)[0]
+            const price = getPrice(name)
+            const amt = (sum.minterSupplyFormat * price).toLocaleString()
+            const match = sum.minterSupply === sum.onChain.total
+            arr.push({name, price, addr: k, amt, match, supplyFmt: sum.minterSupplyFormat})
+        })
+        setTokenList(arr.sort((b,a)=>a.price - b.price))
+    }
+    //get price info
     useEffect(()=>{
         const f = async ()=>
         {
@@ -130,6 +172,9 @@ function TokenSupply() {
         };
         f().then()
     },[])
+    useEffect(()=>{
+        fillPrice()
+    }, [info, priceInfo])
     const fetchData = ()=>{
         async function rpc() {
             let url = `${getHost()}/supply`;
@@ -154,6 +199,7 @@ function TokenSupply() {
                     minterSupply: sum.toString(), minterSupplyFormat: fmt,
                     onChain: {total: json.onChain[tk].totalSupply, totalUnit: json.onChain[tk].totalUnit},
                 })
+                // json.tokens[tk]
             })
             console.log(json)
             setInfo(json)
@@ -178,8 +224,9 @@ function TokenSupply() {
     }
     return (
         <React.Fragment>
+            <TokenSummary key={'tk001'} tokens={tokenList}/>
             <Affix offsetTop={10} key={'affix1'}>
-            <Row style={{alignItems: 'baseline', backgroundColor:'white'}}>
+            <Row style={{alignItems: 'baseline', backgroundColor:'white', marginTop: '6px'}}>
                 <Col key={'c1'} span={4}>Show Minter Detail: <Switch onChange={(c) => {
                     setShowAllMinter(c)
                 }}/></Col>

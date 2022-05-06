@@ -88,6 +88,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     const feeDelta = wantDripScale18 * 5n / 1000n;  // 千5
     let includeFee = wantDripScale18 + feeDelta;
     for(let row of body.result) {
+        if(process.env.DEBUG_RETRY){
+            console.log(`debug retry, skip parse result`)
+            break;
+        }
         const {timeStamp, from, scale18} = scaleValue(row);
         if (scale18 >= wantDripScale18 && scale18 <= includeFee
             && from === address

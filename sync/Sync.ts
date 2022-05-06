@@ -22,9 +22,17 @@ async function main() {
 
 function setupNotify(dingToken: string, checker: EventChecker) {
     if (dingToken) {
+        let times = 0
         checker.mintSourceTxNotFound = async (tx, fmtAmount) => {
             const txLink = `https://evm.confluxscan.net/tx/${tx}`
             const msg = `[${checker.name}] Mint without ethereum tx, amount ${fmtAmount}, token ${checker.tokenAddr}, ${txLink}`
+            if (times === 0) {
+                times += 1
+                console.log(msg)
+                console.log(`wait at the first time.`)
+                await sleep(5 * 60_000)
+                throw new Error(msg) // try again
+            }
             return dingMsg(msg, dingToken).then(() => {
                 process.exit(9)
             })
