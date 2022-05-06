@@ -108,7 +108,8 @@ export class EventChecker {
     }
 
     constructor(url: string, tokenAddr:string) {
-        this.provider = ethers.getDefaultProvider(url)
+        // this.provider = ethers.getDefaultProvider(url)
+        this.provider = new ethers.providers.JsonRpcBatchProvider(url)
         this.ethereumProvider = ethers.getDefaultProvider();
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
         this.tokenAddr = tokenAddr
