@@ -50,27 +50,32 @@ app.get('/sync-info', async (req,res, next)=>{
 const checkerCache = new Map<string, EventChecker>()
 async function getMinters(tokens: object){
     const map = {}
+    const tasks:Promise<any>[] = []
     for(const token of Object.keys(tokens)) {
-        let ck = checkerCache.get(token)
-        if (!ck) {
-            ck = new EventChecker(process.env.E_SPACE_RPC!, token)
-            await ck.init()
-            await ck.getMintRoles(false)
-            // if (ck.tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase() && !ck.minterSet.has(GHOST_USDT_MINTER_1)) {
-            //     ck.minterSet.add(GHOST_USDT_MINTER_1)
-            // }
-            checkerCache.set(token, ck)
-        }
-        let totalSupply = await ck.confluxContract.totalSupply();
-        const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply)}
-        for(const minter of ck.minterSet) {
-            const supply = await ck.confluxContract.minterSupply(minter, {blockTag: tokens[token].blockNumber})
-            // const supply = await ck.confluxContract.minterSupply(minter, {blockTag: 1})
-            const totalUnit = formatEther(supply.total)
-            supInfo[minter] = {total: supply.total.toBigInt().toString(), totalUnit}
-        }
-        map[token] = supInfo
+        tasks.push(new Promise(async(r)=>{
+            let ck = checkerCache.get(token)
+            if (!ck) {
+                ck = new EventChecker(process.env.E_SPACE_RPC!, token)
+                await ck.init()
+                await ck.getMintRoles(false)
+                // if (ck.tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase() && !ck.minterSet.has(GHOST_USDT_MINTER_1)) {
+                //     ck.minterSet.add(GHOST_USDT_MINTER_1)
+                // }
+                checkerCache.set(token, ck)
+            }
+            let totalSupply = await ck.confluxContract.totalSupply();
+            const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply)}
+            for (const minter of ck.minterSet) {
+                const supply = await ck.confluxContract.minterSupply(minter, {blockTag: tokens[token].blockNumber})
+                // const supply = await ck.confluxContract.minterSupply(minter, {blockTag: 1})
+                const totalUnit = formatEther(supply.total)
+                supInfo[minter] = {total: supply.total.toBigInt().toString(), totalUnit}
+            }
+            map[token] = supInfo
+            r(0)
+        }) )
     }
+    await Promise.all(tasks)
     return map
 }
 
