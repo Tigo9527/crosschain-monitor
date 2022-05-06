@@ -83,22 +83,11 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
 function TokenSummary({tokens}) {
     const columns = [
         {
-            title: 'Name', //width: '20%',
+            title: 'Name', //width: 120,
             dataIndex: 'name',
             key: 'name',
-        }, {
-            title: 'Price', //width: '20%',
-            dataIndex: 'price',
-            key: 'price', align: 'right' as const,
-        }, {
-            title: 'Supply',// width: '20%',
-            dataIndex: 'supplyFmt',
-            key: 'supplyFmt', align: 'right' as const,
-            render: (text)=>{
-                return (parseFloat(text).toLocaleString())
-            }
-        }, {
-            title: 'Value',// width: '20%',
+        },  {
+            title: 'Value', //width: 120,
             dataIndex: 'amt', key: 'amt', align: 'right' as const,
         }, {
             title: '', key: 'check',// width: '20%',
@@ -113,13 +102,24 @@ function TokenSummary({tokens}) {
                     }
                 </>
             ),
-        }
+        }, {
+            title: 'Price', //width: '20%',
+            dataIndex: 'price',
+            key: 'price', align: 'right' as const,
+        }, {
+            title: 'Supply',// width: '20%',
+            dataIndex: 'supplyFmt',
+            key: 'supplyFmt', align: 'right' as const,
+            render: (text)=>{
+                return (parseFloat(text).toLocaleString())
+            }
+        },
 
     ]
     return (
         <React.Fragment>
             Summary:
-            <Table pagination={false} columns={columns} dataSource={tokens} />
+            <Table pagination={false} columns={columns} dataSource={tokens} scroll={{x:400}}/>
         </React.Fragment>
     )
 }
@@ -171,7 +171,7 @@ function TokenSupply() {
             setPriceInfo(map)
         };
         f().then()
-    },[])
+    },[info])
     useEffect(()=>{
         fillPrice()
     }, [info, priceInfo])
