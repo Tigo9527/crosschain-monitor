@@ -22,7 +22,8 @@ async function init_DB() {
     const dbUrl = process.env.DB_URL
     // const DING = process.env.DING
     await initDB(dbUrl, false)
-    rpc = ethers.getDefaultProvider(process.env.E_SPACE_RPC)
+    // rpc = ethers.getDefaultProvider(process.env.E_SPACE_RPC)
+    rpc = new ethers.providers.JsonRpcBatchProvider(process.env.E_SPACE_RPC)
     console.log(`network `, await rpc.getNetwork())
 }
 
