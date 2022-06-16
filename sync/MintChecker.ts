@@ -409,7 +409,7 @@ export class EventChecker {
                     console.log(`tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
                     const [provider, mpc, mpcSet] = fromChainId == 1 ?
                         [this.ethereumProvider,
-                        this.multiChainMPC, this.minterSet]
+                        this.multiChainMPC, this.mpcSet]
                         : [this.bscProvider, '', {}]
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
