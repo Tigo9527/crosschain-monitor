@@ -90,6 +90,13 @@ export class EventChecker {
     public celerAddr: string = '';
     public name = ''
     public multiChainMPC = '0x373590a576ccb8143f377db5f1c16f9f8528a8b4'
+    public mpcSet = {
+        // multi-chain mpc
+        '0x373590a576ccb8143f377db5f1c16f9f8528a8b4': '1',
+        // //'usdc, ethereum', // tx eg. https://etherscan.io/tx/0xba9bd79993a6c36f1a94dbbc889f4207270e45b504c69124beb86fbb6089fd50
+        // LogAnySwapIn
+        '0xea928a8d09e11c66e074fbf2f6804e19821f438d': '1',
+    }
     public minterSet = new Set<string>()
     ethereumContract!: Contract
     decimalInfo = new Map<string, number>()
@@ -400,10 +407,13 @@ export class EventChecker {
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256'], eSpaceLog.data)
                     console.log(`tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
-                    const [provider, mpc] = fromChainId == 1 ? [this.ethereumProvider, this.multiChainMPC] : [this.bscProvider, '']
+                    const [provider, mpc, mpcSet] = fromChainId == 1 ?
+                        [this.ethereumProvider,
+                        this.multiChainMPC, this.minterSet]
+                        : [this.bscProvider, '', {}]
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
-                    }, provider, mpc)//skip check mpc on BSC . It's different on each pegged token.
+                    }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
                     // usdt is '0x58340A102534080b9D3175F868aeA9f6aF986dD9'); // eth is 0x230219b25395f14b84cf4dcd987e2daf5a71e4b
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
                     // celer case A:  mint
@@ -480,7 +490,7 @@ export class EventChecker {
         }
         return false;
     }
-    async searchEvmTx(obj:any, ethereumProvider: BaseProvider, mpc: string) {
+    async searchEvmTx(obj:any, ethereumProvider: BaseProvider, mpc: string, mpcSet:object = {}) {
         const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber} = obj
         let found = false
         //
@@ -540,8 +550,9 @@ export class EventChecker {
                 console.log(`[${this.name}] It's not in ethereum token whitelist. ${ethereumLog.address}`)
                 continue
             }
-            if (mpc && hexStripZeros(receiver||'').toLowerCase() !== mpc.toLowerCase()) {
-                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} , actual ${receiver}`)
+            let parsedReceiver = hexStripZeros(receiver||'').toLowerCase();
+            if (mpc && parsedReceiver !== mpc.toLowerCase() && !mpcSet[parsedReceiver]) {
+                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} or ${JSON.stringify(mpcSet)} , actual ${parsedReceiver}`)
                 continue
             }
             // Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
