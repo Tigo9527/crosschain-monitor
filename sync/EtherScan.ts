@@ -85,7 +85,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []
     const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
-    const feeDelta = wantDripScale18 * 1n / 100n;  // 百1
+    const feeDelta = wantDripScale18 * 5n / 100n;  // 百5
     let includeFee = wantDripScale18 + feeDelta;
     for(let row of body.result) {
         if(process.env.DEBUG_RETRY){
