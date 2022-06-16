@@ -96,6 +96,8 @@ export class EventChecker {
         // //'usdc, ethereum', // tx eg. https://etherscan.io/tx/0xba9bd79993a6c36f1a94dbbc889f4207270e45b504c69124beb86fbb6089fd50
         // LogAnySwapIn
         '0xea928a8d09e11c66e074fbf2f6804e19821f438d': '1',
+        // usdt ethereum , eg. https://etherscan.io/tx/0xe57d8b92b22125a5e6682c971323816f313688aed610f33bcf55a94d29c7205e
+        '0xee9762352f63f4387af40d58291612067727457d': 1,
     }
     public minterSet = new Set<string>()
     ethereumContract!: Contract
