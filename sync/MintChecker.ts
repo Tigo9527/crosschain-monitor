@@ -4,7 +4,7 @@ import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "e
 import {Bill, Config, DelayedMint, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
-export const ZERO = '0x0000000000000000000000000000000000000000'
+export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
 export const ETHEREUM_anyUSDT_TOKEN = '0xee9762352f63f4387af40D58291612067727457D'
@@ -100,6 +100,7 @@ export class EventChecker {
         '0xea928a8d09e11c66e074fbf2f6804e19821f438d': '1',
         // usdt ethereum , eg. https://etherscan.io/tx/0xe57d8b92b22125a5e6682c971323816f313688aed610f33bcf55a94d29c7205e
         '0xee9762352f63f4387af40d58291612067727457d': 1,
+        [ZERO]: ZERO,
     }
     public minterSet = new Set<string>()
     ethereumContract!: Contract
@@ -556,9 +557,10 @@ export class EventChecker {
                 console.log(`[${this.name}] It's not in ethereum token whitelist. ${ethereumLog.address}`)
                 continue
             }
-            let parsedReceiver = hexStripZeros(receiver||'').toLowerCase();
+            let parsedReceiver = '0x'+(receiver||'').slice(-40)
             if (mpc && parsedReceiver !== mpc.toLowerCase() && !mpcSet[parsedReceiver]) {
-                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} or ${JSON.stringify(mpcSet)} , actual ${parsedReceiver}`)
+                console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} or ${JSON.stringify(mpcSet)} , actual ${parsedReceiver
+                } raw ${receiver}`)
                 continue
             }
             // Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
