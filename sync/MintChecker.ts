@@ -380,6 +380,8 @@ export class EventChecker {
                     eTopic === '0x75f1bf55bb1de41b63a775dc7d4500f01114ee62b688a6b11d34f4692c1f3d43' ||
                     // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
                     eTopic === '0x97116cf6cd4f6412bb47914d6db18da9e16ab2142f543b86e207c24fbd16b23a' ||
+                    // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, string to, uint256 amount, uint256 fromChainID, uint256 toChainID)
+                    eTopic === '0x409e0ad946b19f77602d6cf11d59e1796ddaa4828159a0b4fb7fa2ff6b161b79' ||
                     // LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount) // multi chain
                     eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
                     const newSupply = await this.calcSupply(eSpaceLog.address, wei*sign, this.tokenAddr)
