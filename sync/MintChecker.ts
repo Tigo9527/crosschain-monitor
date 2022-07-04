@@ -87,6 +87,7 @@ export class EventChecker {
     public provider: BaseProvider;
     public ethereumProvider: BaseProvider;
     public bscProvider: BaseProvider;
+    public kavaProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
     public celerAddr: string = '';
@@ -124,6 +125,7 @@ export class EventChecker {
         // this.provider = new ethers.providers.JsonRpcBatchProvider(url)
         this.ethereumProvider = ethers.getDefaultProvider();
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
+        this.kavaProvider = ethers.getDefaultProvider('https://evm.kava.io')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -150,6 +152,7 @@ export class EventChecker {
 
         console.log(`init bsc provider ...`)
         console.log(`ethereum `, await this.bscProvider.getNetwork().then(st=>st.chainId))
+        console.log(`kava `, await this.kavaProvider.getNetwork().then(st=>st.chainId))
         //
         const celerAbi = [
             'function delayedTransfers(bytes32 id) view returns (tuple(address receiver,address token,uint256 amount,uint256 timestamp))',
@@ -417,7 +420,7 @@ export class EventChecker {
                     const [provider, mpc, mpcSet] = fromChainId == 1 ?
                         [this.ethereumProvider,
                         this.multiChainMPC, this.mpcSet]
-                        : [this.bscProvider, '', {}]
+                        : (fromChainId === 56 ? [this.bscProvider, '', {}] : [this.kavaProvider, '', {}]) //kava chain 2222
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
