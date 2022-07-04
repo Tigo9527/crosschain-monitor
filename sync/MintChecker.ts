@@ -422,7 +422,7 @@ export class EventChecker {
                     const [provider, mpc, mpcSet] = fromChainId == 1 ?
                         [this.ethereumProvider,
                         this.multiChainMPC, this.mpcSet]
-                        : (fromChainId === 56 ? [this.bscProvider, '', {}] : [this.kavaProvider, '', {}]) //kava chain 2222
+                        : (fromChainId == 56 ? [this.bscProvider, '', {}] : [this.kavaProvider, '', {}]) //kava chain 2222
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
@@ -507,7 +507,10 @@ export class EventChecker {
         let found = false
         //
         const txEth = await ethereumProvider.getTransaction(txHashEth)
-        const fmtValueInTx = formatEther(txEth.value)
+        if (!txEth) {
+            console.log(`tx not found ${txHashEth}`)
+        }
+        const fmtValueInTx = formatEther(txEth.value);
         const txEthReceipt = await ethereumProvider.getTransactionReceipt(txHashEth)
         if (txEthReceipt.status != 1) {
             console.log(`transaction on ethereum is failed. ${txHashEth} , status ${txEthReceipt.status}`)
