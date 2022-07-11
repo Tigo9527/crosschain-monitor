@@ -13,10 +13,11 @@ const SyncInfo = ()=>{
             dataIndex: 'name',
             key: 'name',
             render: (text, row) => {
-                const addr = text.split('_')[1]
+                const addr = row.hex;
                 return (
                     <>
-                        <a href={`https://evm.confluxscan.net/address/${addr}`} target='_blank'>{addr}</a>
+                        <a href={`https://evm.confluxscan.net/address/${addr}`} target='_blank'>{row.tokenName || '?'
+                        } </a> {addr.substring(0, 6)}...{addr.slice(-4)}
                     </>
                 );
             },
@@ -50,6 +51,15 @@ const SyncInfo = ()=>{
         const f = async ()=>
         {
             const json = await fetch(`${host}/sync-info`, {mode: "cors"}).then(res => res.json())
+            Object.keys(json.addressMap).forEach(k=>{
+                json.addressMap[k.toLowerCase()] = json.addressMap[k]
+            })
+            json.list.forEach(row=>{
+                const hex = row.name.split("_")[1].toLowerCase()
+                const tokenName = json.addressMap[hex]
+                row.tokenName = `${tokenName}`
+                row.hex = hex;
+            })
             setList(json.list)
             setBlock(json.block)
         };

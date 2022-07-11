@@ -81,6 +81,7 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
     )
 }
 function TokenSummary({tokens}) {
+    tokens.forEach(row=>row.key = row.name)
     const columns = [
         {
             title: 'Name', //width: 120,
@@ -93,9 +94,9 @@ function TokenSummary({tokens}) {
             title: '', key: 'check',// width: '20%',
             render: (_, row) => (
                         row.match ?
-                            <CheckOutlined style={{fontSize: '2em', color: "green"}}/>
+                            <CheckOutlined key={`mark_${row.name}`} style={{fontSize: '2em', color: "green"}}/>
                             :
-                            <WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
+                            <WarningOutlined key={`mark_${row.name}`} style={{fontSize: '2em', color: "darkred"}}/>
             ),
         }, {
             title: 'Price', //width: '20%',
@@ -112,8 +113,8 @@ function TokenSummary({tokens}) {
 
     ]
     return (
-        <React.Fragment key={'tb-x'}>
-            <Table title={()=>'Summary'} key={'tb-x3'} pagination={false} columns={columns} dataSource={tokens} scroll={{x:400}}/>
+        <React.Fragment key={'tb-x2'}>
+            <Table title={()=>'Summary'} key={'tb-x33'} pagination={false} columns={columns} dataSource={tokens} scroll={{x:400}}/>
         </React.Fragment>
     )
 }
@@ -237,9 +238,9 @@ function TokenSupply() {
                     <React.Fragment key={'rf'+k}>
                     <Row key={'row'+k}>
                         <Col span={24} key={'col1'}>
-                            Price: ${getPrice(info.addressMap[k])} { ' ' }
-                            <Tag>{info.addressMap[k]}</Tag>
-                            <a target={`_blank`} href={`https://evm.confluxscan.net/token/${k}`}>{k}</a>
+                            <span style={{color: 'gray'}}>Price: ${getPrice(info.addressMap[k])} {' '}</span>
+                            <Tag color={'green'}>{info.addressMap[k]}</Tag>
+                            <a style={{color:'gray'}} target={`_blank`} href={`https://evm.confluxscan.net/token/${k}`}>{k}</a>
                             <div style={{padding: '10px'}} />
                             <MinterTable key={k} addr={k} price={getPrice(info.addressMap[k])}
                                          addressMap={info.addressMap}
