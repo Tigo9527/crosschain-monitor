@@ -41,7 +41,7 @@ app.get('/sync-info', async (req,res, next)=>{
     try {
         const list = await Config.findAll({where: {name: {[Op.like]: `${EPOCH_PREFIX_KEY}%`}}})
         const block = await rpc.getBlock(rpc.getBlockNumber())
-        res.send({list, block})
+        res.send({list, block, addressMap})
     } catch (e) {
         next(e)
     }
