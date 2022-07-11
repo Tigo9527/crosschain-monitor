@@ -64,10 +64,12 @@ async function getMinters(tokens: object){
                 checkerCache.set(token, ck)
             }
             let totalSupply = await ck.confluxContract.totalSupply();
-            const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply)
-                , minterCount: ck.minterSet.size}
+            const supInfo = {totalSupply: totalSupply.toBigInt().toString(), totalUnit: formatEther(totalSupply),
+                minterCount: ck.minterSet.size
+            }
+            const innerTasks:Promise<void>[] = []
             for (const minter of ck.minterSet) {
-                tasks.push(new Promise<any>(async r=>{
+                innerTasks.push(new Promise<any>(async r=>{
                     const supply = await ck!.confluxContract.minterSupply(minter, {blockTag: tokens[token].blockNumber})
                     // const supply = await ck.confluxContract.minterSupply(minter, {blockTag: 1})
                     const totalUnit = formatEther(supply.total)
@@ -75,6 +77,7 @@ async function getMinters(tokens: object){
                     r(1)
                 }))
             }
+            await Promise.all(innerTasks)
             map[token] = supInfo
             r(0)
         }) )

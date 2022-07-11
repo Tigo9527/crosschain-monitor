@@ -39,12 +39,12 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
             key: 'onChain.minterSupply',
             render: (text, row) => (
                 <>
-                    <span style={{color: 'gray'}}>{row.onChain.total}</span>
+                    <span style={{color: 'gray'}}>{row.onChain?.total}</span>
                     <div/>
-                    {' '}{parseFloat(row.onChain.totalUnit).toLocaleString()}
+                    {' '}{parseFloat(row.onChain?.totalUnit).toLocaleString()}
                     <div/>
                     <span style={{color:'blue'}}>{' $'}
-                        {(row.onChain.totalUnit * price).toLocaleString()}</span>
+                        {(row.onChain?.totalUnit * price).toLocaleString()}</span>
                 </>
             ),
         },{
@@ -52,11 +52,11 @@ function MinterTable({addr, minters, totalSupply, totalUnit, addressMap, price})
             render: (_, row) => (
                 <>
                     {
-                        row.minterSupply === row.onChain.total ?
+                        row.minterSupply === row.onChain?.total ?
                             <><CheckOutlined style={{fontSize: '2em', color: "green"}}/></>
                             :
                             <><WarningOutlined style={{fontSize: '2em', color: "darkred"}}/>
-                                {' '}Diff: {formatEther((BigInt(row.minterSupply) - BigInt(row.onChain.total)))}
+                                {' '}Diff: {formatEther((BigInt(row.minterSupply) - BigInt(row.onChain?.total || 0)))}
                             </>
                     }
                 </>
