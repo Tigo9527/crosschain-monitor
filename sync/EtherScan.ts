@@ -48,11 +48,14 @@ function scaleValue(row:any) {
 }
 async function matchDepositId(etherTxHash:string, expect: string) {
     console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
-    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash).catch(err=>{
+    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash).catch(err => {
         console.log(`ethers getTransaction fail`, err)
         throw err
     });
     const {hash, data, from, chainId} = txInfo
+    return matchDepositId0(hash, data, from, chainId, etherTxHash, expect);
+}
+async function matchDepositId0(hash: string, data:string, from:string, chainId, etherTxHash:string, expect:string) {
     // console.log(`raw tx`, data || txInfo)
     // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
     const MethodID = '0x23463624'
@@ -83,9 +86,11 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         return null;
     }
     let host:string = '';
+    let netAStart = false;
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
         etherToken = ''
+        netAStart = true;
     }
     const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
@@ -128,6 +133,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         }
     }
     for (let row of filtered) {
+        if (netAStart) {
+            const {hash, from, input: data,} = row;
+            if (await matchDepositId0(hash, data, from, refChainId, hash, refId)) {
+                console.log(`[netAStart] matchDepositId one by one, hit`)
+                return row;
+            }
+        }
         if (await matchDepositId(row.hash, refId) ) {
             console.log(`matchDepositId one by one, hit`)
             return row
