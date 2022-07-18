@@ -75,7 +75,7 @@ async function matchDepositId0(hash: string, data:string, from:string, chainId, 
         return true
     }
     console.log(`not match, from ${from}, token ${token}, amount ${amount}, mint chain ${mintChainId
-    }, nonce ${nonce}, source chain ${chainId}`)
+    }, mintAccount ${mintAccount} nonce ${nonce}, source chain ${chainId}`)
     console.log(`actual ${hex} vs ${expect} expect`)
     return false
 }
