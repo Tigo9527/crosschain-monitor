@@ -55,7 +55,7 @@ async function matchDepositId(etherTxHash:string, expect: string) {
     const {hash, data, from, chainId} = txInfo
     return matchDepositId0(hash, data, from, chainId, etherTxHash, expect);
 }
-async function matchDepositId0(hash: string, data:string, from:string, chainId, etherTxHash:string, expect:string) {
+async function matchDepositId0(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
     // console.log(`raw tx`, data || txInfo)
     // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
     const MethodID = '0x23463624'
@@ -130,11 +130,11 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
         if (netAStart) {
             const {hash, from, input: data,} = similar;
-            if (await matchDepositId0(hash, data, from, refChainId, hash, refId)) {
+            if (await matchDepositId0(hash, data, from, 1, hash, refId)) {
                 console.log(`[netAStart] matchDepositId one by one, hit case 1`)
                 return similar;
             }
-        }
+        } else
         if (await matchDepositId(similar.hash, refId) ) {
             return similar
         }
@@ -142,11 +142,11 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     for (let row of filtered) {
         if (netAStart) {
             const {hash, from, input: data,} = row;
-            if (await matchDepositId0(hash, data, from, refChainId, hash, refId)) {
+            if (await matchDepositId0(hash, data, from, 592, hash, refId)) {
                 console.log(`[netAStart] matchDepositId one by one, hit`)
                 return row;
             }
-        }
+        } else
         if (await matchDepositId(row.hash, refId) ) {
             console.log(`matchDepositId one by one, hit`)
             return row
