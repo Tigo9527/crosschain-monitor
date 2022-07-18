@@ -128,6 +128,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {timeStamp, from, scale18} = scaleValue(similar);
         console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
+        if (netAStart) {
+            const {hash, from, input: data,} = similar;
+            if (await matchDepositId0(hash, data, from, refChainId, hash, refId)) {
+                console.log(`[netAStart] matchDepositId one by one, hit case 1`)
+                return similar;
+            }
+        }
         if (await matchDepositId(similar.hash, refId) ) {
             return similar
         }
