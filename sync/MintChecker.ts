@@ -303,7 +303,7 @@ export class EventChecker {
             console.log(`celer delayed transfer info`, {account, token, amount, refId})
             let epochAnchor = epoch
             const hit = await this.searchCelerEvmTx(this.celerAddr, account, amount, amount, amount,
-                epochAnchor, mintLog.transactionHash, refId, false)
+                epochAnchor, mintLog.transactionHash, refId, false, refChainId)
             if (hit) {
                 console.log(`save delayed mint.`)
                 await DelayedMint.create({
@@ -444,6 +444,7 @@ export class EventChecker {
                     const pureData = eSpaceLog.data.substring(2)
                     // console.log(`DelayedTransferExecuted log data`, pureData)
                     const mintId = '0x'+pureData.substring(64*0, 64*1)
+                    const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
                     console.log(`DelayedTransferExecuted `, mintId)
                     const delayed = await DelayedMint.findOne({where: {mintId}})
                     if (!delayed) {
@@ -452,7 +453,7 @@ export class EventChecker {
                     }
                     const {receiver: account, amount, refId, blockNumber: delayedAtBlock} = delayed;
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
-                        delayedAtBlock, transactionHash, refId, true)
+                        delayedAtBlock, transactionHash, refId, true, refChainId)
                 }
             }
             if (found) {
