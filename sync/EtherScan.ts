@@ -12,11 +12,12 @@ export async function listTransfer(who: string, etherToken: string, host) {
     //     &endblock=27025780
 
     host = host || `https://api.etherscan.io`;
+    const tokenFilter = etherToken ? `&contractaddress=${etherToken}` : ''
     // host = 'https://cn.etherscan.com' // not work
     const url = `${host}/api
    ?module=account
    &action=tokentx
-   &contractaddress=${etherToken}
+   ${tokenFilter}
    &address=${who}
    &page=1
    &offset=100
@@ -84,6 +85,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     let host:string = '';
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
+        etherToken = ''
     }
     const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
