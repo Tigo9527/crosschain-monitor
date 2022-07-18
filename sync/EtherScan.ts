@@ -6,12 +6,12 @@ const superagent = require('superagent')
 require('superagent-proxy')(superagent);
 
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
-export async function listTransfer(who: string, etherToken: string, host = `https://api.etherscan.io`) {
+export async function listTransfer(who: string, etherToken: string, host) {
     const apiKey = process.env.ETHER_SCAN_API_KEY || ""
     // &startblock=0
     //     &endblock=27025780
 
-    // let host = ;
+    host = host || `https://api.etherscan.io`;
     // host = 'https://cn.etherscan.com' // not work
     const url = `${host}/api
    ?module=account
