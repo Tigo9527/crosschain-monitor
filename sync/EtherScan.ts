@@ -133,6 +133,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             if (await matchDepositId0(hash, data, from, 1, hash, refId)) {
                 console.log(`[netAStart] matchDepositId one by one, hit case 1`)
                 return similar;
+            } else {
+                console.log(`[net astar ${refChainId}] take similar as match.`)
+                return similar;
             }
         } else
         if (await matchDepositId(similar.hash, refId) ) {
@@ -190,7 +193,7 @@ async function main1() {
         20999855374966449675n,//
         // parseEther("21").toBigInt(),
         '0x6B175474E89094C44Da98b954EedeAC495271d0F', 1648470450,
-        '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469', BigInt(0))
+        '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469', BigInt(1))
 }
 if (module === require.main) {
     require('dotenv/config')
