@@ -82,7 +82,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         return null;
     }
     let host:string = '';
-    if (refChainId == BigInt(529)) {
+    if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
     }
     const body = await listTransfer(address, etherToken, host);
