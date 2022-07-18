@@ -6,12 +6,12 @@ const superagent = require('superagent')
 require('superagent-proxy')(superagent);
 
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
-export async function listTransfer(who: string, etherToken: string) {
+export async function listTransfer(who: string, etherToken: string, host = `https://api.etherscan.io`) {
     const apiKey = process.env.ETHER_SCAN_API_KEY || ""
     // &startblock=0
     //     &endblock=27025780
 
-    let host = `https://api.etherscan.io`;
+    // let host = ;
     // host = 'https://cn.etherscan.com' // not work
     const url = `${host}/api
    ?module=account
@@ -76,12 +76,16 @@ async function matchDepositId(etherTxHash:string, expect: string) {
     return false
 }
 export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
-                                         beforeTimeSec: number, refId:string) {
+                                         beforeTimeSec: number, refId:string, refChainId: BigInt) {
     if (!etherToken) {
         console.log(`ether token is invalid, [${etherToken}]`)
         return null;
     }
-    const body = await listTransfer(address, etherToken);
+    let host:string = '';
+    if (refChainId == BigInt(529)) {
+        host = "https://blockscout.com/astar"
+    }
+    const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []
     const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
@@ -165,7 +169,7 @@ async function main1() {
         20999855374966449675n,//
         // parseEther("21").toBigInt(),
         '0x6B175474E89094C44Da98b954EedeAC495271d0F', 1648470450,
-        '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469')
+        '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469', BigInt(0))
 }
 if (module === require.main) {
     require('dotenv/config')

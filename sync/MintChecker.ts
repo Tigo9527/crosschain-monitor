@@ -435,9 +435,10 @@ export class EventChecker {
                         console.log(`not for current token, found [${token}], want ${this.tokenAddr}`)
                         continue
                     }
-                    console.log(`[${this.name}] celer mint, account ${account} , amount ${amount} ${fmtAmt}`);
+                    console.log(`[${this.name}] celer mint, account ${account} , amount ${amount} ${fmtAmt} refChainId ${
+                        refChainId}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
-                        blockNumber, transactionHash, refId, true)
+                        blockNumber, transactionHash, refId, true, refChainId)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)
@@ -474,7 +475,7 @@ export class EventChecker {
         return {mintId, token, amount, account, refId, refChainId, fmtAmt}
     }
     async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
-                           transactionHash:string, refId:string, save: boolean) {
+                           transactionHash:string, refId:string, save: boolean, refChainId:BigInt) {
         let timestamp;
         if (process.env.DEBUG_TIMESTAMP) {
             timestamp = 1648469937;//new Date('').getTime() / 1000 // test
@@ -482,7 +483,7 @@ export class EventChecker {
             const {timestamp: t0} = await this.provider.getBlock(blockNumber)
             timestamp = t0
         }
-        const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId)
+        const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
