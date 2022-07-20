@@ -386,6 +386,9 @@ export class EventChecker {
                 if (
                     // Burn(bytes32 burnId, address token, address account, uint256 amount, address withdrawAccount) // celer
                     eTopic === '0x75f1bf55bb1de41b63a775dc7d4500f01114ee62b688a6b11d34f4692c1f3d43' ||
+                    // Burn(bytes32 burnId, address token, address account, uint256 amount, uint64 toChainId, address toAccount, uint64 nonce)
+                    // https://evm.confluxscan.net/tx/0x394bbfc941821c6f1dc40eff48c839093b0b5d1ae283032dd101f6eedbc1787b?tab=logs // celer ?
+                    eTopic === '0x6298d7b58f235730b3b399dc5c282f15dae8b022e5fbbf89cee21fd83c8810a3' ||
                     // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
                     eTopic === '0x97116cf6cd4f6412bb47914d6db18da9e16ab2142f543b86e207c24fbd16b23a' ||
                     // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, string to, uint256 amount, uint256 fromChainID, uint256 toChainID)
