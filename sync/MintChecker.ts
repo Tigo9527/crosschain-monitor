@@ -15,6 +15,7 @@ export const ETHEREUM_WBTC_TOKEN = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'
 export const ETHEREUM_WETH_TOKEN = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
 //
 export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955' // pegged mc
+export const BSC_anyUSD = '0x58340A102534080b9D3175F868aeA9f6aF986dD9' // pegged mc
 export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
 export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
 export const BSC_USDC = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' // Binance-Peg USD Coin
@@ -44,6 +45,7 @@ TOKEN_BIND.set(E_SPACE_ETH.toLowerCase(), ETHEREUM_WETH_TOKEN)
 
 export const FOREIGN_TOKEN_TO_LOCAL = new Map<string, string>()
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(BSC_anyUSD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
