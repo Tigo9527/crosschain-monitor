@@ -92,6 +92,7 @@ export class EventChecker {
     public ethereumProvider: BaseProvider;
     public bscProvider: BaseProvider;
     public kavaProvider: BaseProvider;
+    public evmOsProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
     public celerAddr: string = '';
@@ -130,6 +131,7 @@ export class EventChecker {
         this.ethereumProvider = ethers.getDefaultProvider();
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
         this.kavaProvider = ethers.getDefaultProvider('https://evm.kava.io')
+        this.evmOsProvider = ethers.getDefaultProvider('https://eth.bd.evmos.org:8545')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -385,8 +387,7 @@ export class EventChecker {
                     console.log(`event source contract not in minterSet. ${eventSource}`);
                     continue;
                 }
-                if (
-                    // Burn(bytes32 burnId, address token, address account, uint256 amount, address withdrawAccount) // celer
+                if (// Burn(bytes32 burnId, address token, address account, uint256 amount, address withdrawAccount) // celer
                     eTopic === '0x75f1bf55bb1de41b63a775dc7d4500f01114ee62b688a6b11d34f4692c1f3d43' ||
                     // Burn(bytes32 burnId, address token, address account, uint256 amount, uint64 toChainId, address toAccount, uint64 nonce)
                     // https://evm.confluxscan.net/tx/0x394bbfc941821c6f1dc40eff48c839093b0b5d1ae283032dd101f6eedbc1787b?tab=logs // celer ?
@@ -394,17 +395,46 @@ export class EventChecker {
                     // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
                     eTopic === '0x97116cf6cd4f6412bb47914d6db18da9e16ab2142f543b86e207c24fbd16b23a' ||
                     // LogAnySwapOut(index_topic_1 address token, index_topic_2 address from, string to, uint256 amount, uint256 fromChainID, uint256 toChainID)
-                    eTopic === '0x409e0ad946b19f77602d6cf11d59e1796ddaa4828159a0b4fb7fa2ff6b161b79' ||
-                    // LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount) // multi chain
-                    eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
-                    const newSupply = await this.calcSupply(eSpaceLog.address, wei*sign, this.tokenAddr)
+                    eTopic === '0x409e0ad946b19f77602d6cf11d59e1796ddaa4828159a0b4fb7fa2ff6b161b79') {
+                    const newSupply = await this.calcSupply(eSpaceLog.address, wei * sign, this.tokenAddr)
                     await Bill.create({
-                        blockNumber, drip: -wei, ethereumDrip: 0n, ethereumFormatUnit: 0, ethereumTx: '', ethereumTxFrom: '',
-                        ethereumTxTo: '', ethereumTxToken: '',
-                        formatUnit: -parseFloat(mintV), minterAddr: eSpaceLog.address,
+                        blockNumber,
+                        drip: -wei,
+                        ethereumDrip: 0n,
+                        ethereumFormatUnit: 0,
+                        ethereumTx: '',
+                        ethereumTxFrom: '',
+                        ethereumTxTo: '',
+                        ethereumTxToken: '',
+                        formatUnit: -parseFloat(mintV),
+                        minterAddr: eSpaceLog.address,
                         minterName: addressName(eSpaceLog.address),
-                        minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
-                        tokenAddr: this.tokenAddr, tokenName: this.name,
+                        minterSupply: newSupply.drip,
+                        minterSupplyFormat: parseFloat(newSupply.unit),
+                        tokenAddr: this.tokenAddr,
+                        tokenName: this.name,
+                        tx: transactionHash
+                    })
+                    found = true;
+                } else if (// LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount) // multi chain
+                    eTopic === '0x6b616089d04950dc06c45c6dd787d657980543f89651aec47924752c7d16c888') {
+                    const newSupply = await this.calcSupply(eSpaceLog.address, wei * sign, this.tokenAddr)
+                    await Bill.create({
+                        blockNumber,
+                        drip: -wei,
+                        ethereumDrip: 0n,
+                        ethereumFormatUnit: 0,
+                        ethereumTx: '',
+                        ethereumTxFrom: '',
+                        ethereumTxTo: '',
+                        ethereumTxToken: '',
+                        formatUnit: -parseFloat(mintV),
+                        minterAddr: eSpaceLog.address,
+                        minterName: addressName(eSpaceLog.address),
+                        minterSupply: newSupply.drip,
+                        minterSupplyFormat: parseFloat(newSupply.unit),
+                        tokenAddr: this.tokenAddr,
+                        tokenName: this.name,
                         tx: transactionHash
                     })
                     found = true;
@@ -416,7 +446,7 @@ export class EventChecker {
                     console.log(`ethereum tx hash ${txHashEth} from ${hexStripZeros(txFromEth)}`)
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
-                    } , this.ethereumProvider, this.multiChainMPC);
+                    }, this.ethereumProvider, this.multiChainMPC);
                 } else if (eTopic === '0xaac9ce45fe3adf5143598c4f18a369591a20a3384aedaf1b525d29127e1fcd55') {
                     // LogAnySwapIn(index_topic_1 bytes32 txhash, index_topic_2 address token, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
                     // bsc chain 56 for now
@@ -424,10 +454,19 @@ export class EventChecker {
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256'], eSpaceLog.data)
                     console.log(`tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
-                    const [provider, mpc, mpcSet] = fromChainId == 1 ?
-                        [this.ethereumProvider,
-                        this.multiChainMPC, this.mpcSet]
-                        : (fromChainId == 56 ? [this.bscProvider, '', {}] : [this.kavaProvider, '', {}]) //kava chain 2222
+                    let provider: any, mpc: any, mpcSet: any;
+                    if (fromChainId == 1) {
+                        [provider, mpc, mpcSet] = [this.ethereumProvider,
+                            this.multiChainMPC, this.mpcSet];
+                    } else if (fromChainId == 56) {
+                        [provider, mpc, mpcSet] = [this.bscProvider, '', {}];
+                    } else if (fromChainId == 2222) { // //kava chain 2222
+                        [provider, mpc, mpcSet] = [this.kavaProvider, '', {}];
+                    } else if (fromChainId == 9001) {
+                        [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
+                    } else {
+                        throw new Error(`unsupported chain ${fromChainId}`)
+                    }
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
@@ -442,14 +481,14 @@ export class EventChecker {
                     }
                     console.log(`[${this.name}] celer mint, account ${account} , amount ${amount} ${fmtAmt} refChainId ${
                         refChainId}`);
-                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         blockNumber, transactionHash, refId, true, refChainId)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)
                     // console.log(`DelayedTransferExecuted log data`, pureData)
-                    const mintId = '0x'+pureData.substring(64*0, 64*1)
-                    const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
+                    const mintId = '0x' + pureData.substring(64 * 0, 64 * 1)
+                    const refChainId = BigInt('0x' + pureData.substring(64 * 4, 64 * 5))
                     console.log(`DelayedTransferExecuted `, mintId)
                     const delayed = await DelayedMint.findOne({where: {mintId}})
                     if (!delayed) {
@@ -457,7 +496,7 @@ export class EventChecker {
                         continue
                     }
                     const {receiver: account, amount, refId, blockNumber: delayedAtBlock} = delayed;
-                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei*sign, wei,
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         delayedAtBlock, transactionHash, refId, true, refChainId)
                 }
             }
