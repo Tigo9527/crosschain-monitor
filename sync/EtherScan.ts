@@ -91,6 +91,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         host = "https://blockscout.com/astar"
         etherToken = ''
         netAStart = true;
+    } else if (refChainId == BigInt(9001)) {
+        host = "https://evm.evmos.org/api"
+        etherToken = ''
+        // netAStart = true;
     }
     const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
