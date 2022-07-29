@@ -86,15 +86,15 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         return null;
     }
     let host:string = '';
-    let netAStart = false;
+    let useInfoFromMatchedRecord = false;
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
         etherToken = ''
-        netAStart = true;
+        useInfoFromMatchedRecord = true;
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
         etherToken = ''
-        // netAStart = true;
+        useInfoFromMatchedRecord = true;
     }
     const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
@@ -132,13 +132,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {timeStamp, from, scale18} = scaleValue(similar);
         console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
-        if (netAStart) {
+        if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = similar;
             if (await matchDepositId0(hash, data, from, 1, hash, refId)) {
-                console.log(`[netAStart] matchDepositId one by one, hit case 1`)
+                console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
                 return similar;
             } else {
-                console.log(`[net astar ${refChainId}] take similar as match.`)
+                console.log(`[ ${refChainId}] take similar as match.`)
                 return similar;
             }
         } else
@@ -147,10 +147,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         }
     }
     for (let row of filtered) {
-        if (netAStart) {
+        if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = row;
             if (await matchDepositId0(hash, data, from, 592, hash, refId)) {
-                console.log(`[netAStart] matchDepositId one by one, hit`)
+                console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
         } else
