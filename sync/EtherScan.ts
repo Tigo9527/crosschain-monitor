@@ -92,7 +92,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         netAStart = true;
     } else if (refChainId == BigInt(9001)) {
-        host = "https://evm.evmos.org/api"
+        host = "https://evm.evmos.org"
         etherToken = ''
         // netAStart = true;
     }
