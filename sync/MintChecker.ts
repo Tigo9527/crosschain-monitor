@@ -48,6 +48,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_anyUSD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WBTC_TOKEN.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(KAVA_USDC_TOKEN.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_anyUSDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
@@ -101,6 +102,7 @@ export class EventChecker {
     public mpcSet = {
         // multi-chain mpc
         '0x373590a576ccb8143f377db5f1c16f9f8528a8b4': '1',
+        '0xcfd5868fbf612bd8907827f012d71f3c7ba6c943': '1',
         // //'usdc, ethereum', // tx eg. https://etherscan.io/tx/0xba9bd79993a6c36f1a94dbbc889f4207270e45b504c69124beb86fbb6089fd50
         // LogAnySwapIn
         '0xea928a8d09e11c66e074fbf2f6804e19821f438d': '1',
