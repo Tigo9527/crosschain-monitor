@@ -46,9 +46,9 @@ function scaleValue(row:any) {
     const scale18 = BigInt(value) * BigInt(Math.pow(10, 18 - tokenDecimal))
     return {timeStamp, from, scale18};
 }
-async function matchDepositId(etherTxHash:string, expect: string) {
+async function matchDepositId(etherTxHash:string, expect: string, providerUrl = undefined) {
     console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
-    let txInfo = await ethers.getDefaultProvider().getTransaction(etherTxHash).catch(err => {
+    let txInfo = await ethers.getDefaultProvider(providerUrl).getTransaction(etherTxHash).catch(err => {
         console.log(`ethers getTransaction fail`, err)
         throw err
     });
@@ -86,6 +86,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         return null;
     }
     let host:string = '';
+    let providerUrl// = undefined
     let useInfoFromMatchedRecord = false;
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
@@ -93,8 +94,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         useInfoFromMatchedRecord = true;
     } else if (refChainId == BigInt(1284)) {
         host = "https://api-moonbeam.moonscan.io"
+        providerUrl = 'https://rpc.api.moonbeam.network'
         etherToken = ''
-        useInfoFromMatchedRecord = true;
+        useInfoFromMatchedRecord = false;
     } else if (refChainId == BigInt(2001)) {
         host = "https://explorer-mainnet-cardano-evm.c1.milkomeda.com"
         etherToken = ''
@@ -142,27 +144,27 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = similar;
-            if (await matchDepositId0(hash, data, from, 1, hash, refId)) {
+            if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
                 console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
                 return similar;
             } else {
-                console.log(`[ ${refChainId}] take similar as match.`)
-                return similar;
+                // console.log(`[ ${refChainId}] take similar as match.`)
+                // return similar;
             }
         } else
-        if (await matchDepositId(similar.hash, refId) ) {
+        if (await matchDepositId(similar.hash, refId, providerUrl) ) {
             return similar
         }
     }
     for (let row of filtered) {
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = row;
-            if (await matchDepositId0(hash, data, from, 592, hash, refId)) {
+            if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
                 console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
         } else
-        if (await matchDepositId(row.hash, refId) ) {
+        if (await matchDepositId(row.hash, refId, providerUrl) ) {
             console.log(`matchDepositId one by one, hit`)
             return row
         }
