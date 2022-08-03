@@ -150,13 +150,16 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
                 console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
                 return similar;
-            } else if (forceUseSimilar){
+            }if (forceUseSimilar){
                 console.log(`[ ${refChainId}] take similar as match.`)
                 return similar;
             }
         } else
         if (await matchDepositId(similar.hash, refId, providerUrl) ) {
             return similar
+        } else if (forceUseSimilar) {
+            console.log(`[ ${refChainId}] take similar as match, case 2.`)
+            return similar;
         }
     }
     for (let row of filtered) {
