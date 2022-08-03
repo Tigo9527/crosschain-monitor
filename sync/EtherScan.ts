@@ -88,6 +88,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     let host:string = '';
     let providerUrl// = undefined
     let useInfoFromMatchedRecord = false;
+    let forceUseSimilar = false;
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
         etherToken = ''
@@ -97,6 +98,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         providerUrl = 'https://rpc.api.moonbeam.network'
         etherToken = ''
         useInfoFromMatchedRecord = false;
+        forceUseSimilar = true;
     } else if (refChainId == BigInt(2001)) {
         host = "https://explorer-mainnet-cardano-evm.c1.milkomeda.com"
         etherToken = ''
@@ -105,6 +107,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         host = "https://evm.evmos.org"
         etherToken = ''
         useInfoFromMatchedRecord = true;
+        forceUseSimilar = true;
     }
     const body = await listTransfer(address, etherToken, host);
     // console.log(`ether scan result:` , body)
@@ -147,9 +150,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
                 console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
                 return similar;
-            } else {
-                // console.log(`[ ${refChainId}] take similar as match.`)
-                // return similar;
+            } else if (forceUseSimilar){
+                console.log(`[ ${refChainId}] take similar as match.`)
+                return similar;
             }
         } else
         if (await matchDepositId(similar.hash, refId, providerUrl) ) {
