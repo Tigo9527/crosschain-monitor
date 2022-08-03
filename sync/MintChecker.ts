@@ -94,6 +94,7 @@ export class EventChecker {
     public bscProvider: BaseProvider;
     public kavaProvider: BaseProvider;
     public milk2001Provider: BaseProvider;
+    public moonbeam1284Provider: BaseProvider;
     public evmOsProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
@@ -136,6 +137,7 @@ export class EventChecker {
         this.kavaProvider = ethers.getDefaultProvider('https://evm.kava.io')
         this.evmOsProvider = ethers.getDefaultProvider('https://eth.bd.evmos.org:8545')
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
+        this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -468,6 +470,8 @@ export class EventChecker {
                         [provider, mpc, mpcSet] = [this.kavaProvider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
+                    } else if (fromChainId == 1284) {
+                        [provider, mpc, mpcSet] = [this.moonbeam1284Provider, '', {}];
                     } else if (fromChainId == 9001) {
                         [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
                     } else {
