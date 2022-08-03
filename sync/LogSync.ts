@@ -24,7 +24,7 @@ export class ELog extends Model<ILog> implements ILog {
 			transactionHash: {type: DataTypes.STRING(66), allowNull: false},
 		}, {
 			sequelize: seq,
-			tableName: 'token',
+			tableName: 'ELog',
 			indexes: [
 				{name: 'idx_block_addr', fields: ['blockNumber', 'address']}
 			]
@@ -54,7 +54,7 @@ class LogSync {
 		const preBlock = BigInt(config?.config!)
 
 		let delay = await this.sync(50540715,50540715)
-		setTimeout(()=>this.repeat(), delay)
+		// setTimeout(()=>this.repeat(), delay)
 	}
 	async sync(fromBlock: number, toBlock: number) {
 		const contracts = ['0xfe97e85d13abd9c1c33384e796f10b73905637ce', //usdt
