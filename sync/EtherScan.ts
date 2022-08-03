@@ -91,6 +91,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         host = "https://blockscout.com/astar"
         etherToken = ''
         useInfoFromMatchedRecord = true;
+    } else if (refChainId == BigInt(2001)) {
+        host = "https://explorer-mainnet-cardano-evm.c1.milkomeda.com"
+        etherToken = ''
+        useInfoFromMatchedRecord = true;
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
         etherToken = ''
