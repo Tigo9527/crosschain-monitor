@@ -19,7 +19,7 @@ export const BSC_anyUSD = '0x58340A102534080b9D3175F868aeA9f6aF986dD9' // pegged
 export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
 export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
 export const BSC_USDC = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' // Binance-Peg USD Coin
-export const ONT58_USDT = '0x72b0f5612802d473a13716db71a0348bcf631d98' // ont58 usdt
+export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' // ont58 usdt
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
