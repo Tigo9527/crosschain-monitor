@@ -104,6 +104,7 @@ export class EventChecker {
     public milk2001Provider: BaseProvider;
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
+    public ArbitrumNova42170Provider: BaseProvider;
     public evmOsProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
@@ -148,6 +149,7 @@ export class EventChecker {
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
+        this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -480,6 +482,8 @@ export class EventChecker {
                         [provider, mpc, mpcSet] = [this.kavaProvider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
+                    } else if (fromChainId == 42170) {
+                        [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {}];
                     } else if (fromChainId == 58) {
                         [provider, mpc, mpcSet] = [this.ont58Provider, '', {}];
                     } else if (fromChainId == 1284) {
