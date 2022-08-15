@@ -483,7 +483,9 @@ export class EventChecker {
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
                     } else if (fromChainId == 42170) {
-                        [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {}];
+                        [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {
+                            '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
+                        }];
                     } else if (fromChainId == 58) {
                         [provider, mpc, mpcSet] = [this.ont58Provider, '', {}];
                     } else if (fromChainId == 1284) {
@@ -598,7 +600,7 @@ export class EventChecker {
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
                 return false;
             }
-            if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase()) {
+            if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase() && !mpcSet[txEthTo]) {
                 console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${mpc} , actual ${txEthTo}`)
                 return false;
             }
