@@ -105,6 +105,16 @@ export class EventChecker {
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
+    /*
+    Step Network [Mainnet]
+
+RPC URL: https://rpc.step.network/
+Chain ID: 1234
+Currency Symbol: FITFI
+
+Block Explorer URL: https://stepscan.io/
+     */
+    public step1234Provider: BaseProvider;
     public evmOsProvider: BaseProvider;
     dingToken = ''
     public tokenAddr: string = '';
@@ -150,6 +160,7 @@ export class EventChecker {
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
+        this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -480,6 +491,8 @@ export class EventChecker {
                         [provider, mpc, mpcSet] = [this.bscProvider, '', {}];
                     } else if (fromChainId == 2222) { // //kava chain 2222
                         [provider, mpc, mpcSet] = [this.kavaProvider, '', {}];
+                    } else if (fromChainId == 1234) {
+                        [provider, mpc, mpcSet] = [this.step1234Provider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
                     } else if (fromChainId == 42170) {
