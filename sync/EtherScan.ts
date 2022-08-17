@@ -55,16 +55,22 @@ async function matchDepositId(etherTxHash:string, expect: string, providerUrl = 
     const {hash, data, from, chainId} = txInfo
     return matchDepositId0(hash, data, from, chainId, etherTxHash, expect);
 }
+
+function decodeTxData(data: string) {
+    const MethodID = '0x23463624'
+    const headlessData = data.substring(MethodID.length)
+    const token = '0x' + headlessData.substring(64 * 0 + 24, 64 * 1)
+    const amount = BigInt('0x' + headlessData.substring(64 * 1, 64 * 2))
+    const mintChainId = BigInt('0x' + headlessData.substring(64 * 2, 64 * 3))
+    const mintAccount = '0x' + headlessData.substring(64 * 3 + 24, 64 * 4)
+    const nonce = BigInt('0x' + headlessData.substring(64 * 4, 64 * 5))
+    return {token, amount, mintChainId, mintAccount, nonce};
+}
+
 async function matchDepositId0(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
     // console.log(`raw tx`, data || txInfo)
     // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
-    const MethodID = '0x23463624'
-    const headlessData = data.substring(MethodID.length)
-    const token = '0x'+headlessData.substring(64*0 + 24, 64*1)
-    const amount = BigInt('0x'+headlessData.substring(64*1, 64*2))
-    const mintChainId = BigInt('0x'+headlessData.substring(64*2, 64*3))
-    const mintAccount = '0x'+headlessData.substring(64*3 + 24, 64*4)
-    const nonce = BigInt('0x'+headlessData.substring(64*4, 64*5))
+    const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
     const hex = utils.solidityKeccak256(
         //      0 sender  1 token    2 amount  3 mintChain 4 mintAcc  5 nonce  6 sourceChain
         [ "address", "address","uint256","uint64",    "address",  "uint64", "uint64" ],
@@ -123,6 +129,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             break;
         }
         const {timeStamp, from, scale18} = scaleValue(row);
+        if (useInfoFromMatchedRecord) {
+            const {hash, from, input: data,} = row;
+            const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
+            if (mintChainId.toString() != '1030') {
+                continue
+            }
+        }
         if (scale18 >= wantDripScale18 && scale18 <= includeFee
             && from === address
             && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
