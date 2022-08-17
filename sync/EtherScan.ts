@@ -131,9 +131,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {timeStamp, from, scale18} = scaleValue(row);
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = row;
-            const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
-            if (mintChainId.toString() != '1030') {
-                continue
+            try {
+                const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
+                if (mintChainId.toString() != '1030') {
+                    continue
+                }
+            } catch (e) {
             }
         }
         if (scale18 >= wantDripScale18 && scale18 <= includeFee
