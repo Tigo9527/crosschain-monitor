@@ -86,6 +86,7 @@ export const addressMap:{[k:string]: string} = {
     [E_SPACE_ANY_SWAP_USDT]: 'AnyswapV6ERC20_USDT', // vault 0x373590a576ccb8143f377db5f1c16f9f8528a8b4, it's not a contract
     [E_SPACE_ANY_SWAP_DAI]: 'AnyswapV6ERC20_DAI', //
     '0xBB7684Cc5408F4DD0921E5c2Cadd547b8f1AD573': 'celer',
+    '0x3b53D2C7B44d40BE05Fa5E2309FFeB6eB2492d88': 'celer_2',
     [ETHEREUM_USDT_TOKEN]:'ethereumUSDT',
     [ETHEREUM_USDC_TOKEN]: 'ethereumUSDC',
     [ETHEREUM_WBTC_TOKEN]: 'ethereumWBTC',
