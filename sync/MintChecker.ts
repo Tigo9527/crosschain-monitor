@@ -571,6 +571,23 @@ Block Explorer URL: https://stepscan.io/
             const {timestamp: t0} = await this.provider.getBlock(blockNumber)
             timestamp = t0
         }
+        if (process.env.SKIP_TX === transactionHash) {
+            const value = wei;
+            const tokenDecimal = "0"; const txHashEth = `skip at chain ${refChainId}`; const txEthReceiptFrom = "skip"; const txEthTo = "skip";
+            const contractAddress = "skip";
+            const newSupply = await this.calcSupply(minter, BigInt(diff), this.tokenAddr)
+            await Bill.create({
+                blockNumber, drip: wei, ethereumDrip: value, ethereumFormatUnit: parseFloat(formatUnits(BigInt(value), parseInt(tokenDecimal))),
+                ethereumTx: txHashEth, ethereumTxFrom: txEthReceiptFrom, ethereumTxTo: txEthTo,
+                ethereumTxToken: contractAddress, formatUnit: parseFloat(formatEther(wei)),
+                minterAddr: minter, minterName: addressName(minter),
+                minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
+                tokenAddr: this.tokenAddr, tokenName: this.name,
+                tx: transactionHash
+            })
+            console.log(`skip tx ${transactionHash}`)
+            return  true;
+        }
         const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,

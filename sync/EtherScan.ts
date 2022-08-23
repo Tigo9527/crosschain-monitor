@@ -111,6 +111,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         useInfoFromMatchedRecord = true;
         forceUseSimilar = true;
+    } else if (refChainId == BigInt(12340001)) {
+        // https://developers.flow.com/flow/faq/developers
+        // https://developers.flow.com/http-api
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
         etherToken = ''
