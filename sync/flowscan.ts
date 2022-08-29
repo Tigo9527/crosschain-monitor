@@ -97,7 +97,7 @@ export async function matchFlowScan(addr:string, accessKey:string, wantDripScale
     console.log(`want [${wantDripScale18} ${includeFee}], time  ${earlierTimeSec} - ${beforeTimeSec}`)
     for (let transfer of transferList) {
         for (const e of transfer.events) {
-            const scale8 = parseUnits(e.value).mul(1_0000_0000).toBigInt();
+            const scale8 = parseUnits(e.value, 18).toBigInt();
             const timeStamp = Math.floor(new Date(transfer.time).getTime() / 1000)
             console.log(`value ${e.value} / ${scale8}, time ${transfer.time} / ${timeStamp} s`)
             if (scale8>= wantDripScale18 && scale8 <= includeFee
