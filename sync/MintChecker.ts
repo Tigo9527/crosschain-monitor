@@ -1,9 +1,10 @@
 import {Contract, ethers, utils} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
-import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseUnits} from "ethers/lib/utils";
+import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseEther, parseUnits} from "ethers/lib/utils";
 import {Bill, Config, DelayedMint, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
+import {matchFlowScan} from "./flowscan";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -330,7 +331,7 @@ Block Explorer URL: https://stepscan.io/
         }
         for (let mintId_ of delayedMap.keys()) {
             const mintLog = mintMap.get(mintId_)
-            const {mintId, token, amount, account, refId, refChainId, fmtAmt} = EventChecker.parseCelerMint(mintLog.data)
+            const {mintId, token, amount, account, refId, refChainId, fmtAmt, depositor} = EventChecker.parseCelerMint(mintLog.data)
             if (token.toLowerCase() !== this.tokenAddr.toLowerCase()) {
                 console.log(`found token ${token} , want ${this.tokenAddr}`)
                 // continue
@@ -339,7 +340,7 @@ Block Explorer URL: https://stepscan.io/
             console.log(`celer delayed transfer info`, {account, token, amount, refId})
             let epochAnchor = epoch
             const hit = await this.searchCelerEvmTx(this.celerAddr, account, amount, amount, amount,
-                epochAnchor, mintLog.transactionHash, refId, false, refChainId)
+                epochAnchor, mintLog.transactionHash, refId, false, refChainId, depositor)
             if (hit) {
                 console.log(`save delayed mint.`)
                 await DelayedMint.create({
@@ -518,7 +519,7 @@ Block Explorer URL: https://stepscan.io/
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
                     // celer case A:  mint
                     // const [mintId,token,account,amount,refChainId,refId, depositor] = eSpaceLog.topics
-                    const {mintId, token, amount, account, refId, refChainId, fmtAmt} = EventChecker.parseCelerMint(eSpaceLog.data)
+                    const {mintId, token, amount, account, refId, refChainId, fmtAmt, depositor} = EventChecker.parseCelerMint(eSpaceLog.data)
                     if (token.toLowerCase() !== this.tokenAddr.toLowerCase()) {
                         console.log(`not for current token, found [${token}], want ${this.tokenAddr}`)
                         continue
@@ -526,7 +527,7 @@ Block Explorer URL: https://stepscan.io/
                     console.log(`[${this.name}] celer mint, account ${account} , amount ${amount} ${fmtAmt} refChainId ${
                         refChainId}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
-                        blockNumber, transactionHash, refId, true, refChainId)
+                        blockNumber, transactionHash, refId, true, refChainId, depositor)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)
@@ -560,11 +561,12 @@ Block Explorer URL: https://stepscan.io/
         const amount = BigInt('0x'+pureData.substring(64*3, 64*4))
         const refChainId = BigInt('0x'+pureData.substring(64*4, 64*5))
         const refId = '0x'+pureData.substring(64*5, 64*6)
+        const depositor = '0x'+pureData.substring(64*6, 64*7)
         const fmtAmt = formatEther(amount)
-        return {mintId, token, amount, account, refId, refChainId, fmtAmt}
+        return {mintId, token, amount, account, refId, refChainId, fmtAmt, depositor}
     }
     async searchCelerEvmTx(minter: string, account:string, amount:bigint, diff:bigint, wei:bigint, blockNumber:number,
-                           transactionHash:string, refId:string, save: boolean, refChainId:BigInt) {
+                           transactionHash:string, refId:string, save: boolean, refChainId:BigInt, depositor:string) {
         let timestamp;
         if (process.env.DEBUG_TIMESTAMP) {
             timestamp = 1648469937;//new Date('').getTime() / 1000 // test
@@ -589,7 +591,15 @@ Block Explorer URL: https://stepscan.io/
             console.log(`skip tx ${transactionHash}`)
             return  true;
         }
-        const row = await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
+        let flowScanRow = undefined as any
+        if (refChainId.toString() == "12340001") {
+            const [similar] = await matchFlowScan(depositor, process.env.FLOW_SCAN_KEY!, wei, timestamp)
+            if (similar) {
+                const {hash, to, token:contractAddress, value} = similar;
+                flowScanRow = {hash, from:'', to, contractAddress, value: parseEther(value).toBigInt(), tokenDecimal: 8}
+            }
+        }
+        const row = flowScanRow || await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
