@@ -97,17 +97,17 @@ export async function matchFlowScan(addr:string, accessKey:string, wantDripScale
     console.log(`want [${wantDripScale18} ${includeFee}], time  ${earlierTimeSec} - ${beforeTimeSec}`)
     for (let transfer of transferList) {
         for (const e of transfer.events) {
-            const scale8 = parseUnits(e.value, 18).toBigInt();
+            const scale18 = parseUnits(e.value, 18).toBigInt();
             const timeStamp = Math.floor(new Date(transfer.time).getTime() / 1000)
-            console.log(`value ${e.value} / ${scale8}, time ${transfer.time} / ${timeStamp} s`)
-            if (scale8>= wantDripScale18 && scale8 <= includeFee
+            console.log(`value ${e.value} / ${scale18}, time ${transfer.time} / ${timeStamp} s`)
+            if (scale18>= wantDripScale18 && scale18 <= includeFee
                 && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
                 similarRows.push({token:transfer.token, ...e})
             }
         }
     }
     if (similarRows.length == 1) {
-        return similarRows[0]
+        return similarRows
     }
     console.log(`similar row[s] != 1`, similarRows)
     return []
