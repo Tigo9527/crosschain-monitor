@@ -534,6 +534,7 @@ Block Explorer URL: https://stepscan.io/
                     // console.log(`DelayedTransferExecuted log data`, pureData)
                     const mintId = '0x' + pureData.substring(64 * 0, 64 * 1)
                     const refChainId = BigInt('0x' + pureData.substring(64 * 4, 64 * 5))
+                    const depositor = '0x'+pureData.substring(64*6, 64*7)
                     console.log(`DelayedTransferExecuted `, mintId)
                     const delayed = await DelayedMint.findOne({where: {mintId}})
                     if (!delayed) {
@@ -542,7 +543,7 @@ Block Explorer URL: https://stepscan.io/
                     }
                     const {receiver: account, amount, refId, blockNumber: delayedAtBlock} = delayed;
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
-                        delayedAtBlock, transactionHash, refId, true, refChainId)
+                        delayedAtBlock, transactionHash, refId, true, refChainId, depositor)
                 }
             }
             if (found) {
