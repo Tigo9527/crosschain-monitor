@@ -108,6 +108,7 @@ export class EventChecker {
     public milk2001Provider: BaseProvider;
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
+    public cronos25Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
     /*
     Step Network [Mainnet]
@@ -165,6 +166,7 @@ Block Explorer URL: https://stepscan.io/
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
+        this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -503,6 +505,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {
                             '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
                         }];
+                    } else if (fromChainId == 25) {
+                        [provider, mpc, mpcSet] = [this.cronos25Provider, '', {}];
                     } else if (fromChainId == 58) {
                         [provider, mpc, mpcSet] = [this.ont58Provider, '', {}];
                     } else if (fromChainId == 1284) {
