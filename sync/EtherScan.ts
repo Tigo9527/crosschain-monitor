@@ -106,6 +106,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         useInfoFromMatchedRecord = false;
         forceUseSimilar = true;
+    } else if (refChainId == BigInt(2222)) {
+        host = "https://explorer.kava.io"
+        etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
     } else if (refChainId == BigInt(2001)) {
         host = "https://explorer-mainnet-cardano-evm.c1.milkomeda.com"
         etherToken = ''
