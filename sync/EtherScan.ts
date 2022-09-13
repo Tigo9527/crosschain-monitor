@@ -137,6 +137,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             console.log(`debug retry, skip parse result`)
             break;
         }
+        if (!row.value) {
+            // Why don't token transfers have a value field?
+            continue
+        }
         const {timeStamp, from, scale18} = scaleValue(row);
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = row;
