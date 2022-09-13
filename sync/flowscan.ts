@@ -1,4 +1,5 @@
 import {parseUnits} from "ethers/lib/utils";
+import {Bill} from "../lib/Models";
 
 const superagent = require('superagent')
 async function fetchFlowScanTx(hash:string, accessKey:string) {
@@ -93,7 +94,7 @@ export async function matchFlowScan(addr:string, accessKey:string, wantDripScale
     const feeDelta = wantDripScale18 * 8n / 100n;  // 百8
     let includeFee = wantDripScale18 + feeDelta;
     const transferList = await fetchFlowScan(addr, accessKey)
-    const similarRows = [] as any[]
+    let similarRows = [] as any[]
     console.log(`want [${wantDripScale18} ${includeFee}], time  ${earlierTimeSec} - ${beforeTimeSec}`)
     for (let transfer of transferList) {
         for (const e of transfer.events) {
@@ -106,10 +107,23 @@ export async function matchFlowScan(addr:string, accessKey:string, wantDripScale
             }
         }
     }
-    if (similarRows.length == 1) {
-        return similarRows
+    let filterByDb = similarRows;
+    if (similarRows.length > 1) {
+        filterByDb = [] as any[]
+        for (let i = 0; i < similarRows.length; i++){
+            let r = similarRows[i];
+            let pre = await Bill.findOne({where: {ethereumTx: r.hash}})
+            if (pre) {
+                console.log(`db has external tx hash ${r.hash}`)
+            } else {
+                filterByDb.push(r)
+            }
+        }
     }
-    console.log(`similar row[s] != 1`, similarRows)
+    if (filterByDb.length == 1) {
+        return filterByDb
+    }
+    console.log(`similar row[s] != 1`, filterByDb)
     return []
 }
 if (module === require.main) {
