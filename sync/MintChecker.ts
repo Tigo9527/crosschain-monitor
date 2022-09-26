@@ -111,6 +111,7 @@ export class EventChecker {
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
+    public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
     /*
     Step Network [Mainnet]
@@ -166,6 +167,7 @@ Block Explorer URL: https://stepscan.io/
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
+        this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
@@ -503,6 +505,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.step1234Provider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
+                    } else if (fromChainId == 137) {
+                        [provider, mpc, mpcSet] = [this.polygon137Provider, '', {}];
                     } else if (fromChainId == 42170) {
                         [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {
                             '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
