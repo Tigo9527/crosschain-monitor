@@ -24,6 +24,7 @@ export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
 export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
 export const CRONOS_BTC = '0x062E66477Faf219F25D27dCED647BF57C3107d52' // pegged mc
 export const BSC_USDC = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' // Binance-Peg USD Coin
+export const POLYGON_USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Binance-Peg USD Coin
 export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' // ont58 usdt
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
@@ -61,6 +62,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WBTC_TOKEN.toLowerCase(), E_SPACE_WBTC.toLow
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(KAVA_USDC_TOKEN.toLowerCase(), E_SPACE_USDC.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(POLYGON_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(KAVA_USDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(KAVA_BTC_TOKEN.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_anyUSDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
