@@ -1,4 +1,4 @@
-import {parseUnits} from "ethers/lib/utils";
+import {formatUnits, parseUnits} from "ethers/lib/utils";
 
 const superagent = require('superagent')
 async function list(account: string) {
@@ -26,8 +26,8 @@ async function list(account: string) {
     // for(let k of Object.keys(data.headers)){}
     req.set(data.headers)
     const {body:res} = await req
-    // console.log(`result is `, res)
-    return res;
+   // console.log(`result is `, res)
+    return res.result;
 }
 export async function matchKlaytnScan(account: string, wantDripScale18:bigint, beforeTimeSec:number) {
     if (account.length > 42) {
@@ -40,13 +40,19 @@ export async function matchKlaytnScan(account: string, wantDripScale18:bigint, b
     const earlierTimeSec = beforeTimeSec - 3600 * 1 // recent N hours
     const feeDelta = wantDripScale18 * 8n / 100n;  // 百8
     let includeFee = wantDripScale18 + feeDelta;
-    console.log(`want [${wantDripScale18} ${includeFee}], time  ${earlierTimeSec} - ${beforeTimeSec}`)
+    console.log(`want [${wantDripScale18} with fee ${includeFee}], time  ${earlierTimeSec} - ${beforeTimeSec}`)
     for(let e of burnList) {
-        const scale18 = parseUnits(e.amount, e.decimals).toBigInt();
-        const timeStamp = e.createdAt;
-        console.log(`value ${e.value} / ${scale18}, time ${e.createdAt} / ${timeStamp} s`)
+        const scale18 = parseUnits((formatUnits(BigInt(e.amount), e.decimals)), 18).toBigInt();
+        const createdAt = e.createdAt;
+        console.log(`value ${e.amount} / scale ${scale18}, createdAt ${e.createdAt} / ${createdAt} s`)
+
+        console.log(`scale18>= wantDripScale18`,scale18>= wantDripScale18)
+        console.log(`scale18 <= includeFee`, scale18 <= includeFee)
+        console.log(`createdAt <= beforeTimeSec`, createdAt <= beforeTimeSec)
+        console.log(`createdAt >= earlierTimeSec`, createdAt >= earlierTimeSec)
+
         if (scale18>= wantDripScale18 && scale18 <= includeFee
-            && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
+            && createdAt <= beforeTimeSec && createdAt >= earlierTimeSec) {
             similarRows.push({token:e.tokenAddress, ...e})
             console.log(`this one is similar`)
         }
@@ -57,6 +63,6 @@ export async function matchKlaytnScan(account: string, wantDripScale18:bigint, b
 if (module === require.main) {
     // let account = "0xc4f2381408bd3417f2255f55080b385328b382d3";
     let account = "0x000000000000000000000000c4f2381408bd3417f2255f55080b385328b382d3";
-    console.log(`0x${account.slice(-40)}`)
-    // list(account)
+    // console.log(`0x${account.slice(-40)}`)
+    matchKlaytnScan(account, 19491367000000000000n, 1665823425)
 }
