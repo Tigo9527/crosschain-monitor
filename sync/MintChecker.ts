@@ -5,6 +5,7 @@ import {Bill, Config, DelayedMint, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer} from "./EtherScan";
 import {matchFlowScan} from "./flowscan";
+import {matchKlaytnScan} from "./KlaytnScan";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -612,6 +613,13 @@ Block Explorer URL: https://stepscan.io/
             if (similar) {
                 const {hash, to, token:contractAddress, value} = similar;
                 flowScanRow = {hash, from:'', to, contractAddress, value: parseEther(value).toBigInt(), tokenDecimal: 8}
+            }
+        } else if (refChainId.toString() == "8217") {
+            const [similar] = await matchKlaytnScan(depositor, wei, timestamp);
+            if (similar) {
+                const {parentHash:hash, fromAddress: from, toAddress:to, token:contractAddress,
+                    amount:value, decimals} = similar;
+                flowScanRow = {hash, from, to, contractAddress, value, tokenDecimal: decimals}
             }
         }
         const row = flowScanRow || await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
