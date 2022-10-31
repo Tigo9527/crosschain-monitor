@@ -30,6 +30,9 @@ async function list(account: string) {
     return res;
 }
 export async function matchKlaytnScan(account: string, wantDripScale18:bigint, beforeTimeSec:number) {
+    if (account.length > 42) {
+        account = `0x${account.slice(-40)}`;
+    }
     console.log(`---- matchKlaytnScan ----`)
     const result: any[] = await list(account)
     const burnList = result.filter(t=>t.toAddress === '0x0000000000000000000000000000000000000000');
@@ -52,6 +55,8 @@ export async function matchKlaytnScan(account: string, wantDripScale18:bigint, b
     return similarRows;
 }
 if (module === require.main) {
-    let account = "0xc4f2381408bd3417f2255f55080b385328b382d3";
-    list(account)
+    // let account = "0xc4f2381408bd3417f2255f55080b385328b382d3";
+    let account = "0x000000000000000000000000c4f2381408bd3417f2255f55080b385328b382d3";
+    console.log(`0x${account.slice(-40)}`)
+    // list(account)
 }
