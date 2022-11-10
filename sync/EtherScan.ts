@@ -7,7 +7,11 @@ require('superagent-proxy')(superagent);
 
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
 export async function listTransfer(who: string, etherToken: string, host) {
-    const apiKey = process.env.ETHER_SCAN_API_KEY || ""
+    let apiKey = process.env.ETHER_SCAN_API_KEY || ""
+    let apiKeyStr = `&apikey=${apiKey}`;
+    if (host.startsWith("https://api-moonbeam.moonscan.io")) {
+       apiKeyStr = '';
+    }
     // &startblock=0
     //     &endblock=27025780
 
@@ -22,7 +26,7 @@ export async function listTransfer(who: string, etherToken: string, host) {
    &page=1
    &offset=100
    &sort=desc
-   &apikey=${apiKey}`.replace(/[\n ]*/g,'')
+   ${apiKeyStr}`.replace(/[\n ]*/g,'')
     console.log(`url ${url}`)
     let proxy = process.env.PROXY
     let times = 5
