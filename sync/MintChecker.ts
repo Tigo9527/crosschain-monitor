@@ -118,6 +118,7 @@ export class EventChecker {
     public cronos25Provider: BaseProvider;
     public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
+    public Milkomeda2002Provider: BaseProvider;
     /*
     Step Network [Mainnet]
 
@@ -174,6 +175,7 @@ Block Explorer URL: https://stepscan.io/
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
+        this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         this.tokenAddr = tokenAddr
@@ -508,6 +510,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.kavaProvider, '', {}];
                     } else if (fromChainId == 1234) {
                         [provider, mpc, mpcSet] = [this.step1234Provider, '', {}];
+                    } else if (fromChainId == 2002) {
+                        [provider, mpc, mpcSet] = [this.Milkomeda2002Provider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
                     } else if (fromChainId == 137) {
