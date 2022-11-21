@@ -116,7 +116,7 @@ export class EventChecker {
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
-    public smartBCH10001: BaseProvider;
+    public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
     public Milkomeda2002Provider: BaseProvider;
@@ -179,7 +179,8 @@ Block Explorer URL: https://stepscan.io/
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
-        this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
+        // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
+        this.ethereumpow10001 = ethers.getDefaultProvider("https://mainnet.ethereumpow.org/")
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
@@ -523,7 +524,7 @@ Block Explorer URL: https://stepscan.io/
                             '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
                         }];
                     } else if (fromChainId == 10001) {
-                        [provider, mpc, mpcSet] = [this.smartBCH10001, '', {}];
+                        [provider, mpc, mpcSet] = [this.ethereumpow10001, '', {}];
                     } else if (fromChainId == 25) {
                         [provider, mpc, mpcSet] = [this.cronos25Provider, '', {}];
                     } else if (fromChainId == 58) {
