@@ -28,13 +28,14 @@ export const CRONOS_BTC = '0x062E66477Faf219F25D27dCED647BF57C3107d52' // pegged
 export const BSC_USDC = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' // Binance-Peg USD Coin
 export const POLYGON_USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Binance-Peg USD Coin
 export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' // ont58 usdt
+export const ETH_W_BTC = '0x5df101F56ea643e06066392d266e9f4366b9186d' // ont58 usdt
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
     ETHEREUM_WBTC_TOKEN, ETHEREUM_WETH_TOKEN, ETHEREUM_anyUSDT_TOKEN,
     BSC_USD, BSC_ETH, BSC_BTC, BSC_USDC, BSC_anyUSD,
     KAVA_USDC_TOKEN, KAVA_USDT_TOKEN, KAVA_BTC_TOKEN,
-    ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT,
+    ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT, ETH_W_BTC,
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -70,6 +71,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(KAVA_BTC_TOKEN.toLowerCase(), E_SPACE_WBTC.toLowerCas
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_anyUSDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(STEP1234_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(ETH_W_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
@@ -729,8 +731,8 @@ Block Explorer URL: https://stepscan.io/
             }
             const localToken = mapForeignTokenToLocal(ethereumLog.address) || ''
             if (bindToken !== ethereumLog.address.toLowerCase() && localToken !== this.tokenAddr.toLowerCase()) {
-                console.log(`[${this.name}] It's not binding, ${bindToken} vs ${ethereumLog.address
-                } , neither mapping [${localToken}] vs ${this.tokenAddr} , emit by contract [${ethereumLog.address}]`)
+                console.log(`[${this.name}] It's not binding, ${bindToken} vs foreign ${ethereumLog.address
+                } , neither mapping local [${localToken}] vs configToken ${this.tokenAddr} , emit by foreign contract [${ethereumLog.address}]`)
                 continue
             }
             if (!ETHEREUM_TOKENS.has(ethereumLog.address)) {
