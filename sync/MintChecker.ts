@@ -672,6 +672,7 @@ Block Explorer URL: https://stepscan.io/
                 tokenName: this.name,
                 tx: transactionHash
             })
+            console.log(`skip tx ${transactionHash} (eSpace our side)`)
             return true;
         }
         let found = false
