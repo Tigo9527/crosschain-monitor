@@ -389,7 +389,7 @@ Block Explorer URL: https://stepscan.io/
             minterSupply: newSupply.drip,
             minterSupplyFormat: parseFloat(newSupply.unit),
             tokenAddr: this.tokenAddr,
-            tokenName: this.name,
+            tokenName: this.name, fromChainId: 1029,
             tx: transactionHash
         })
     }
@@ -461,7 +461,7 @@ Block Explorer URL: https://stepscan.io/
                         minterSupplyFormat: parseFloat(newSupply.unit),
                         tokenAddr: this.tokenAddr,
                         tokenName: this.name,
-                        tx: transactionHash
+                        tx: transactionHash, fromChainId: 0,
                     })
                     found = true;
                 } else if (// LogSwapout(index_topic_1 address account, index_topic_2 address bindaddr, uint256 amount) // multi chain
@@ -483,7 +483,7 @@ Block Explorer URL: https://stepscan.io/
                         minterSupplyFormat: parseFloat(newSupply.unit),
                         tokenAddr: this.tokenAddr,
                         tokenName: this.name,
-                        tx: transactionHash
+                        tx: transactionHash, fromChainId:0,
                     })
                     found = true;
                 } else if (
@@ -536,7 +536,7 @@ Block Explorer URL: https://stepscan.io/
                         throw new Error(`unsupported chain ${fromChainId}`)
                     }
                     found = await this.searchEvmTx({
-                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
+                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
                     // usdt is '0x58340A102534080b9D3175F868aeA9f6aF986dD9'); // eth is 0x230219b25395f14b84cf4dcd987e2daf5a71e4b
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
@@ -610,7 +610,7 @@ Block Explorer URL: https://stepscan.io/
                 minterAddr: minter, minterName: addressName(minter),
                 minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
                 tokenAddr: this.tokenAddr, tokenName: this.name,
-                tx: transactionHash
+                tx: transactionHash, fromChainId: Number(refChainId),
             })
             console.log(`skip tx ${transactionHash}`)
             return  true;
@@ -643,7 +643,7 @@ Block Explorer URL: https://stepscan.io/
                     minterAddr: minter, minterName: addressName(minter),
                     minterSupply: newSupply.drip, minterSupplyFormat: parseFloat(newSupply.unit),
                     tokenAddr: this.tokenAddr, tokenName: this.name,
-                    tx: transactionHash
+                    tx: transactionHash, fromChainId: Number(refChainId)
                 })
             }
             return true;
@@ -651,7 +651,7 @@ Block Explorer URL: https://stepscan.io/
         return false;
     }
     async searchEvmTx(obj:any, ethereumProvider: BaseProvider, mpc: string, mpcSet:object = {}) {
-        const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber} = obj
+        const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId} = obj
         let found = false
         //
         const txEth = await ethereumProvider.getTransaction(txHashEth)
@@ -681,7 +681,7 @@ Block Explorer URL: https://stepscan.io/
             const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
             await Bill.create({
                 blockNumber, drip: wei, ethereumDrip: txEth.value.toBigInt(), ethereumFormatUnit: parseFloat(fmtValueInTx),
-                ethereumTx: txHashEth,
+                ethereumTx: txHashEth, fromChainId,
                 ethereumTxFrom: txEthReceiptFrom,
                 ethereumTxTo: txEthTo,
                 ethereumTxToken: 'Raw ETH',
@@ -737,7 +737,7 @@ Block Explorer URL: https://stepscan.io/
                     drip: wei,
                     ethereumDrip: ethDrip,
                     ethereumFormatUnit: parseFloat(v),
-                    ethereumTx: txHashEth,
+                    ethereumTx: txHashEth, fromChainId,
                     ethereumTxFrom: txEthReceiptFrom,
                     ethereumTxTo: txEthTo,
                     ethereumTxToken: ethereumLog.address,
@@ -796,7 +796,7 @@ export async function addMinterPlaceHolder(checker: EventChecker) {
             // defaults
             blockNumber: 0,drip: 0n,ethereumDrip: 0n,ethereumFormatUnit: 0,ethereumTx: "",ethereumTxFrom: "",
             ethereumTxTo: "",ethereumTxToken: "",formatUnit: 0,
-            minterSupply: 0n,minterSupplyFormat: 0,
+            minterSupply: 0n,minterSupplyFormat: 0, fromChainId: 0,
         }).then(()=>{
             console.log(`create place holder for ${minter} , token ${checker.name}`)
         })
