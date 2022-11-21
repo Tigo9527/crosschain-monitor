@@ -501,7 +501,7 @@ Block Explorer URL: https://stepscan.io/
                     // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256'], eSpaceLog.data)
-                    console.log(`tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
+                    console.log(`foreign tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
                     let provider: any, mpc: any, mpcSet: any;
                     if (fromChainId == 1) {
                         [provider, mpc, mpcSet] = [this.ethereumProvider,
@@ -652,6 +652,28 @@ Block Explorer URL: https://stepscan.io/
     }
     async searchEvmTx(obj:any, ethereumProvider: BaseProvider, mpc: string, mpcSet:object = {}) {
         const {txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId} = obj
+        if (process.env.SKIP_TX === transactionHash) {
+            const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
+            await Bill.create({
+                blockNumber,
+                drip: wei,
+                ethereumDrip: BigInt(0),
+                ethereumFormatUnit: parseFloat('0'),
+                ethereumTx: txHashEth, fromChainId,
+                ethereumTxFrom: '',
+                ethereumTxTo: '',
+                ethereumTxToken: '',
+                formatUnit: parseFloat(mintV),
+                minterAddr: eSpaceLog.address,
+                minterName: addressName(eSpaceLog.address),
+                minterSupply: newSupply.drip,
+                minterSupplyFormat: parseFloat(newSupply.unit),
+                tokenAddr: this.tokenAddr,
+                tokenName: this.name,
+                tx: transactionHash
+            })
+            return true;
+        }
         let found = false
         //
         const txEth = await ethereumProvider.getTransaction(txHashEth)
