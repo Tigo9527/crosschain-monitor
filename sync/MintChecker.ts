@@ -179,7 +179,7 @@ Block Explorer URL: https://stepscan.io/
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
-        this.smartBCH10001 = ethers.getDefaultProvider("https://rpc-testnet.smartbch.org")
+        this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
         this.tokenAddr = tokenAddr
     }
     async getDecimal(addr: string, provider: BaseProvider) {
