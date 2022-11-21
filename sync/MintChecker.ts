@@ -493,7 +493,7 @@ Block Explorer URL: https://stepscan.io/
                     const [, txHashEth, txFromEth] = eSpaceLog.topics
                     console.log(`ethereum tx hash ${txHashEth} from ${hexStripZeros(txFromEth)}`)
                     found = await this.searchEvmTx({
-                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber
+                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId: 1,
                     }, this.ethereumProvider, this.multiChainMPC);
                 } else if (eTopic === '0xaac9ce45fe3adf5143598c4f18a369591a20a3384aedaf1b525d29127e1fcd55') {
                     // LogAnySwapIn(index_topic_1 bytes32 txhash, index_topic_2 address token, index_topic_3 address to, uint256 amount, uint256 fromChainID, uint256 toChainID)
@@ -536,7 +536,7 @@ Block Explorer URL: https://stepscan.io/
                         throw new Error(`unsupported chain ${fromChainId}`)
                     }
                     found = await this.searchEvmTx({
-                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId
+                        txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId: BigInt(fromChainId)
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
                     // usdt is '0x58340A102534080b9D3175F868aeA9f6aF986dD9'); // eth is 0x230219b25395f14b84cf4dcd987e2daf5a71e4b
                 } else if (eTopic === '0x5bc84ecccfced5bb04bfc7f3efcdbe7f5cd21949ef146811b4d1967fe41f777a') {
