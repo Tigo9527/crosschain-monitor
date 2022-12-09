@@ -30,6 +30,7 @@ export const POLYGON_USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Bina
 export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' //
 export const ETH_W_BTC = '0x5df101F56ea643e06066392d266e9f4366b9186d' //
 export const VELAS_BTC = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C' //
+export const VELAS_ETH = '0x6aB6d61428fde76768D7b45D8BFeec19c6eF91A8' //
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
@@ -37,6 +38,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     BSC_USD, BSC_ETH, BSC_BTC, BSC_USDC, BSC_anyUSD,
     KAVA_USDC_TOKEN, KAVA_USDT_TOKEN, KAVA_BTC_TOKEN,
     ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT, ETH_W_BTC, VELAS_BTC,
+    VELAS_ETH,
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -74,6 +76,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(STEP1234_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETH_W_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(VELAS_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(VELAS_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
