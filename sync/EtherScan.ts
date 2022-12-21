@@ -222,6 +222,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {timeStamp, from, scale18} = scaleValue(similar);
         console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
+        if (rawEth) {
+            return similar;
+        }
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = similar;
             if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
@@ -231,11 +234,10 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 console.log(`[ ${refChainId}] take similar as match.`)
                 return similar;
             }
-        } else
-        if (await matchDepositId(similar.hash, refId, providerUrl) ) {
-            return similar
+        } else if (await matchDepositId(similar.hash, refId, providerUrl) ) {
+            return similar;
         } else if (forceUseSimilar) {
-            console.log(`[ ${refChainId}] take similar as match, case 2.`)
+            console.log(`[ ${refChainId}] take similar as match, case 2.`);
             return similar;
         }
     }
