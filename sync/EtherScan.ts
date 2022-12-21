@@ -163,7 +163,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         forceUseSimilar = true;
     }
     let body;
+    let rawEth = false;
     if (etherToken === 'eth') {
+        rawEth = true;
         body = await listTx(address, host);
     } else {
         body = await listTransfer(address, etherToken, host);
@@ -181,6 +183,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         if (!row.value) {
             // Why don't token transfers have a value field?
             continue
+        }
+        if (rawEth) {
+            row.tokenDecimal = 18;
         }
         const {timeStamp, from, scale18} = scaleValue(row);
         if (useInfoFromMatchedRecord) {
