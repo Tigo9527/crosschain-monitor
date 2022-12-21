@@ -5,6 +5,35 @@ import {ethers, utils} from "ethers";
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
 
+export async function listTx(who: string, host) {
+    let apiKey = process.env.ETHER_SCAN_API_KEY || ""
+    let apiKeyStr = `&apikey=${apiKey}`;
+    host = host || `https://api.etherscan.io`;
+    const url = `${host}/api
+   ?module=account
+   &action=txlist
+   &address=${who}
+   &page=1
+   &offset=100
+   &sort=desc
+   ${apiKeyStr}`.replace(/[\n ]*/g,'')
+    console.log(`url ${url}`)
+    let proxy = process.env.PROXY
+    let times = 5
+    while (times > 0) {
+        times --
+        const body = await (proxy ? superagent.get(url)
+            .proxy(proxy) : superagent.get(url))
+            .then((res: any) => res.body)
+        console.log(`ether scan api result length:`, body?.result?.length)
+        if (body?.status === '1') {
+            return body
+        }
+        console.log(`ether scan return unsatisfied content`, body)
+        await sleep(6_000) // rate limit is 1/5sec
+    }
+    throw new Error(`fetch tx list from ether scan api fail.`)
+}
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
 export async function listTransfer(who: string, etherToken: string, host) {
     let apiKey = process.env.ETHER_SCAN_API_KEY || ""
@@ -133,7 +162,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         useInfoFromMatchedRecord = true;
         forceUseSimilar = true;
     }
-    const body = await listTransfer(address, etherToken, host);
+    let body;
+    if (etherToken === 'eth') {
+        body = await listTx(address, host);
+    } else {
+        body = await listTransfer(address, etherToken, host);
+    }
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []
     const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours

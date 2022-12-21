@@ -642,7 +642,13 @@ Block Explorer URL: https://stepscan.io/
                 flowScanRow = {hash, from, to, contractAddress, value, tokenDecimal: decimals}
             }
         }
-        const row = flowScanRow || await fetchErc20Transfer(account, wei, getBindToken(this.tokenAddr)!, timestamp, refId, refChainId)
+        let ethTokenVar = getBindToken(this.tokenAddr)!;
+        if (this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57'
+            && refChainId.toString()==='1') {
+            console.log(`it's raw eth`)
+            ethTokenVar = 'eth';
+        }
+        const row = flowScanRow || await fetchErc20Transfer(account, wei, ethTokenVar, timestamp, refId, refChainId)
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
                 contractAddress, value, tokenName, tokenDecimal} = row
