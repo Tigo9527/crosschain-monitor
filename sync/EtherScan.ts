@@ -160,8 +160,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
+        providerUrl = 'https://eth.bd.evmos.org:8545'
         etherToken = ''
-        useInfoFromMatchedRecord = true;
+        useInfoFromMatchedRecord = false;
         forceUseSimilar = true;
         let result = await fetchEvmOS20(address, 1) || [];
         if (result.length > 0 && result[result.length-1].timeStamp > beforeTimeSec) {
