@@ -73,7 +73,8 @@ export function parseList20Text(text:string) {
         let valueDrip = BigInt('0x'+valueDiv?.getAttribute('value'));
         let valueUnit = formatUnits(valueDrip, parseInt(decimals!))
         let tokenName = tdArr[7].querySelector('a')?.text.trim();
-        return {hash: tx, from, ago, to, contract, value: valueDrip, valueDrip, tokenDecimal:decimals, decimals, tokenName, valueUnit, timestamp: 0, timeStamp: 0};
+        return {hash: tx, from, ago, to, contract, value: valueDrip, valueDrip, contractAddress: contract,
+            tokenDecimal:decimals, decimals, tokenName, valueUnit, timestamp: 0, timeStamp: 0};
     }).filter(row=>row.to==='Burn')
     // console.log(.join(' \n '))
 }
