@@ -21,6 +21,7 @@
     "influx": "^5.9.3",
     "js-conflux-sdk": "^2.0.4",
     "mysql2": "^2.3.3",
+    "node-html-parser": "^6.1.4",
     "sequelize": "^6.17.0",
     "sqlite3": "^5.0.2",
     "superagent": "^7.1.1",

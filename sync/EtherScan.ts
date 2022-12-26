@@ -1,6 +1,7 @@
 import {formatEther, formatUnits, parseEther, parseUnits} from "ethers/lib/utils";
 import {sleep} from "../lib/Tool";
 import {ethers, utils} from "ethers";
+import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
 
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
@@ -128,6 +129,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     let providerUrl// = undefined
     let useInfoFromMatchedRecord = false;
     let forceUseSimilar = false;
+    let body;
     if (refChainId == BigInt(592)) {
         host = "https://blockscout.com/astar"
         etherToken = ''
@@ -161,12 +163,19 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         useInfoFromMatchedRecord = true;
         forceUseSimilar = true;
+        let result = await fetchEvmOS20(address, 1) || [];
+        if (result.length > 0 && result[result.length-1].timeStamp > beforeTimeSec) {
+            console.log(`try page 2 since earliest time is greater`)
+            result = await fetchEvmOS20(address, 2) || [];
+        }
+        body = {result}
     }
-    let body;
     let rawEth = false;
     if (etherToken === 'eth') {
         rawEth = true;
         body = await listTx(address, host);
+    } else if (body) {
+        // fetched
     } else {
         body = await listTransfer(address, etherToken, host);
     }
