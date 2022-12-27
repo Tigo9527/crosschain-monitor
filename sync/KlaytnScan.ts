@@ -20,7 +20,7 @@ async function list(account: string) {
         "body": null,
         "method": "GET"
     };
-    let url = "https://api-cypress-v2.scope.klaytn.com/v2/accounts/" + account + "/ftTransfers?page=1&token=";
+    let url = "https://api-cypress-v3.scope.klaytn.com/v2/accounts/" + account + "/ftTransfers?page=1&token=";
     // fetch(url, data);
     let req = superagent.get(`${url}`);
     // for(let k of Object.keys(data.headers)){}
