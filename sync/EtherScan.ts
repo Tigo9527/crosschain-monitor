@@ -182,7 +182,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     }
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []
-    const earlierTimeSec = beforeTimeSec - 3600 * 2 // recent 2 hours
+    let limitHours = 2;
+    if (refId === '0x4c925138ccbee83c011aae15417397093428eafde3cde6ad331406ec07935ca7') {
+        // tmp fix 2022.12.29, 1030 tx hash 0xebde7c4c8d51911ba5017168b7624ac693d5414f503c31856160f38340b5ed55
+        limitHours = 5;
+    }
+    const earlierTimeSec = beforeTimeSec - 3600 * limitHours // recent 2 hours
     const feeDelta = wantDripScale18 * 8n / 100n;  // 百8
     let includeFee = wantDripScale18 + feeDelta;
     for(let row of body.result) {
