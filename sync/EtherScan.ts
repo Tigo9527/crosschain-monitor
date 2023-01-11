@@ -228,14 +228,14 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             && from === address
             && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
             filtered.push(row)
-            if (scale18 === wantDripScale18) {
+            if (scale18 === wantDripScale18 && !row.fromNear) {
                 console.log(`Match Exact ${scale18} vs ${wantDripScale18}`)
                 if (await matchDepositId(row.hash, refId) ) {
                     return row;
                 }
             }
         }
-        let debug = true;
+        let debug = false;
         debug && console.log(`\n value ${scale18} ${formatEther(scale18)} >= ${formatEther(wantDripScale18)} ${wantDripScale18
         } ${scale18 >= wantDripScale18
         } \n with fee ${scale18} ${formatEther(scale18)} <= ${formatEther(includeFee)} ${includeFee} ${scale18 < includeFee
@@ -275,6 +275,8 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
+        } else if (row.fromNear) {
+            // skip matching on near chain
         } else
         if (await matchDepositId(row.hash, refId, providerUrl) ) {
             console.log(`matchDepositId one by one, hit`)
