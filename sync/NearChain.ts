@@ -44,8 +44,9 @@ export function convertNearTransfer2evmTransfer(txns:any[], evmAcc:string) {
     }).filter(Boolean)
 }
 export async function checkNearTxWith1030memo(hash:string, accountId: string) {
-    const [[,memo]] = await fetchNearTxLogs(hash, accountId);
-    // console.log(logs2d)
+    let logs2d = await fetchNearTxLogs(hash, accountId);
+    const [[,memo]] = logs2d;
+    console.log(logs2d)
     console.log(`memo`, memo, ' ， tx', hash)
     return memo?.endsWith(' 1030')
 }
@@ -78,7 +79,9 @@ export async function fetchNearTxLogs(hash:string, accountId: string) {
     return logs2d;
 }
 async function main() {
-    await fetchNearTxLogs('Br3S1oTQ1QkK5GCBhTFvYgswBNz463wnUDyT9NcFGKMy','' +
+    // await fetchNearTxLogs('Br3S1oTQ1QkK5GCBhTFvYgswBNz463wnUDyT9NcFGKMy','' +
+    //     '4c6c75e5551d79d27e7865c6af0900350b2e3250c17e0744e17519e820405910')
+    await fetchNearTxLogs('6qATkXfViQB7JLvAfz5KuuoXji5qf3vSFT3ZQHLjECkh','' +
         '4c6c75e5551d79d27e7865c6af0900350b2e3250c17e0744e17519e820405910')
 }
 async function main1() {

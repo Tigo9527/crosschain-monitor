@@ -219,7 +219,7 @@ export class Bill extends Model<IBill> implements IBill {
             ethereumTx: {type: DataTypes.STRING(66), allowNull: false},
             ethereumTxFrom: {type: DataTypes.STRING(42), allowNull: false},
             ethereumTxTo: {type: DataTypes.STRING(42), allowNull: false},
-            ethereumTxToken: {type: DataTypes.STRING(42), allowNull: false},
+            ethereumTxToken: {type: DataTypes.STRING(64), allowNull: false},
             ethereumDrip: {type: DataTypes.DECIMAL(65,0), allowNull: false},
             ethereumFormatUnit: {type: DataTypes.DECIMAL(47,18), allowNull: false},
         }, {
