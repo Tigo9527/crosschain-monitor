@@ -309,6 +309,31 @@ async function main1() {
         '0x6B175474E89094C44Da98b954EedeAC495271d0F', 1648470450,
         '0x27A92BF3245D9144CC8509FA35D43348C3635AED0F1F387F2F6E395D7880E469', BigInt(1))
 }
+
+export async function recoverPubKeyFromTx(tx) {
+    const expandedSig = {
+        r: tx.r,
+        s: tx.s,
+        v: tx.v
+    }
+    const signature = ethers.utils.joinSignature(expandedSig)
+    const txData = {
+        gasPrice: tx.gasPrice,
+        gasLimit: tx.gasLimit,
+        value: tx.value,
+        nonce: tx.nonce,
+        data: tx.data,
+        chainId: tx.chainId,
+        to: tx.to // you might need to include this if it's a regular tx and not simply a contract deployment
+    }
+    const rsTx = await ethers.utils.resolveProperties(txData)
+    const raw = ethers.utils.serializeTransaction(rsTx) // returns RLP encoded tx
+    const msgHash = ethers.utils.keccak256(raw) // as specified by ECDSA
+    const msgBytes = ethers.utils.arrayify(msgHash) // create binary hash
+    const recoveredPubKey = ethers.utils.recoverPublicKey(msgBytes, signature)
+    const recoveredAddress = ethers.utils.recoverAddress(msgBytes, signature)
+    return {recoveredPubKey, recoveredAddress};
+}
 if (module === require.main) {
     require('dotenv/config')
     main().then()
