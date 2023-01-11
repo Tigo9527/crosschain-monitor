@@ -2,7 +2,7 @@ import {formatEther, formatUnits, parseEther, parseUnits} from "ethers/lib/utils
 import {sleep} from "../lib/Tool";
 import {ethers, utils} from "ethers";
 import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
-import {convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
+import {checkNearTxWith1030memo, convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
 
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
@@ -227,7 +227,14 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         if (scale18 >= wantDripScale18 && scale18 <= includeFee
             && from === address
             && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
-            filtered.push(row)
+            if (row.fromNear) {
+                let has1030memo = await checkNearTxWith1030memo(row.hash, row.fromNear);
+                if (!has1030memo) {
+                    console.log(`near chain , tx without 1030 memo, skip`)
+                    continue
+                }
+            }
+            filtered.push(row);
             if (scale18 === wantDripScale18 && !row.fromNear) {
                 console.log(`Match Exact ${scale18} vs ${wantDripScale18}`)
                 if (await matchDepositId(row.hash, refId) ) {
@@ -276,7 +283,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 return row;
             }
         } else if (row.fromNear) {
-            // skip matching on near chain
+
         } else
         if (await matchDepositId(row.hash, refId, providerUrl) ) {
             console.log(`matchDepositId one by one, hit`)
