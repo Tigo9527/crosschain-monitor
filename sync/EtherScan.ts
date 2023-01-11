@@ -172,7 +172,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         }
         body = {result}
     } else if (refChainId == BigInt(1001313161554)) {
-        const nearId = await fetchNearId('0x8e9df7202da4e7b49267bf5af464e01722b3330f')
+        const nearId = await fetchNearId(address)
         console.log(`near id`, nearId)
         const nearTx = await fetchNearTransfer(nearId);
         const evmTx = convertNearTransfer2evmTransfer(nearTx.txns, address)

@@ -513,7 +513,8 @@ Block Explorer URL: https://stepscan.io/
                     // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256'], eSpaceLog.data)
-                    console.log(`foreign tx hash ${txHashEth} from ${hexStripZeros(to)} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
+                    let receiver = hexStripZeros(to);
+                    console.log(`foreign tx hash ${txHashEth} from ${receiver} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
                     let provider: any, mpc: any, mpcSet: any;
                     if (fromChainId == 1) {
                         [provider, mpc, mpcSet] = [this.ethereumProvider,
@@ -548,8 +549,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
                     } else if (fromChainId == 1001313161554) {
                         console.log(`near chain`)
-                        found = await this.searchCelerEvmTx(eSpaceLog.address, to, BigInt(amount), wei * sign, wei,
-                            blockNumber, transactionHash, '', true, fromChainId, to)
+                        found = await this.searchCelerEvmTx(eSpaceLog.address, receiver, BigInt(amount), wei * sign, wei,
+                            blockNumber, transactionHash, '', true, fromChainId, receiver)
                         console.log(`near found ? `, found)
                         if (!found) {
                             throw new Error(`near chain process fail`)
