@@ -21,9 +21,9 @@ export async function fetchNearTransfer(nearId:string) {
     console.log(`near transfer count `, res.body.txns.length || res.body.txns || res.body )
     return res.body
 }
-export function convertNearTransfer2evmTransfer(txns:any[]) {
+export function convertNearTransfer2evmTransfer(txns:any[], evmAcc:string) {
     return txns.map(t=>{
-        const {transaction_hash:hash, token_old_owner_account_id: from, token_new_owner_account_id: to,
+        const {transaction_hash:hash, token_old_owner_account_id: fromNear, token_new_owner_account_id: to,
             amount, block_timestamp, outcomes: {status},
             ft: {contract, name:tokenName, symbol, decimals,}} = t;
         // console.log(`from ${from} to ${to}, status ${status}`)
@@ -35,7 +35,7 @@ export function convertNearTransfer2evmTransfer(txns:any[]) {
         const valueUnit = formatUnits(valueDrip, decimals);
         const time = Number(BigInt(block_timestamp) / BigInt(1_000_000_000))
         return {
-            hash, from, to, contract, value, valueDrip,
+            hash, fromNear, from: evmAcc, to, contract, value, valueDrip,
             contractAddress: contract,
             tokenDecimal:decimals, decimals, tokenName, valueUnit, timestamp: time, timeStamp: time,
             timeStr: new Date(time * 1000).toISOString(),
@@ -43,10 +43,11 @@ export function convertNearTransfer2evmTransfer(txns:any[]) {
     }).filter(Boolean)
 }
 async function main() {
-    const ret = await fetchNearId('0x8e9df7202da4e7b49267bf5af464e01722b3330f')
+    let evmAcc = '0x8e9df7202da4e7b49267bf5af464e01722b3330f';
+    const ret = await fetchNearId(evmAcc)
     console.log(`it's`, ret)
     const nearTx = await fetchNearTransfer(ret);
-    const evmTx = convertNearTransfer2evmTransfer(nearTx.txns)
+    const evmTx = convertNearTransfer2evmTransfer(nearTx.txns, evmAcc)
     console.log(evmTx)
 }
 if (module === require.main) {

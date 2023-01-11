@@ -175,7 +175,8 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const nearId = await fetchNearId('0x8e9df7202da4e7b49267bf5af464e01722b3330f')
         console.log(`near id`, nearId)
         const nearTx = await fetchNearTransfer(nearId);
-        const evmTx = convertNearTransfer2evmTransfer(nearTx.txns)
+        const evmTx = convertNearTransfer2evmTransfer(nearTx.txns, address)
+        console.log(`candidate count`, evmTx.length)
         body = {result: evmTx};
         useInfoFromMatchedRecord = false;
         forceUseSimilar = true;
@@ -233,13 +234,14 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 }
             }
         }
-        // console.log(`not match ${scale18} vs ${wantDripScale18
-        // } ${scale18 >= wantDripScale18
-        // } \n ${scale18} <= ${includeFee} ${scale18 < includeFee
-        // } \n ${from} vs ${address} ${from === address
-        // } \n ${timeStamp} < ${beforeTimeSec} ${timeStamp < beforeTimeSec
-        // } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
-        // }`)
+        let debug = true;
+        debug && console.log(`not match ${scale18} vs ${wantDripScale18
+        } ${scale18 >= wantDripScale18
+        } \n ${scale18} <= ${includeFee} ${scale18 < includeFee
+        } \n ${from} vs ${address} ${from === address
+        } \n ${timeStamp} < ${beforeTimeSec} ${timeStamp < beforeTimeSec
+        } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
+        }`)
     }
     if (filtered.length === 1) {
         let similar = filtered[0];
