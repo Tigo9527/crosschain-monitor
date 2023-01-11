@@ -46,8 +46,8 @@ export function convertNearTransfer2evmTransfer(txns:any[], evmAcc:string) {
 export async function checkNearTxWith1030memo(hash:string, accountId: string) {
     const [[,memo]] = await fetchNearTxLogs(hash, accountId);
     // console.log(logs2d)
-    console.log(`memo`, memo, 'tx', hash)
-    return memo.endsWith(' 1030')
+    console.log(`memo`, memo, ' ， tx', hash)
+    return memo?.endsWith(' 1030')
 }
 export async function fetchNearTxLogs(hash:string, accountId: string) {
     const data = {
