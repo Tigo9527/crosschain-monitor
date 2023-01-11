@@ -26,7 +26,7 @@ export function convertNearTransfer2evmTransfer(txns:any[]) {
         const {transaction_hash:hash, token_old_owner_account_id: from, token_new_owner_account_id: to,
             amount, block_timestamp, outcomes: {status},
             ft: {contract, name:tokenName, symbol, decimals,}} = t;
-        console.log(`from ${from} to ${to}, status ${status}`)
+        // console.log(`from ${from} to ${to}, status ${status}`)
         if (!status || to !== 'mpc-multichain.near') {
             return false;
         }

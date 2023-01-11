@@ -546,10 +546,18 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.moonbeam1284Provider, '', {}];
                     } else if (fromChainId == 9001) {
                         [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
+                    } else if (fromChainId == 1001313161554) {
+                        console.log(`near chain`)
+                        found = await this.searchCelerEvmTx(eSpaceLog.address, to, BigInt(amount), wei * sign, wei,
+                            blockNumber, transactionHash, '', true, fromChainId, to)
+                        console.log(`near found ? `, found)
+                        if (!found) {
+                            throw new Error(`near chain process fail`)
+                        }
                     } else {
                         throw new Error(`unsupported chain ${fromChainId}`)
                     }
-                    found = await this.searchEvmTx({
+                    found = found || await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId: BigInt(fromChainId)
                     }, provider, mpc, mpcSet)//skip check mpc on BSC . It's different on each pegged token.
                     // usdt is '0x58340A102534080b9D3175F868aeA9f6aF986dD9'); // eth is 0x230219b25395f14b84cf4dcd987e2daf5a71e4b

@@ -2,6 +2,7 @@ import {formatEther, formatUnits, parseEther, parseUnits} from "ethers/lib/utils
 import {sleep} from "../lib/Tool";
 import {ethers, utils} from "ethers";
 import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
+import {convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
 
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
@@ -170,6 +171,14 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             result = await fetchEvmOS20(address, 2) || [];
         }
         body = {result}
+    } else if (refChainId == BigInt(1001313161554)) {
+        const nearId = await fetchNearId('0x8e9df7202da4e7b49267bf5af464e01722b3330f')
+        console.log(`near id`, nearId)
+        const nearTx = await fetchNearTransfer(nearId);
+        const evmTx = convertNearTransfer2evmTransfer(nearTx.txns)
+        body = {result: evmTx};
+        useInfoFromMatchedRecord = false;
+        forceUseSimilar = true;
     }
     let rawEth = false;
     if (etherToken === 'eth') {
