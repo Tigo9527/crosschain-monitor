@@ -200,6 +200,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     const earlierTimeSec = beforeTimeSec - 3600 * limitHours // recent 2 hours
     const feeDelta = wantDripScale18 * 8n / 100n;  // 百8
     let includeFee = wantDripScale18 + feeDelta;
+    console.log(`time range`, new Date(earlierTimeSec*1000).toISOString(), new Date(beforeTimeSec*1000).toISOString())
     for(let row of body.result) {
         if(process.env.DEBUG_RETRY){
             console.log(`debug retry, skip parse result`)
@@ -235,13 +236,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             }
         }
         let debug = true;
-        debug && console.log(`not match ${scale18} vs ${wantDripScale18
+        debug && console.log(`\n value ${scale18} ${formatEther(scale18)} >= ${formatEther(wantDripScale18)} ${wantDripScale18
         } ${scale18 >= wantDripScale18
-        } \n ${scale18} <= ${includeFee} ${scale18 < includeFee
+        } \n with fee ${scale18} ${formatEther(scale18)} <= ${formatEther(includeFee)} ${includeFee} ${scale18 < includeFee
         } \n ${from} vs ${address} ${from === address
         } \n ${timeStamp} < ${beforeTimeSec} ${timeStamp < beforeTimeSec
         } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
-        }`)
+        } ${row.timeStr} ${row.hash}`)
     }
     if (filtered.length === 1) {
         let similar = filtered[0];
