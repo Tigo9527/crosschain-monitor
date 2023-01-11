@@ -256,7 +256,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         const {timeStamp, from, scale18} = scaleValue(similar);
         console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
-        if (rawEth) {
+        if (rawEth || similar.fromNear) {
             return similar;
         }
         if (useInfoFromMatchedRecord) {
