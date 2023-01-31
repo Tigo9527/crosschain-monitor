@@ -32,6 +32,7 @@ export const ETH_W_BTC = '0x5df101F56ea643e06066392d266e9f4366b9186d' //
 export const VELAS_BTC = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C' //
 export const VELAS_ETH = '0x6aB6d61428fde76768D7b45D8BFeec19c6eF91A8' //
 export const CRONOS_USDC = '0xc21223249CA28397B4B6541dfFaEcC539BfF0c59';
+export const ETH_POW_USDT = '0x8A496486f4c7CB840555Bc2Be327CBA1447027C3';
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
@@ -39,7 +40,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     BSC_USD, BSC_ETH, BSC_BTC, BSC_USDC, BSC_anyUSD,
     KAVA_USDC_TOKEN, KAVA_USDT_TOKEN, KAVA_BTC_TOKEN,
     ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT, ETH_W_BTC, VELAS_BTC,
-    VELAS_ETH, CRONOS_USDC,
+    VELAS_ETH, CRONOS_USDC, ETH_POW_USDT,
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -75,6 +76,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(KAVA_BTC_TOKEN.toLowerCase(), E_SPACE_WBTC.toLowerCas
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_anyUSDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(STEP1234_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(ETH_POW_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETH_W_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(VELAS_BTC.toLowerCase(), E_SPACE_WBTC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(VELAS_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
@@ -191,6 +193,8 @@ Block Explorer URL: https://stepscan.io/
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
+
+        // https://www.oklink.com/en/ethw/token/0x8a496486f4c7cb840555bc2be327cba1447027c3
         this.ethereumpow10001 = ethers.getDefaultProvider("https://mainnet.ethereumpow.org/")
         this.tokenAddr = tokenAddr
     }
