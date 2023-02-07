@@ -85,6 +85,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(VELAS_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(VELAS_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(POLYGON_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WETH_TOKEN.toLowerCase(), E_SPACE_ETH.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
