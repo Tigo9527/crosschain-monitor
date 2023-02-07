@@ -142,6 +142,7 @@ export class EventChecker {
     public velas106Provider: BaseProvider;
     // https://snowtrace.io
     public avalanche43114: BaseProvider;
+    public neonEvm245022934p: BaseProvider;
     /*
     Step Network [Mainnet]
 
@@ -203,6 +204,7 @@ Block Explorer URL: https://stepscan.io/
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.velas106Provider = ethers.getDefaultProvider('https://explorer.velas.com/rpc')
         this.avalanche43114 = ethers.getDefaultProvider('https://api.avax.network/ext/bc/C/rpc')
+        this.neonEvm245022934p = ethers.getDefaultProvider('https://mainnet.neonevm.org')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
@@ -550,6 +552,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.velas106Provider, '', {}];
                     } else if (fromChainId == 137) {
                         [provider, mpc, mpcSet] = [this.polygon137Provider, '', {}];
+                    } else if (fromChainId == 245022934) {
+                        [provider, mpc, mpcSet] = [this.neonEvm245022934p, '', {}];
                     } else if (fromChainId == 43114) {
                         [provider, mpc, mpcSet] = [this.avalanche43114, '', {}];
                     } else if (fromChainId == 42170) {
