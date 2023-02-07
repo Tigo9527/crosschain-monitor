@@ -162,6 +162,7 @@ Block Explorer URL: https://stepscan.io/
         '0xea928a8d09e11c66e074fbf2f6804e19821f438d': '1',
         // usdt ethereum , eg. https://etherscan.io/tx/0xe57d8b92b22125a5e6682c971323816f313688aed610f33bcf55a94d29c7205e
         '0xee9762352f63f4387af40d58291612067727457d': 1,
+        // https://www.oklink.com/zh-cn/eth/tx/0x9aa682839e3c1dca5f8506941b61b0bd5fb3ac36e74bc2ae859715ce53970e86?tab=1 eg.
         '0x2ac03bf434db503f6f5f85c3954773731fc3f056': 'any eth',
         [ZERO]: ZERO,
     }
