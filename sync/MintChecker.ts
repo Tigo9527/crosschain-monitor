@@ -35,6 +35,7 @@ export const VELAS_USDC = '0x80A16016cC4A2E6a2CACA8a4a498b1699fF0f844' //
 export const CRONOS_USDC = '0xc21223249CA28397B4B6541dfFaEcC539BfF0c59';
 export const ETH_POW_USDT = '0x8A496486f4c7CB840555Bc2Be327CBA1447027C3';
 export const POLYGON_USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+export const avalanche43114_USDT = '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7';
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
     ETHEREUM_USDT_TOKEN, ETHEREUM_DAI_TOKEN, ETHEREUM_USDC_TOKEN,
@@ -43,6 +44,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     KAVA_USDC_TOKEN, KAVA_USDT_TOKEN, KAVA_BTC_TOKEN,
     ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT, ETH_W_BTC, VELAS_BTC,
     VELAS_ETH, VELAS_USDC, CRONOS_USDC, ETH_POW_USDT, POLYGON_USDT,
+    avalanche43114_USDT,
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -85,6 +87,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(VELAS_ETH.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(VELAS_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(POLYGON_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(avalanche43114_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WETH_TOKEN.toLowerCase(), E_SPACE_ETH.toLowerCase())
 
 
@@ -137,6 +140,8 @@ export class EventChecker {
     public ArbitrumNova42170Provider: BaseProvider;
     public Milkomeda2002Provider: BaseProvider;
     public velas106Provider: BaseProvider;
+    // https://snowtrace.io
+    public avalanche43114: BaseProvider;
     /*
     Step Network [Mainnet]
 
@@ -197,6 +202,7 @@ Block Explorer URL: https://stepscan.io/
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.velas106Provider = ethers.getDefaultProvider('https://explorer.velas.com/rpc')
+        this.avalanche43114 = ethers.getDefaultProvider('https://api.avax.network/ext/bc/C/rpc')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
@@ -544,6 +550,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.velas106Provider, '', {}];
                     } else if (fromChainId == 137) {
                         [provider, mpc, mpcSet] = [this.polygon137Provider, '', {}];
+                    } else if (fromChainId == 43114) {
+                        [provider, mpc, mpcSet] = [this.avalanche43114, '', {}];
                     } else if (fromChainId == 42170) {
                         [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {
                             '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
