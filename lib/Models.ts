@@ -210,7 +210,7 @@ export class Bill extends Model<IBill> implements IBill {
             tokenAddr: {type: DataTypes.STRING(42), allowNull: false},
             tokenName: {type: DataTypes.STRING(32), allowNull: false},
             drip: {type: DataTypes.DECIMAL(65,0), allowNull: false},
-            fromChainId: {type: DataTypes.STRING, allowNull: false, defaultValue: ""},
+            fromChainId: {type: DataTypes.STRING(16), allowNull: false, defaultValue: ""},
             formatUnit: {type: DataTypes.DECIMAL(47,18), allowNull: false},
             minterAddr: {type: DataTypes.STRING(42), allowNull: false},
             minterName: {type: DataTypes.STRING(42), allowNull: false},

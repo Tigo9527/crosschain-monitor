@@ -198,7 +198,11 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         limitHours = 5;
     }
     const earlierTimeSec = beforeTimeSec - 3600 * limitHours // recent 2 hours
-    const feeDelta = wantDripScale18 * 15n / 100n;  // 百15
+    let feeFactor = 15n;
+    if (refChainId === BigInt(592)) {
+        feeFactor = 5n;
+    }
+    const feeDelta = wantDripScale18 * feeFactor / 100n;  // 百15
     let includeFee = wantDripScale18 + feeDelta;
     console.log(`time range`, new Date(earlierTimeSec*1000).toISOString(), new Date(beforeTimeSec*1000).toISOString())
     for(let row of body.result) {
