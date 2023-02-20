@@ -145,6 +145,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     } else if (refChainId == BigInt(2002)) {
         host = "https://explorer-mainnet-algorand-rollup.a1.milkomeda.com"
         etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
+    } else if (refChainId == BigInt(42262)) {
+        host = "https://explorer.emerald.oasis.dev"
+        etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
     } else if (refChainId == BigInt(2222)) {
         host = "https://explorer.kava.io"
         etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;

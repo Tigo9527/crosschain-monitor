@@ -139,6 +139,7 @@ export class EventChecker {
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
+    public c42262Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
@@ -211,6 +212,7 @@ Block Explorer URL: https://stepscan.io/
         this.neonEvm245022934p = ethers.getDefaultProvider('https://mainnet.neonevm.org')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
+        this.c42262Provider = ethers.getDefaultProvider('https://emerald.oasis.dev')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
 
         // https://www.oklink.com/en/ethw/token/0x8a496486f4c7cb840555bc2be327cba1447027c3
