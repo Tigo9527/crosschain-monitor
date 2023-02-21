@@ -290,7 +290,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
-        } else if (row.fromNear) {
+        } else if (row.fromNear || rawEth) {
 
         } else
         if (await matchDepositId(row.hash, refId, providerUrl) ) {
