@@ -188,6 +188,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     if (etherToken === 'eth') {
         rawEth = true;
         body = await listTx(address, host);
+        useInfoFromMatchedRecord = false;
     } else if (body) {
         // fetched
     } else {
