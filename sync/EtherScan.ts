@@ -82,7 +82,7 @@ function scaleValue(row:any) {
     return {timeStamp, from, scale18};
 }
 async function matchDepositId(etherTxHash:string, expect: string, providerUrl = undefined) {
-    console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
+    console.log(`try to matchDepositId, etherTxHash ${etherTxHash}, provider url [${providerUrl}]`)
     let txInfo = await ethers.getDefaultProvider(providerUrl).getTransaction(etherTxHash).catch(err => {
         console.log(`ethers getTransaction fail`, err)
         throw err
