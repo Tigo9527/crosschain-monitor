@@ -166,6 +166,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         host = 'https://gw-mainnet-explorer.nervosdao.community' // /api
         etherToken = ''
         useInfoFromMatchedRecord = false;
+        providerUrl = "https://v1.mainnet.godwoken.io/rpc"
         forceUseSimilar = true;
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
