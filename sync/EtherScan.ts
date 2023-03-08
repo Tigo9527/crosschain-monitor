@@ -162,6 +162,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     } else if (refChainId == BigInt(52)) {
         host = "https://api.cronoscan.com"
         etherToken = ''
+    } else if (refChainId == BigInt(71402)) {
+        host = 'https://gw-mainnet-explorer.nervosdao.community/api'
+        etherToken = ''
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
         providerUrl = 'https://eth.bd.evmos.org:8545'
