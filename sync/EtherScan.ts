@@ -163,7 +163,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         host = "https://api.cronoscan.com"
         etherToken = ''
     } else if (refChainId == BigInt(71402)) {
-        host = 'https://gw-mainnet-explorer.nervosdao.community/api'
+        host = 'https://gw-mainnet-explorer.nervosdao.community' // /api
         etherToken = ''
     } else if (refChainId == BigInt(9001)) {
         host = "https://evm.evmos.org"
