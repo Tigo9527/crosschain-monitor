@@ -282,9 +282,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 console.log(`[ ${refChainId}] take similar as match.`)
                 return similar;
             }
-        } else if (await matchDepositId(similar.hash, refId, providerUrl) ) {
-            return similar;
         } else if (forceUseSimilar) {
+            return similar;
+        } else if (await matchDepositId(similar.hash, refId, providerUrl) ) {
             console.log(`[ ${refChainId}] take similar as match, case 2.`);
             return similar;
         }
