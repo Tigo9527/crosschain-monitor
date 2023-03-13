@@ -273,17 +273,16 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         if (rawEth || similar.fromNear) {
             return similar;
         }
+        if (forceUseSimilar){
+            console.log(`[ ${refChainId}] take similar as match.`)
+            return similar;
+        }
         if (useInfoFromMatchedRecord) {
             const {hash, from, input: data,} = similar;
             if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
                 console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
                 return similar;
-            }if (forceUseSimilar){
-                console.log(`[ ${refChainId}] take similar as match.`)
-                return similar;
             }
-        } else if (forceUseSimilar) {
-            return similar;
         } else if (await matchDepositId(similar.hash, refId, providerUrl) ) {
             console.log(`[ ${refChainId}] take similar as match, case 2.`);
             return similar;
