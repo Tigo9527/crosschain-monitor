@@ -3,6 +3,7 @@ import {sleep} from "../lib/Tool";
 import {ethers, utils} from "ethers";
 import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
 import {checkNearTxWith1030memo, convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
+import has = Reflect.has;
 
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
@@ -103,6 +104,14 @@ function decodeTxData(data: string) {
 }
 
 async function matchDepositId0(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
+    try {
+        return await matchDepositId0Unsafe(hash, data, from ,chainId, etherTxHash, expect);
+    } catch (e) {
+        console.log(`fail reason`, e)
+    }
+    return false;
+}
+async function matchDepositId0Unsafe(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
     // console.log(`raw tx`, data || txInfo)
     // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
     const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
@@ -297,8 +306,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             }
         } else if (row.fromNear || rawEth) {
 
-        } else
-        if (await matchDepositId(row.hash, refId, providerUrl) ) {
+        } else if (await matchDepositId(row.hash, refId, providerUrl) ) {
             console.log(`matchDepositId one by one, hit`)
             return row
         }
