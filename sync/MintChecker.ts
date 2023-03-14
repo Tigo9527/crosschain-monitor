@@ -822,8 +822,13 @@ Block Explorer URL: https://stepscan.io/
                     console.log(`[${this.name}] On ethereum, transfer value ${v} < ${mintV} , token ${ethereumLog.address}`)
                     continue
                 }
-                console.log(`ethereum, transfer from ${hexStripZeros(sender)} to ${hexStripZeros(receiver)}`, v)
-                const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr)
+                let stripFrom = hexStripZeros(sender);
+                console.log(`ethereum, transfer from ${stripFrom} to ${hexStripZeros(receiver)}`, v)
+                if (stripFrom === '0x') {
+                    console.log(`from is zero, skip`)
+                    continue
+                }
+                const newSupply = await this.calcSupply(eSpaceLog.address, BigInt(wei*sign), this.tokenAddr);
                 await Bill.create({
                     blockNumber,
                     drip: wei,
