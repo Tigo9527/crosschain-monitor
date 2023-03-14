@@ -145,6 +145,7 @@ export class EventChecker {
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
+    public ArbitrumOne42161Provider: BaseProvider;
     public Milkomeda2002Provider: BaseProvider;
     public velas106Provider: BaseProvider;
     // https://snowtrace.io
@@ -208,6 +209,7 @@ Block Explorer URL: https://stepscan.io/
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
+        this.ArbitrumOne42161Provider = ethers.getDefaultProvider('https://arb1.arbitrum.io/rpc')
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
         this.velas106Provider = ethers.getDefaultProvider('https://explorer.velas.com/rpc')
         this.avalanche43114 = ethers.getDefaultProvider('https://api.avax.network/ext/bc/C/rpc')
@@ -564,6 +566,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.neonEvm245022934p, '', {}];
                     } else if (fromChainId == 43114) {
                         [provider, mpc, mpcSet] = [this.avalanche43114, '', {}];
+                    } else if (fromChainId == 42161) {
+                        [provider, mpc, mpcSet] = [this.ArbitrumOne42161Provider, '', {}];
                     } else if (fromChainId == 42170) {
                         [provider, mpc, mpcSet] = [this.ArbitrumNova42170Provider, '', {
                             '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C': 1,
