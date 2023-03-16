@@ -143,6 +143,7 @@ export class EventChecker {
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
+    public telos40Provider: BaseProvider;
     public c42262Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
@@ -218,6 +219,7 @@ Block Explorer URL: https://stepscan.io/
         this.neonEvm245022934p = ethers.getDefaultProvider('https://mainnet.neonevm.org')
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
+        this.telos40Provider = ethers.getDefaultProvider('https://mainnet.telos.net/evm')
         this.c42262Provider = ethers.getDefaultProvider('https://emerald.oasis.dev')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
 
@@ -578,6 +580,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.ethereumpow10001, '', {}];
                     } else if (fromChainId == 25) {
                         [provider, mpc, mpcSet] = [this.cronos25Provider, '', {}];
+                    } else if (fromChainId == 40) {
+                        [provider, mpc, mpcSet] = [this.telos40Provider, '', {}];
                     } else if (fromChainId == 58) {
                         [provider, mpc, mpcSet] = [this.ont58Provider, '', {}];
                     } else if (fromChainId == 1284) {
