@@ -709,11 +709,15 @@ Block Explorer URL: https://stepscan.io/
             console.log(`it's raw eth`)
             ethTokenVar = 'eth';
         }
-        const row = flowScanRow || await fetchErc20Transfer(account, wei, ethTokenVar, timestamp, refId, refChainId)
+        let row = flowScanRow || await fetchErc20Transfer(account, wei, ethTokenVar, timestamp, refId, refChainId)
+        if (!row && account.toLowerCase() !== depositor.toLowerCase()) {
+            console.log(`fetch by depositor`)
+            row = await fetchErc20Transfer(depositor, wei, ethTokenVar, timestamp, refId, refChainId)
+        }
         if (row) {
             const {hash:txHashEth, timeStamp, nonce, from:txEthReceiptFrom, to:txEthTo,
-                contractAddress, value, tokenName, tokenDecimal} = row
-            const newSupply = await this.calcSupply(minter, BigInt(diff), this.tokenAddr)
+                contractAddress, value, tokenName, tokenDecimal} = row;
+            const newSupply = await this.calcSupply(minter, BigInt(diff), this.tokenAddr);
             if (save) {
                 await Bill.create({
                     blockNumber, drip: wei, ethereumDrip: value, ethereumFormatUnit: parseFloat(formatUnits(BigInt(value), parseInt(tokenDecimal))),
