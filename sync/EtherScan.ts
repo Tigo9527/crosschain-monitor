@@ -274,11 +274,18 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
         } ${row.timeStr} ${row.hash}`)
     }
+    if (filtered.length === 2 && rawEth) {
+        const [row0, row1] = filtered;
+        if (row0.hash === row1.hash) {
+            console.log(`raw eth, trim duplicate row`, row1)
+            filtered.pop();
+        }
+    }
     if (filtered.length === 1) {
         let similar = filtered[0];
         const {timeStamp, from, scale18} = scaleValue(similar);
         console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
-            parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`)
+            parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`);
         if (rawEth || similar.fromNear) {
             return similar;
         }
