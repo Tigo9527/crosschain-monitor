@@ -709,7 +709,7 @@ Block Explorer URL: https://stepscan.io/
             console.log(`it's raw eth`)
             ethTokenVar = 'eth';
         }
-        let row = flowScanRow || await fetchErc20Transfer(depositor, wei, ethTokenVar, timestamp, refId, refChainId)
+        let row = flowScanRow || await fetchErc20Transfer(hexStripZeros(depositor), wei, ethTokenVar, timestamp, refId, refChainId)
         // if (!row && account.toLowerCase() !== depositor.toLowerCase()) {
         //     console.log(`fetch by depositor`)
         //     row = await fetchErc20Transfer(depositor, wei, ethTokenVar, timestamp, refId, refChainId)
