@@ -585,6 +585,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.ethereumpow10001, '', {}];
                     } else if (fromChainId == 25) {
                         [provider, mpc, mpcSet] = [this.cronos25Provider, '', {}];
+                    } else if (fromChainId == 10) {
+                        [provider, mpc, mpcSet] = [this.optimism10Provider, '', {}];
                     } else if (fromChainId == 40) {
                         [provider, mpc, mpcSet] = [this.telos40Provider, '', {}];
                     } else if (fromChainId == 58) {
