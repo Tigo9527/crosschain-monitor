@@ -320,12 +320,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     }
     console.log(`fetchErc20Transfer from ether scan, NOT MATCH, account ${address
     }, wantDripScale18 ${wantDripScale18} ${formatEther(wantDripScale18)}`);
-    console.log(`[ ${filtered.filter((row:any)=>row.from === address).map((row:any)=>{
+    console.log(`${filtered.filter((row:any)=>row.from === address).map((row:any)=>{
         const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
         const fmtUnit = formatUnits(BigInt(value), parseInt(tokenDecimal))
         return `${new Date(parseInt(timeStamp)*1000).toISOString()} ${from} -> ${to
-        } \n ${contractAddress} [${tokenName}] x ${value} (${fmtUnit})`
-    }).join('\n')} ]--- filtered.`);
+        } hash ${hash} \n ${contractAddress} [${tokenName}] x ${value} (${fmtUnit})`
+    }).join('\n')}\n--- filtered.`);
     console.log(` ether scan api result length ${body.result.length}`)
     return null;
 }
