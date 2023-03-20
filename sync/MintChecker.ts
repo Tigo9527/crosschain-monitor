@@ -147,6 +147,7 @@ export class EventChecker {
     public ont58Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
     public telos40Provider: BaseProvider;
+    public optimism10Provider: BaseProvider;
     public c42262Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
@@ -223,6 +224,7 @@ Block Explorer URL: https://stepscan.io/
         this.step1234Provider = ethers.getDefaultProvider('https://rpc.step.network/')
         this.cronos25Provider = ethers.getDefaultProvider('https://evm.cronos.org')
         this.telos40Provider = ethers.getDefaultProvider('https://mainnet.telos.net/evm')
+        this.optimism10Provider = ethers.getDefaultProvider('https://mainnet.optimism.io')
         this.c42262Provider = ethers.getDefaultProvider('https://emerald.oasis.dev')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
 
