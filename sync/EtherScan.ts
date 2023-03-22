@@ -8,6 +8,10 @@ import has = Reflect.has;
 const superagent = require('superagent')
 require('superagent-proxy')(superagent);
 
+export function stripAddr(hex:string) {
+    return `0x${hex.substring(hex.length-40)}`
+}
+
 export async function listTx(who: string, host) {
     let apiKey = process.env.ETHER_SCAN_API_KEY || ""
     let apiKeyStr = `&apikey=${apiKey}`;

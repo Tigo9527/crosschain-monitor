@@ -3,7 +3,7 @@ import {BaseProvider} from "@ethersproject/providers"
 import {formatEther, formatUnits, hexStripZeros, hexZeroPad, parseEther, parseUnits} from "ethers/lib/utils";
 import {Bill, Config, DelayedMint, updateConfig} from "../lib/Models";
 import {addAddress, dingMsg, sleep} from "../lib/Tool";
-import {fetchErc20Transfer} from "./EtherScan";
+import {fetchErc20Transfer, stripAddr} from "./EtherScan";
 import {matchFlowScan} from "./flowscan";
 import {matchKlaytnScan} from "./KlaytnScan";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
@@ -543,7 +543,7 @@ Block Explorer URL: https://stepscan.io/
                     eTopic === '0x05d0634fe981be85c22e2942a880821b70095d84e152c3ea3c17a4e4250d9d61'
                 ) {
                     const [, txHashEth, txFromEth] = eSpaceLog.topics
-                    console.log(`ethereum tx hash ${txHashEth} from ${hexStripZeros(txFromEth)}`)
+                    console.log(`ethereum tx hash ${txHashEth} from ${stripAddr(txFromEth)}`)
                     found = await this.searchEvmTx({
                         txHashEth, eSpaceLog, wei, sign, mintV, transactionHash, blockNumber, fromChainId: 1,
                     }, this.ethereumProvider, this.multiChainMPC);
@@ -553,7 +553,7 @@ Block Explorer URL: https://stepscan.io/
                     // LogAnySwapIn , example https://evm.confluxscan.net/tx/0x1dc8d76ae97265f39205c9e60807ea89c53611733409a7d018c16120cfacac48?tab=logs
                     const [, txHashEth, token, to,] = eSpaceLog.topics
                     const [amount, fromChainId, toChainId] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256'], eSpaceLog.data)
-                    let receiver = hexStripZeros(to);
+                    let receiver = stripAddr(to);
                     console.log(`foreign tx hash ${txHashEth} from ${receiver} , amount ${amount} / ${formatEther(amount)} fromChain ${fromChainId} toChain ${toChainId}`)
                     let provider: any, mpc: any, mpcSet: any;
                     if (fromChainId == 1) {
@@ -709,7 +709,7 @@ Block Explorer URL: https://stepscan.io/
             console.log(`it's raw eth`)
             ethTokenVar = 'eth';
         }
-        let row = flowScanRow || await fetchErc20Transfer(hexStripZeros(depositor), wei, ethTokenVar, timestamp, refId, refChainId)
+        let row = flowScanRow || await fetchErc20Transfer(stripAddr(depositor), wei, ethTokenVar, timestamp, refId, refChainId)
         // if (!row && account.toLowerCase() !== depositor.toLowerCase()) {
         //     console.log(`fetch by depositor`)
         //     row = await fetchErc20Transfer(depositor, wei, ethTokenVar, timestamp, refId, refChainId)
@@ -839,8 +839,8 @@ Block Explorer URL: https://stepscan.io/
                     console.log(`[${this.name}] On ethereum, transfer value ${v} < ${mintV} , token ${ethereumLog.address}`)
                     continue
                 }
-                let stripFrom = hexStripZeros(sender);
-                console.log(`ethereum, transfer from ${stripFrom} to ${hexStripZeros(receiver)}`, v)
+                let stripFrom = stripAddr(sender);
+                console.log(`ethereum, transfer from ${stripFrom} to ${stripAddr(receiver)}`, v)
                 if (stripFrom === '0x') {
                     console.log(`from is zero, skip`)
                     continue
