@@ -841,7 +841,7 @@ Block Explorer URL: https://stepscan.io/
                 }
                 let stripFrom = stripAddr(sender);
                 console.log(`ethereum, transfer from ${stripFrom} to ${stripAddr(receiver)}`, v)
-                if (stripFrom === '0x') {
+                if (stripFrom === ethers.constants.AddressZero) {
                     console.log(`from is zero, skip`)
                     continue
                 }
