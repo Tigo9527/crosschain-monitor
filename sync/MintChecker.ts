@@ -151,6 +151,7 @@ export class EventChecker {
     public telos40Provider: BaseProvider;
     public optimism10Provider: BaseProvider;
     public c42262Provider: BaseProvider;
+    public Godwoken71402Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
@@ -228,6 +229,7 @@ Block Explorer URL: https://stepscan.io/
         this.telos40Provider = ethers.getDefaultProvider('https://mainnet.telos.net/evm')
         this.optimism10Provider = ethers.getDefaultProvider('https://mainnet.optimism.io')
         this.c42262Provider = ethers.getDefaultProvider('https://emerald.oasis.dev')
+        this.Godwoken71402Provider = ethers.getDefaultProvider('https://v1.mainnet.godwoken.io/rpc')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
 
         // https://www.oklink.com/en/ethw/token/0x8a496486f4c7cb840555bc2be327cba1447027c3
@@ -575,6 +577,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.polygon137Provider, '', {}];
                     } else if (fromChainId == 245022934) {
                         [provider, mpc, mpcSet] = [this.neonEvm245022934p, '', {}];
+                    } else if (fromChainId == 71402) {
+                        [provider, mpc, mpcSet] = [this.Godwoken71402Provider, '', {}];
                     } else if (fromChainId == 43114) {
                         [provider, mpc, mpcSet] = [this.avalanche43114, '', {}];
                     } else if (fromChainId == 42161) {
@@ -775,9 +779,9 @@ Block Explorer URL: https://stepscan.io/
         } , status ${txEthReceipt.status} value ${fmtValueInTx}`)
 
         if (txEth.value.toBigInt() && this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57'
+            && txEthLogs.length === 0) {
             // ethereum WETH tx example :
             // https://www.oklink.com/zh-cn/eth/tx/0x9aa682839e3c1dca5f8506941b61b0bd5fb3ac36e74bc2ae859715ce53970e86?tab=1
-            && txEthLogs.length === 0) {
             console.log(`It's ETH, value ${fmtValueInTx}`)
             if (txEth.value.toBigInt() < wei) {
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
