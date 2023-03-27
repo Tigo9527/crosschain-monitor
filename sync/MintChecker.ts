@@ -28,6 +28,7 @@ export const CRONOS_BTC = '0x062E66477Faf219F25D27dCED647BF57C3107d52' // pegged
 export const TELOS40_BTC = '0xf390830DF829cf22c53c8840554B98eafC5dCBc2' //
 export const BSC_USDC = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' // Binance-Peg USD Coin
 export const POLYGON_USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Binance-Peg USD Coin
+export const zksync_era324_USDC = '0x000000000000000000000000000000000000800A' //
 export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' //
 export const Godwoken71402_USDT = '0xfA9343C3897324496A05fC75abeD6bAC29f8A40f' //
 export const ETH_W_BTC = '0x5df101F56ea643e06066392d266e9f4366b9186d' //
@@ -52,7 +53,7 @@ export const ETHEREUM_TOKENS = new Set<string>([
     ONT58_USDT, CRONOS_BTC, POLYGON_USDC, CRONOS_USDT, ETH_W_BTC, VELAS_BTC,
     VELAS_ETH, VELAS_USDC, CRONOS_USDC, ETH_POW_USDT, POLYGON_USDT,
     avalanche43114_USDT, STEP1234_BTC, STEP1234_USDC, avalanche43114_USDC,arbitrum42161eth,
-    TELOS40_BTC, optimism10eth, Godwoken71402_USDT,
+    TELOS40_BTC, optimism10eth, Godwoken71402_USDT, zksync_era324_USDC,
 ]);
 // export const GHOST_USDT_MINTER_1 = '0xF480f38C366dAaC4305dC484b2Ad7a496FF00CeA'
 export const E_SPACE_ANY_SWAP_USDT = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C'
@@ -213,9 +214,11 @@ Block Explorer URL: https://stepscan.io/
     constructor(url: string, tokenAddr:string) {
         if (tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase()) {
             // token address conflict on different chains, fix them
-            FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+            FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), tokenAddr.toLowerCase())
+        } else if (tokenAddr.toLowerCase() === E_SPACE_USDC.toLowerCase()) {
+            FOREIGN_TOKEN_TO_LOCAL.set(zksync_era324_USDC.toLowerCase(), tokenAddr.toLowerCase())
         }
-        this.provider = ethers.getDefaultProvider(url)
+        this.provider = ethers.getDefaultProvider(url);
         // this.provider = new ethers.providers.JsonRpcBatchProvider(url)
         this.ethereumProvider = ethers.getDefaultProvider();
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
