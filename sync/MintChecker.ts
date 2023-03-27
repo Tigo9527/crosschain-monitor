@@ -210,6 +210,10 @@ Block Explorer URL: https://stepscan.io/
     }
 
     constructor(url: string, tokenAddr:string) {
+        if (tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase()) {
+            // token address conflict on different chains, fix them
+            FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
+        }
         this.provider = ethers.getDefaultProvider(url)
         // this.provider = new ethers.providers.JsonRpcBatchProvider(url)
         this.ethereumProvider = ethers.getDefaultProvider();
