@@ -143,6 +143,7 @@ export function addressName(addr = '', unknown = 'unknown') {
 export class EventChecker {
     notifyMint = true
     public provider: BaseProvider;
+    public zksync_era324_p: BaseProvider;
     public ethereumProvider: BaseProvider;
     public bscProvider: BaseProvider;
     public kavaProvider: BaseProvider;
@@ -221,6 +222,7 @@ Block Explorer URL: https://stepscan.io/
         this.kavaProvider = ethers.getDefaultProvider('https://evm.kava.io')
         this.evmOsProvider = ethers.getDefaultProvider('https://eth.bd.evmos.org:8545')
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
+        this.zksync_era324_p = ethers.getDefaultProvider('https://mainnet.era.zksync.io')
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
@@ -577,6 +579,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.Milkomeda2002Provider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
+                    } else if (fromChainId == 324) {
+                        [provider, mpc, mpcSet] = [this.zksync_era324_p, '', {}];
                     } else if (fromChainId == 106) {
                         [provider, mpc, mpcSet] = [this.velas106Provider, '', {}];
                     } else if (fromChainId == 137) {
