@@ -805,7 +805,7 @@ Block Explorer URL: https://stepscan.io/
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
                 return false;
             }
-            if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase() && !mpcSet[txEthTo]) {
+            if ( (txEthTo||'').toLowerCase() !== mpc.toLowerCase() && !mpcSet[txEthTo] && Object.keys(mpcSet).length > 0) {
                 console.log(`[${this.name}] ETH receiver is not multiChainMPC, want ${mpc} , actual ${txEthTo}`)
                 return false;
             }
