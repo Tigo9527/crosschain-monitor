@@ -797,10 +797,10 @@ Block Explorer URL: https://stepscan.io/
         } , status ${txEthReceipt.status} value ${fmtValueInTx}`)
 
         if (txEth.value.toBigInt() && this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57'
-            && txEthLogs.length === 0) {
+            && (txEthLogs.length === 0 || fromChainId.toString() === '324')) {
             // ethereum WETH tx example :
             // https://www.oklink.com/zh-cn/eth/tx/0x9aa682839e3c1dca5f8506941b61b0bd5fb3ac36e74bc2ae859715ce53970e86?tab=1
-            console.log(`It's ETH, value ${fmtValueInTx}`)
+            console.log(`It's ETH, value ${fmtValueInTx}, from chain ${fromChainId}`)
             if (txEth.value.toBigInt() < wei) {
                 console.log(`[${this.name}] On ethereum, transfer ETH ${fmtValueInTx} < ${mintV}`)
                 return false;
