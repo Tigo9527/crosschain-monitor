@@ -32,6 +32,7 @@ export const POLYGON_USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Bina
 export const zksync_era324_USDC = '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4' //
 export const ONT58_USDT = '0x72b0F5612802d473A13716db71a0348bcf631d98' //
 export const Godwoken71402_USDT = '0xfA9343C3897324496A05fC75abeD6bAC29f8A40f' //
+export const BitGert32520_USDT = '0xE3F5a90F9cb311505cd691a46596599aA1A0AD7D' //
 export const ETH_W_BTC = '0x5df101F56ea643e06066392d266e9f4366b9186d' //
 export const POLOYGON_WETH = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619' //
 export const VELAS_BTC = '0x639A647fbe20b6c8ac19E48E2de44ea792c62c5C' //
@@ -221,6 +222,7 @@ Block Explorer URL: https://stepscan.io/
         if (tokenAddr.toLowerCase() === E_SPACE_USDT.toLowerCase()) {
             // token address conflict on different chains, fix them
             FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), tokenAddr.toLowerCase())
+            FOREIGN_TOKEN_TO_LOCAL.set(BitGert32520_USDT.toLowerCase(), tokenAddr.toLowerCase())
         } else if (tokenAddr.toLowerCase() === E_SPACE_USDC.toLowerCase()) {
             FOREIGN_TOKEN_TO_LOCAL.set(zksync_era324_USDC.toLowerCase(), tokenAddr.toLowerCase())
         }
