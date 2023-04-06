@@ -150,6 +150,7 @@ export class EventChecker {
     public provider: BaseProvider;
     public zksync_era324_p: BaseProvider;
     public platon210425_p: BaseProvider;
+    public bitgert32520: BaseProvider;
     public ethereumProvider: BaseProvider;
     public bscProvider: BaseProvider;
     public kavaProvider: BaseProvider;
@@ -232,6 +233,7 @@ Block Explorer URL: https://stepscan.io/
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
         this.zksync_era324_p = ethers.getDefaultProvider('https://mainnet.era.zksync.io')
         this.platon210425_p = ethers.getDefaultProvider('https://openapi2.platon.network/rpc')
+        this.bitgert32520 = ethers.getDefaultProvider('https://rpc.icecreamswap.com')
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
@@ -588,6 +590,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.Milkomeda2002Provider, '', {}];
                     } else if (fromChainId == 2001) {
                         [provider, mpc, mpcSet] = [this.milk2001Provider, '', {}];
+                    } else if (fromChainId == 32520) {
+                        [provider, mpc, mpcSet] = [this.bitgert32520, '', {}];
                     } else if (fromChainId == 210425) {
                         [provider, mpc, mpcSet] = [this.platon210425_p, '', {}];
                     } else if (fromChainId == 324) {
