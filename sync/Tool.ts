@@ -1,8 +1,19 @@
 import {EventChecker, ZERO_FULL} from "./MintChecker";
-import {ethers} from "ethers";
+import {config} from "dotenv"
+import {Contract, ethers} from "ethers";
 import {Bill} from "../lib/Models";
 import {formatEther} from "ethers/lib/utils";
 import {sleep} from "../lib/Tool";
+import {ERC20ABI} from "./abi/ERC20";
+
+
+export async function checkHistory() {
+    const provider = ethers.getDefaultProvider(process.env.E_SPACE_RPC) as any;
+    await provider.getNetwork().then(id=>console.log(`chain`, id))
+    const cc = new Contract("0xfe97e85d13abd9c1c33384e796f10b73905637ce", ERC20ABI, provider);
+    let sup = await cc.totalSupply().then(formatEther);
+    console.log(`totalSupply`, sup)
+}
 
 export async function checkDB(checker:EventChecker) {
     const provider = ethers.getDefaultProvider(process.env.E_SPACE_RPC)
@@ -57,4 +68,9 @@ export async function replayDB(checker:EventChecker) {
     await sleep(1_000)
     console.log(mapByMinter)
     console.log(`done, sum ${sum}, ${formatEther(sum)}`)
+}
+
+if (module === require.main) {
+    config()
+    checkHistory().then()
 }
