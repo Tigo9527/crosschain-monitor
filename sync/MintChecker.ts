@@ -853,10 +853,6 @@ Block Explorer URL: https://stepscan.io/
                 } , neither mapping local [${localToken}] vs configToken ${this.tokenAddr} , emit by foreign contract [${ethereumLog.address}]`)
                 continue
             }
-            if (!ETHEREUM_TOKENS.has(ethereumLog.address)) {
-                console.log(`[${this.name}] It's not in ethereum token whitelist. ${ethereumLog.address}`)
-                continue
-            }
             let parsedReceiver = '0x'+(receiver||'').slice(-40)
             if (mpc && parsedReceiver !== mpc.toLowerCase() && !mpcSet[parsedReceiver]) {
                 console.log(`[${this.name}] token receiver is not multiChainMPC, want ${mpc} or ${JSON.stringify(mpcSet)} , actual ${parsedReceiver
