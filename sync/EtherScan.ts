@@ -155,6 +155,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         useInfoFromMatchedRecord = false;
         forceUseSimilar = true;
+    } else if (refChainId == BigInt(7700)) {
+        host = "https://evm.explorer.canto.io"
+        etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
     } else if (refChainId == BigInt(2002)) {
         host = "https://explorer-mainnet-algorand-rollup.a1.milkomeda.com"
         etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
