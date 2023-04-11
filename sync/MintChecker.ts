@@ -158,6 +158,7 @@ export class EventChecker {
     public milk2001Provider: BaseProvider;
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
+    public canto7700Provider: BaseProvider;
     public cronos25Provider: BaseProvider;
     public telos40Provider: BaseProvider;
     public optimism10Provider: BaseProvider;
@@ -241,6 +242,7 @@ Block Explorer URL: https://stepscan.io/
         this.bitgert32520 = ethers.getDefaultProvider('https://rpc.icecreamswap.com')
         this.moonbeam1284Provider = ethers.getDefaultProvider('https://rpc.api.moonbeam.network')
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
+        this.canto7700Provider = ethers.getDefaultProvider('https://canto.slingshot.finance')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.ArbitrumOne42161Provider = ethers.getDefaultProvider('https://arb1.arbitrum.io/rpc')
@@ -629,6 +631,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.ont58Provider, '', {}];
                     } else if (fromChainId == 1284) {
                         [provider, mpc, mpcSet] = [this.moonbeam1284Provider, '', {}];
+                    } else if (fromChainId == 7700) {
+                        [provider, mpc, mpcSet] = [this.canto7700Provider, '', {}];
                     } else if (fromChainId == 9001) {
                         [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
                     } else if (fromChainId == 1001313161554) {
