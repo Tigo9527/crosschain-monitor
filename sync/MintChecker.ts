@@ -227,6 +227,8 @@ Block Explorer URL: https://stepscan.io/
         } else if (tokenAddr.toLowerCase() === E_SPACE_ETH.toLowerCase()) {
             // 42170 eth
             FOREIGN_TOKEN_TO_LOCAL.set('0x722E8BdD2ce80A4422E880164f2079488e115365'.toLowerCase(), tokenAddr.toLowerCase())
+            // on chain 2222
+            FOREIGN_TOKEN_TO_LOCAL.set('0xE3F5a90F9cb311505cd691a46596599aA1A0AD7D'.toLowerCase(), tokenAddr.toLowerCase())
         } else if (tokenAddr.toLowerCase() === E_SPACE_USDC.toLowerCase()) {
             FOREIGN_TOKEN_TO_LOCAL.set(zksync_era324_USDC.toLowerCase(), tokenAddr.toLowerCase())
         }
