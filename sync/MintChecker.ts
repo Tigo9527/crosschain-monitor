@@ -155,6 +155,7 @@ export class EventChecker {
     public ethereumProvider: BaseProvider;
     public bscProvider: BaseProvider;
     public kavaProvider: BaseProvider;
+    public kardia24p: BaseProvider;
     public milk2001Provider: BaseProvider;
     public moonbeam1284Provider: BaseProvider;
     public ont58Provider: BaseProvider;
@@ -237,6 +238,7 @@ Block Explorer URL: https://stepscan.io/
         this.ethereumProvider = ethers.getDefaultProvider();
         this.bscProvider = ethers.getDefaultProvider('https://bsc-dataseed.binance.org/')
         this.kavaProvider = ethers.getDefaultProvider('https://evm.kava.io')
+        this.kardia24p = ethers.getDefaultProvider('https://rpc.kardiachain.io')
         this.evmOsProvider = ethers.getDefaultProvider('https://eth.bd.evmos.org:8545')
         this.milk2001Provider = ethers.getDefaultProvider('https://rpc-mainnet-cardano-evm.c1.milkomeda.com')
         this.zksync_era324_p = ethers.getDefaultProvider('https://mainnet.era.zksync.io')
@@ -589,6 +591,8 @@ Block Explorer URL: https://stepscan.io/
                     if (fromChainId == 1) {
                         [provider, mpc, mpcSet] = [this.ethereumProvider,
                             this.multiChainMPC, this.mpcSet];
+                    } else if (fromChainId == 24) {
+                        [provider, mpc, mpcSet] = [this.kardia24p, '', {}];
                     } else if (fromChainId == 56) {
                         [provider, mpc, mpcSet] = [this.bscProvider, '', {}];
                     } else if (fromChainId == 2222) { // //kava chain 2222
