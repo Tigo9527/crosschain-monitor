@@ -232,6 +232,8 @@ Block Explorer URL: https://stepscan.io/
             FOREIGN_TOKEN_TO_LOCAL.set('0xE3F5a90F9cb311505cd691a46596599aA1A0AD7D'.toLowerCase(), tokenAddr.toLowerCase())
         } else if (tokenAddr.toLowerCase() === E_SPACE_USDC.toLowerCase()) {
             FOREIGN_TOKEN_TO_LOCAL.set(zksync_era324_USDC.toLowerCase(), tokenAddr.toLowerCase())
+            // chain 24 kardia.
+            FOREIGN_TOKEN_TO_LOCAL.set('0x765277EebeCA2e31912C9946eAe1021199B39C61'.toLowerCase(), tokenAddr.toLowerCase())
         }
         this.provider = ethers.getDefaultProvider(url);
         // this.provider = new ethers.providers.JsonRpcBatchProvider(url)
