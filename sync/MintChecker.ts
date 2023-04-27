@@ -167,6 +167,7 @@ export class EventChecker {
     public Godwoken71402Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
     public polygon137Provider: BaseProvider;
+    public filecoin314p: BaseProvider;
     public ArbitrumNova42170Provider: BaseProvider;
     public ArbitrumOne42161Provider: BaseProvider;
     public Milkomeda2002Provider: BaseProvider;
@@ -250,6 +251,7 @@ Block Explorer URL: https://stepscan.io/
         this.ont58Provider = ethers.getDefaultProvider('https://dappnode3.ont.io:10339')
         this.canto7700Provider = ethers.getDefaultProvider('https://canto.slingshot.finance')
         this.polygon137Provider = ethers.getDefaultProvider('https://polygon-rpc.com')
+        this.filecoin314p = ethers.getDefaultProvider('https://rpc.ankr.com/filecoin')
         this.ArbitrumNova42170Provider = ethers.getDefaultProvider('https://nova.arbitrum.io/rpc')
         this.ArbitrumOne42161Provider = ethers.getDefaultProvider('https://arb1.arbitrum.io/rpc')
         this.Milkomeda2002Provider = ethers.getDefaultProvider('https://rpc-mainnet-algorand-rollup.a1.milkome.com')
@@ -613,6 +615,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.zksync_era324_p, '', {}];
                     } else if (fromChainId == 106) {
                         [provider, mpc, mpcSet] = [this.velas106Provider, '', {}];
+                    } else if (fromChainId == 314) {
+                        [provider, mpc, mpcSet] = [this.filecoin314p, '', {}];
                     } else if (fromChainId == 137) {
                         [provider, mpc, mpcSet] = [this.polygon137Provider, '', {}];
                     } else if (fromChainId == 245022934) {
