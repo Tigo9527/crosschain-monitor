@@ -166,6 +166,7 @@ export class EventChecker {
     public cronos25Provider: BaseProvider;
     public telos40Provider: BaseProvider;
     public optimism10Provider: BaseProvider;
+    public eos17777p: BaseProvider;
     public c42262Provider: BaseProvider;
     public Godwoken71402Provider: BaseProvider;
     public ethereumpow10001: BaseProvider;
@@ -268,6 +269,7 @@ Block Explorer URL: https://stepscan.io/
         this.telos40Provider = ethers.getDefaultProvider('https://mainnet.telos.net/evm')
         this.optimism10Provider = ethers.getDefaultProvider('https://mainnet.optimism.io')
         this.c42262Provider = ethers.getDefaultProvider('https://emerald.oasis.dev')
+        this.eos17777p = ethers.getDefaultProvider('https://api.evm.eosnetwork.com')
         this.Godwoken71402Provider = ethers.getDefaultProvider('https://v1.mainnet.godwoken.io/rpc')
         // this.smartBCH10001 = ethers.getDefaultProvider("http://rpc-testnet.smartbch.org")
 
@@ -652,6 +654,8 @@ Block Explorer URL: https://stepscan.io/
                         [provider, mpc, mpcSet] = [this.moonbeam1284Provider, '', {}];
                     } else if (fromChainId == 7700) {
                         [provider, mpc, mpcSet] = [this.canto7700Provider, '', {}];
+                    } else if (fromChainId == 17777) {
+                        [provider, mpc, mpcSet] = [this.eos17777p, '', {}];
                     } else if (fromChainId == 9001) {
                         [provider, mpc, mpcSet] = [this.evmOsProvider, '', {}];
                     } else if (fromChainId == 1001313161554) {
