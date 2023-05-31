@@ -526,7 +526,7 @@ Block Explorer URL: https://stepscan.io/
                     continue;
                 }
                 // if(!this.minterSet.has(eventSource) && eventSource !== GHOST_USDT_MINTER_1) {
-                if(!this.minterSet.has(eventSource)) {
+                if(!this.minterSet.has(eventSource) && action !== 'burn') {
                     console.log(`event source contract not in minterSet. ${eventSource}`);
                     continue;
                 }
