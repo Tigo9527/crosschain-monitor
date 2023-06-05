@@ -157,10 +157,17 @@ async function reportRawCfx(provider: BaseProvider, who) {
 }
 
 async function main() {
-    let evmUrl = process.env.E_SPACE_RPC || ''
+    let dingToken = process.env.DING_CFX || '';
+    console.log(`ding token is [${dingToken}]`)
+    const [,,cmd] = process.argv;
+    if (cmd === 'ding') {
+        await dingMsg(`Test Ding message:`, dingToken)
+        return;
+    }
+    let evmUrl = process.env.E_SPACE_RPC || '';
     const evm = new CfxPoolMonitor(evmUrl, '0xb12c13e66ade1f72f71834f2fc5082db8c091358'
         , '0x14b2D3bC65e74DAE1030EAFd8ac30c533c976A9b')
-    evm.dingToken = process.env.DING_CFX || ''
+    evm.dingToken = dingToken
     evm.linkScan = 'https://evm.confluxscan.net/token/'
     let extraCfxHolder = '0xf55460b8bc81ea65d7ae0aea2383ef69c8f2c62e';
     evm.moreFun = ()=>reportRawCfx(evm.provider, extraCfxHolder)
