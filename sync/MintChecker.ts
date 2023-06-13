@@ -732,7 +732,9 @@ Block Explorer URL: https://stepscan.io/
             const {timestamp: t0} = await this.provider.getBlock(blockNumber)
             timestamp = t0
         }
-        if (process.env.SKIP_TX === transactionHash) {
+        if (process.env.SKIP_TX === transactionHash
+            // file coin chain do not provide an API to fetch necessary information, skip them
+            || ( account === '0x423e897749c3b6f9e6e80ef8e60718ce670672d2' && refChainId.toString() === '314' && parseFloat(formatEther(wei)) < 9000 ) ) {
             const value = wei;
             const tokenDecimal = "0"; const txHashEth = `skip at chain ${refChainId}`; const txEthReceiptFrom = "skip"; const txEthTo = "skip";
             const contractAddress = "skip";
