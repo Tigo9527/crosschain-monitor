@@ -156,7 +156,8 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         useInfoFromMatchedRecord = false;
         forceUseSimilar = true;
     } else if (refChainId == BigInt(7700)) {
-        host = "https://evm.explorer.canto.io"
+        // host = "https://evm.explorer.canto.io"
+        host = "https://tuber.build"
         etherToken = '';    useInfoFromMatchedRecord = true;    forceUseSimilar = true;
     } else if (refChainId == BigInt(2002)) {
         host = "https://explorer-mainnet-algorand-rollup.a1.milkomeda.com"
