@@ -35,6 +35,7 @@ app.get('/price-info', async (req,res, next)=>{
         getPrice('BTCUSDT'),
         getPrice('ETHUSDT'),
         getPrice('BNBUSDT'),
+        getPrice('CFXUSDT'),
     ]).then(arr=>res.send({list: arr}))
         .catch(e=>next(e))
 })
