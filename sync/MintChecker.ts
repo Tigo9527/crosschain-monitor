@@ -148,6 +148,7 @@ export const addressMap:{[k:string]: string} = {
     [E_SPACE_ANY_SWAP_DAI]: 'AnyswapV6ERC20_DAI', //
     '0xBB7684Cc5408F4DD0921E5c2Cadd547b8f1AD573': 'celer',
     '0x3b53D2C7B44d40BE05Fa5E2309FFeB6eB2492d88': 'celer_2',
+    '0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa': 'AnyswapV6Router',
     [ETHEREUM_USDT_TOKEN]:'ethereumUSDT',
     [ETHEREUM_USDC_TOKEN]: 'ethereumUSDC',
     [ETHEREUM_WBTC_TOKEN]: 'ethereumWBTC',
