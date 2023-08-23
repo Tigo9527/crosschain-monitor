@@ -119,10 +119,14 @@ async function check(dingToken = '') {
 
     async function repeat() {
         try {
-            while (epoch >= maxEpoch - 80) { // re-org 40 happened.
+            let delayEpoch = 80;
+            while (epoch >= maxEpoch - delayEpoch) { // re-org may happen.
                 await sleep(5_000)
                 maxEpoch = await checker.provider.getBlockNumber()
                 console.log(`max epoch at ${maxEpoch}`)
+            }
+            if (range > 1 && epoch + range > maxEpoch - delayEpoch) {
+                range = 1
             }
             await checker.getEventByEpoch(epoch, range) //
             epoch+=range
