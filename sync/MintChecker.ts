@@ -20,6 +20,7 @@ export const ETHEREUM_WBTC_TOKEN = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'
 export const ETHEREUM_WETH_TOKEN = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
 // export const STEP1234_USDT = ''
 export const CRONOS_USDT = '0x66e428c3f67a68878562e79A0234c1F83c208770'
+export const CRONOS_BNB = '0xfA9343C3897324496A05fC75abeD6bAC29f8A40f'
 //
 export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955' // pegged mc
 export const BSC_anyUSD = '0x58340A102534080b9D3175F868aeA9f6aF986dD9' // pegged mc
@@ -117,6 +118,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WETH_TOKEN.toLowerCase(), E_SPACE_ETH.toLowe
 FOREIGN_TOKEN_TO_LOCAL.set(arbitrum42161eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(optimism10eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_WBNB.toLowerCase(), E_SPACE_BNB.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_BNB.toLowerCase(), E_SPACE_BNB.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
