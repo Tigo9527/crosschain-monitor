@@ -68,7 +68,6 @@ async function check(dingToken = '') {
     if (tokenAddr == '0x94bd7a37d2ce24cc597e158facaa8d601083ffec') {
         // bnb catchup
         range = 1000
-        eSpaceRpc = 'https://evm.confluxrpc.com'
     }
     let checker: EventChecker;
     try {

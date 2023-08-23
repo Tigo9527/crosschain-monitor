@@ -208,6 +208,7 @@ Block Explorer URL: https://stepscan.io/
         '0xee9762352f63f4387af40d58291612067727457d': 1,
         // https://www.oklink.com/zh-cn/eth/tx/0x9aa682839e3c1dca5f8506941b61b0bd5fb3ac36e74bc2ae859715ce53970e86?tab=1 eg.
         '0x2ac03bf434db503f6f5f85c3954773731fc3f056': 'any eth',
+        '0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa': 'any bnb',
         [ZERO]: ZERO,
     }
     public minterSet = new Set<string>()
@@ -446,7 +447,7 @@ Block Explorer URL: https://stepscan.io/
                 const mintId = '0x'+pureData.substring(64*0, 64*1)
                 const token = '0x'+pureData.substring(64*1 + 24, 64*2)
                 mintMap.set(mintId, log)
-                console.log(`mint event , id`, mintId)
+                console.log(`checkCelerDelayEvent mint event , id ${mintId} tx ${log.transactionHash}`)
             } else if (topic === '0xcbcfffe5102114216a85d3aceb14ad4b81a3935b1b5c468fadf3889eb9c5dce6') {
                 // DelayedTransferAdded(bytes32 id)
                 delayedMap.set(log.data, log) // mint id -> log
