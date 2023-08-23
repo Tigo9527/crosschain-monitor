@@ -64,6 +64,12 @@ async function check(dingToken = '') {
         process.exit(0)
         return;
     }
+    let range = 1
+    if (tokenAddr == '0x94bd7a37d2ce24cc597e158facaa8d601083ffec') {
+        // bnb catchup
+        range = 1000
+        eSpaceRpc = 'https://evm.confluxrpc.com'
+    }
     let checker: EventChecker;
     try {
         checker = new EventChecker(eSpaceRpc, tokenAddr);
@@ -105,7 +111,7 @@ async function check(dingToken = '') {
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpoch = 0;
     let preErrorEpoch = 0
-    let range = 1000
+
     async function repeat() {
         try {
             while (epoch >= maxEpoch - 80) { // re-org 40 happened.
@@ -122,13 +128,18 @@ async function check(dingToken = '') {
                     .catch(undefined)
             }
         } catch (e) {
-            console.log(`Process event fail at epoch/block ${epoch}`, e)
-            if (dingToken && preErrorEpoch != epoch) {
-                await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}` ,
-                    process.env.DEV_DING || dingToken)
+            if ((e as any).error?.code == -32000) {
+                console.log(`qps exceeded ${(e as any).error}`)
+                await sleep(1_000)
+            } else {
+                console.log(`Process event fail at epoch/block ${epoch}`, e)
+                if (dingToken && preErrorEpoch != epoch) {
+                    await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}`,
+                        process.env.DEV_DING || dingToken)
+                }
+                preErrorEpoch = epoch
+                await sleep(5_000);
             }
-            preErrorEpoch = epoch
-            await sleep(5_000);
         }
         setTimeout(repeat, 0)
     }
