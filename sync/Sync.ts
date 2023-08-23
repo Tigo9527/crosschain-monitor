@@ -76,10 +76,6 @@ async function check(dingToken = '') {
         checker = new EventChecker(eSpaceRpc, tokenAddr);
         checker.notifyMint = false
         await checker.init()
-        if (isBNB) {
-            // sync history data , but minter has been removed long time ago.
-            checker.minterSet.add("0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa")
-        }
     } catch (e) {
         console.log(`error startup`, e)
         process.exit(9)
@@ -103,6 +99,10 @@ async function check(dingToken = '') {
         console.log(`getMintRoles fail`, err)
         process.exit(1)
     })
+    if (isBNB) {
+        // sync history data , but minter has been removed long time ago.
+        checker.minterSet.add("0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa")
+    }
     let cursorKey = `${EPOCH_PREFIX_KEY}${tokenAddr}`; // it's the next epoch.
     if (cmd === 'importFromScan') {
         await importFromScan(checker, cursorKey)
