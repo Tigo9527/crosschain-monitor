@@ -208,7 +208,6 @@ Block Explorer URL: https://stepscan.io/
         '0xee9762352f63f4387af40d58291612067727457d': 1,
         // https://www.oklink.com/zh-cn/eth/tx/0x9aa682839e3c1dca5f8506941b61b0bd5fb3ac36e74bc2ae859715ce53970e86?tab=1 eg.
         '0x2ac03bf434db503f6f5f85c3954773731fc3f056': 'any eth',
-        '0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa': 'any bnb',
         [ZERO]: ZERO,
     }
     public minterSet = new Set<string>()

@@ -65,15 +65,21 @@ async function check(dingToken = '') {
         return;
     }
     let range = 1
+    let isBNB = false
     if (tokenAddr == '0x94bd7a37d2ce24cc597e158facaa8d601083ffec') {
         // bnb catchup
         range = 1000
+        isBNB = true;
     }
     let checker: EventChecker;
     try {
         checker = new EventChecker(eSpaceRpc, tokenAddr);
         checker.notifyMint = false
         await checker.init()
+        if (isBNB) {
+            // sync history data , but minter has been removed long time ago.
+            checker.minterSet.add("0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa")
+        }
     } catch (e) {
         console.log(`error startup`, e)
         process.exit(9)
