@@ -105,6 +105,7 @@ async function check(dingToken = '') {
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpoch = 0;
     let preErrorEpoch = 0
+    let range = 1000
     async function repeat() {
         try {
             while (epoch >= maxEpoch - 80) { // re-org 40 happened.
@@ -112,8 +113,8 @@ async function check(dingToken = '') {
                 maxEpoch = await checker.provider.getBlockNumber()
                 console.log(`max epoch at ${maxEpoch}`)
             }
-            await checker.getEventByEpoch(epoch) //
-            epoch++
+            await checker.getEventByEpoch(epoch, range) //
+            epoch+=range
             await updateConfig(cursorKey, epoch.toString()) // it's the next epoch.
             if (preErrorEpoch == epoch - 1) {
                 dingMsg(`[${checker.name}] previous error at epoch [${preErrorEpoch
@@ -141,9 +142,7 @@ async function test() {
     // await start()
     // await initConflux()
 }
-async function fetch() {
 
-}
 async function initConflux() {
     const cfxF = new ConfluxFetcher('https://main.confluxrpc.com')
     await cfxF.init();

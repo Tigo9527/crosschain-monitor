@@ -6,6 +6,7 @@ import {addAddress, dingMsg, sleep} from "../lib/Tool";
 import {fetchErc20Transfer, stripAddr} from "./EtherScan";
 import {matchFlowScan} from "./flowscan";
 import {matchKlaytnScan} from "./KlaytnScan";
+import {Log} from "@ethersproject/abstract-provider";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -388,26 +389,35 @@ Block Explorer URL: https://stepscan.io/
         }
         console.log(` --- minter count ${this.minterSet.size} , token ${token} [${this.name}] ---`)
     }
-    async getEventByEpoch(epoch: number = 38659021) {
+    async getEventByEpoch(epoch: number = 38659021, range:number=1) {
         // const blockNumber = await this.provider.getBlockNumber()
         // console.log(`max block number is`, blockNumber)
         process.stderr.write(`\r\u001b[2K ---- fetch by epoch ${epoch} ----\t`)
+        const [logs, celerDelayLogs] = await Promise.all([
+            this.getMintLogs(epoch, range),
+            this.getCelerDelayLogs(epoch, range),
+        ]);
+        // console.log(`get logs, epoch ${epoch} , of address ${filter.address}`, logs)
+        await this.checkMintEvents(logs);
+        await this.checkCelerDelayEvent(celerDelayLogs)
+    }
+
+    private async getMintLogs(epoch: number, range: number) {
         let filter = {
-            fromBlock: epoch, toBlock: epoch, limit: 5000,
+            fromBlock: epoch, toBlock: epoch + range - 1, limit: 5000,
             address: this.tokenAddr,
             topics: [utils.id("Transfer(address,address,uint256)"),]
         };
-        const logs = await this.provider.getLogs(filter).catch(err=>{
+        const logs = await this.provider.getLogs(filter).catch(err => {
             console.log(`get logs fail:`, filter)
             throw err;
         })
-        // console.log(`get logs, epoch ${epoch} , of address ${filter.address}`, logs)
-        await this.checkMintEvents(logs);
-        await this.checkCelerDelayEvent(epoch)
+        return logs;
     }
-    async checkCelerDelayEvent(epoch: number) {
+
+    async getCelerDelayLogs(epoch: number, range: number) : Promise<Array<Log>> {
         let filter = {
-            fromBlock: epoch, toBlock: epoch, limit: 5000,
+            fromBlock: epoch, toBlock: epoch + range - 1, limit: 5000,
             address: process.env.CELER_ADDRESS,
             // DelayedTransferAdded(bytes32 id)
             // topics: ['0xcbcfffe5102114216a85d3aceb14ad4b81a3935b1b5c468fadf3889eb9c5dce6']
@@ -418,6 +428,10 @@ Block Explorer URL: https://stepscan.io/
             console.log(`get logs fail:`, filter)
             throw err;
         })
+        return logs
+    }
+    async checkCelerDelayEvent(logs) {
+
         // console.log(`log count ${logs.length} , epoch ${epoch}`)
         // if delayed, check on ethereum, save it, and confirm when minting in eSpace contract.
         // if not delayed, check by mint event in eSpace token.
@@ -448,7 +462,7 @@ Block Explorer URL: https://stepscan.io/
             }
             console.log(`celer delayed mint tx ${mintLog.transactionHash}`);
             console.log(`celer delayed transfer info`, {account, token, amount, refId})
-            let epochAnchor = epoch
+            let epochAnchor = mintLog.blockNumber
             const hit = await this.searchCelerEvmTx(this.celerAddr, account, amount, amount, amount,
                 epochAnchor, mintLog.transactionHash, refId, false, refChainId, depositor)
             if (hit) {
