@@ -25,6 +25,7 @@ export const BSC_USD = '0x55d398326f99059fF775485246999027B3197955' // pegged mc
 export const BSC_anyUSD = '0x58340A102534080b9D3175F868aeA9f6aF986dD9' // pegged mc
 export const BSC_ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' // pegged mc
 export const BSC_anyETH = '0x0230219B25395F14B84Cf4dCd987e2dAf5a71e4B'
+export const BSC_WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
 export const BSC_BTC = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' // pegged mc
 export const CRONOS_BTC = '0x062E66477Faf219F25D27dCED647BF57C3107d52' // pegged mc
 export const TELOS40_BTC = '0xf390830DF829cf22c53c8840554B98eafC5dCBc2' //
@@ -71,6 +72,7 @@ export const E_SPACE_DAI = '0x74eaE367d018A5F29be559752e4B67d01cc6b151'
 export const E_SPACE_USDC = '0x6963efed0ab40f6c3d7bda44a05dcf1437c44372'
 export const E_SPACE_WBTC = '0x1f545487c62e5acfea45dcadd9c627361d1616d8'
 export const E_SPACE_ETH = '0xa47f43de2f9623acb395ca4905746496d2014d57'
+export const E_SPACE_BNB = '0x94bd7a37d2ce24cc597e158facaa8d601083ffec'
 
 export const TOKEN_BIND = new Map<string, string>()
 TOKEN_BIND.set(E_SPACE_USDT.toLowerCase(), ETHEREUM_USDT_TOKEN)
@@ -114,6 +116,7 @@ FOREIGN_TOKEN_TO_LOCAL.set(avalanche43114_USDC.toLowerCase(), E_SPACE_USDC.toLow
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WETH_TOKEN.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(arbitrum42161eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(optimism10eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(BSC_WBNB.toLowerCase(), E_SPACE_BNB.toLowerCase())
 
 
 export function mapForeignTokenToLocal(foreign:string) {
