@@ -126,12 +126,18 @@ function TokenSupply() {
     const anyArr:any[] = []
     const [tokenList, setTokenList] = useState(anyArr)
     const getPrice = (name)=>{
+        const p = priceInfo[`${name}USDT`]
+        if (p) {
+            return p;
+        }
         if (name.includes('BTC')) {
-            return priceInfo['BTCUSDT']
+            return priceInfo['BTCUSDT'];
+        } else if (name.includes('BNB')) {
+            return priceInfo['BNBUSDT'];
         } else if (name.includes('Ethereum')) {
-            return priceInfo['ETHUSDT']
+            return priceInfo['ETHUSDT'];
         } else {
-            return 1.0
+            return 1.0;
         }
     }
     function fillPrice() {
