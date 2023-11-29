@@ -101,7 +101,10 @@ class CfxPoolMonitor {
             await this.checkSupply()
         } catch (e) {
             console.log(`check fail [${this.name}][${this.symbol}]`, e)
-            await dingMsg(`[${this.name}][${this.symbol}] fail: ${e}`, process.env.DEV_DING || '')
+            const strE = `${e}`
+            if (!strE.includes("failed after 0 retries: timeout")) {
+                await dingMsg(`[${this.name}][${this.symbol}] fail: ${e}`, process.env.DEV_DING || '');
+            }
         }
         setTimeout(()=>this.repeat(), 60_000)
     }
