@@ -113,6 +113,9 @@ export class Config extends Model<IConfig> implements IConfig {
         })
     }
 }
+export async function getMaxBlockOfToken(tokenAddr: string) {
+    return Bill.max("blockNumber", {where: {tokenAddr}}).then(res=>res as number)
+}
 export async function getNumber(name: string, defaultV: number, save = true ) {
     const bean = await Config.findByPk(name)
     if (bean) {

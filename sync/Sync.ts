@@ -3,7 +3,7 @@ import {ConfluxFetcher, EthereumFetcher} from "./fetcher/Fetcher";
 import {initDB} from "../lib/DBProvider";
 import {formatEther} from "ethers/lib/utils";
 import {addMinterPlaceHolder, ETHEREUM_USDT_TOKEN, EventChecker, importFromScan, TOKEN_BIND} from "./MintChecker";
-import {Bill, EPOCH_PREFIX_KEY, getNumber, updateConfig} from "../lib/Models";
+import {Bill, EPOCH_PREFIX_KEY, getMaxBlockOfToken, getNumber, updateConfig} from "../lib/Models";
 import {dingMsg, sleep} from "../lib/Tool";
 import {checkDB, replayDB} from "./Tool";
 import {setupInfluxWorker} from "./InfluxWorker";
@@ -114,6 +114,13 @@ async function check(dingToken = '') {
         process.exit(0)
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
+    let maxEpochInBill = await getMaxBlockOfToken(tokenAddr)
+    if (maxEpochInBill >= epoch) {
+        console.log(`use maxEpochInBill `, maxEpochInBill)
+        epoch = maxEpochInBill + 1
+    } else {
+        console.log(`maxEpochInBill `, maxEpochInBill, ` in config `, epoch)
+    }
     let maxEpoch = 0;
     let preErrorEpoch = 0
 
