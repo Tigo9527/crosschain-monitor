@@ -106,7 +106,7 @@ async function check(dingToken = '') {
     let cursorKey = `${EPOCH_PREFIX_KEY}${tokenAddr}`; // it's the next epoch.
     if (cmd === 'importFromScan') {
         await importFromScan(checker, cursorKey)
-        await Bill.sequelize?.close
+        await Bill.sequelize?.close()
         console.log(`Done.`)
         process.exit()
     } else if (cmd === 'addMinterPlaceHolder') {
