@@ -148,12 +148,19 @@ async function check(dingToken = '') {
                 console.log(`qps exceeded ${(e as any).error}`)
                 await sleep(1_000)
             } else {
-                console.log(`Process event fail at epoch/block ${epoch}`, e)
-                if (dingToken && preErrorEpoch != epoch) {
-                    await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}`,
-                        process.env.DEV_DING || dingToken)
+                const eStr = `${e}`;
+                let sendDing = true;
+                if (eStr.includes('expected a numbers with less than largest epoch number')) {
+                    sendDing = false;
+                } else if (eStr.includes('Filter has wrong epoch numbers')) {
+                    sendDing= false;
                 }
-                preErrorEpoch = epoch
+                console.log(`Process event fail at epoch/block ${epoch}`, e);
+                if (dingToken && preErrorEpoch != epoch && sendDing) {
+                    await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}`,
+                      process.env.DEV_DING || dingToken)
+                    preErrorEpoch = epoch;
+                }
                 await sleep(5_000);
             }
         }
