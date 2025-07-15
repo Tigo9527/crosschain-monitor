@@ -144,9 +144,13 @@ async function check(dingToken = '') {
                     .catch(undefined)
             }
         } catch (e) {
+            const {code, reason, method, params} = e as any;
             if ((e as any).error?.code == -32000) {
                 console.log(`qps exceeded ${(e as any).error}`)
                 await sleep(1_000)
+            } else if (code === 'SERVER_ERROR' && reason === 'failed to meet quorum') {
+                console.log(`that is server error.`, reason)
+                await sleep(2_000)
             } else {
                 const eStr = `${e}`;
                 let sendDing = true;
@@ -157,6 +161,7 @@ async function check(dingToken = '') {
                 }
                 console.log(`Process event fail at epoch/block ${epoch}`, e);
                 if (dingToken && preErrorEpoch != epoch && sendDing) {
+                    const msg = (code && reason) ? `code ${code} reason ${reason} method ${method} params ${params}` : `${e}`;
                     await dingMsg(`[${checker.name}] Process fail at ${epoch}. ${e}`,
                       process.env.DEV_DING || dingToken)
                     preErrorEpoch = epoch;
