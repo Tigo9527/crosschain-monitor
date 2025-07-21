@@ -791,13 +791,18 @@ Block Explorer URL: https://stepscan.io/
             }
         }
         let ethTokenVar = getBindToken(this.tokenAddr)!;
-        if (this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57'
+        const wEthToken = ethTokenVar;
+        if (this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57' // e-space USDT
             // 324 zk sync
             && (refChainId.toString()==='1' || refChainId.toString() === '324')) {
             console.log(`it's raw eth`)
             ethTokenVar = 'eth';
         }
         let row = flowScanRow || await fetchErc20Transfer(stripAddr(depositor), wei, ethTokenVar, timestamp, refId, refChainId)
+        if (!row && ethTokenVar == 'eth') {
+            console.log(`try again for wEth`);
+            row = await fetchErc20Transfer(stripAddr(depositor), wei, wEthToken, timestamp, refId, refChainId)
+        }
         // if (!row && account.toLowerCase() !== depositor.toLowerCase()) {
         //     console.log(`fetch by depositor`)
         //     row = await fetchErc20Transfer(depositor, wei, ethTokenVar, timestamp, refId, refChainId)
