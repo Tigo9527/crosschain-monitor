@@ -32,7 +32,7 @@ export async function listTx(who: string, host) {
         const body = await (proxy ? superagent.get(url)
             .proxy(proxy) : superagent.get(url))
             .then((res: any) => res.body)
-        console.log(`ether scan api result length:`, body?.result?.length)
+        console.log(`list tx, ether scan api result length:`, body?.result?.length)
         if (body?.status === '1') {
             return body
         }
@@ -71,7 +71,7 @@ export async function listTransfer(who: string, etherToken: string, host) {
         const body = await (proxy ? superagent.get(url)
             .proxy(proxy) : superagent.get(url))
             .then((res: any) => res.body)
-        console.log(`ether scan api result length:`, body?.result?.length)
+        console.log(`list tokenTx, ether scan api result length:`, body?.result?.length)
         if (body?.status === '1') {
             return body
         }
@@ -89,7 +89,7 @@ function scaleValue(row:any) {
 async function matchDepositId(etherTxHash:string, expect: string, providerUrl = undefined) {
     console.log(`try to matchDepositId, etherTxHash ${etherTxHash}, provider url [${providerUrl}]`)
     let txInfo = await ethers.getDefaultProvider(providerUrl).getTransaction(etherTxHash).catch(err => {
-        console.log(`ethers getTransaction fail`, err)
+        // console.log(`ethers getTransaction fail`, err)
         throw err
     });
     const {hash, data, from, chainId} = txInfo
