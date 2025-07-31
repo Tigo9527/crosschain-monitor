@@ -713,7 +713,7 @@ Block Explorer URL: https://stepscan.io/
                 } else if (eTopic === '0xd8cf6b5491e7c90a12dfa30c1e953e502e1f88ed615826fc4d92e578d0b18f16') {
                     // eg https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
                     const id = eSender;
-                    const _ = parseMesonRequest(id.substring(2))
+                    const _ = parseMesonRequest(id)
                     if (process.env.SKIP_TX === transactionHash ) {
                         found = true
                     }
