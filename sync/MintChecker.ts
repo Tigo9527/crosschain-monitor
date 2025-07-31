@@ -149,6 +149,7 @@ export const addressMap:{[k:string]: string} = {
     '0xBB7684Cc5408F4DD0921E5c2Cadd547b8f1AD573': 'celer',
     '0x3b53D2C7B44d40BE05Fa5E2309FFeB6eB2492d88': 'celer_2',
     '0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa': 'AnyswapV6Router',
+    '0x5AEBF33255dCbfdcc0dfABf23347Eb031441Bb4e': 'meson',
     [ETHEREUM_USDT_TOKEN]:'ethereumUSDT',
     [ETHEREUM_USDC_TOKEN]: 'ethereumUSDC',
     [ETHEREUM_WBTC_TOKEN]: 'ethereumWBTC',
@@ -725,6 +726,11 @@ Block Explorer URL: https://stepscan.io/
                     const {receiver: account, amount, refId, blockNumber: delayedAtBlock} = delayed;
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         delayedAtBlock, transactionHash, refId, true, refChainId, depositor)
+                } else {
+                    console.log(`unknown topic ${eTopic} `)
+                    if (process.env.SKIP_TX === transactionHash ) {
+                        found = true
+                    }
                 }
             }
             if (found) {
