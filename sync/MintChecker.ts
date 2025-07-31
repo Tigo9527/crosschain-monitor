@@ -710,6 +710,13 @@ Block Explorer URL: https://stepscan.io/
                         refChainId}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         blockNumber, transactionHash, refId, true, refChainId, depositor)
+                } else if (eTopic === '0xd8cf6b5491e7c90a12dfa30c1e953e502e1f88ed615826fc4d92e578d0b18f16') {
+                    // eg https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
+                    const id = eSender;
+                    const _ = parseMesonRequest(id.substring(2))
+                    if (process.env.SKIP_TX === transactionHash ) {
+                        found = true
+                    }
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)
@@ -1039,3 +1046,19 @@ async function importFromFile(checker: EventChecker, cursorKey: string) {
 
 }
 
+export function parseMesonRequest(id: string) {
+    const v = parseInt(id.substring(0, 4))
+    const created = parseInt('0x' + id.substring(4, 14))
+    const actionId = parseInt('0x' + id.substring(14, 16))
+    const tokenIndex = parseInt('0x' + id.substring(16, 18))
+    const value = ethers.utils.formatUnits('0x' + id.substring(18, 34), 6)
+    let fromV = parseInt('0x' + id.substring(34, 36));
+    // hubs https://github.com/CodeToFree/free-tunnel/blob/main/scripts/deployHub.js
+    const fromchain = fromV;// CHAINs.find(c => c.hubId === fromV)
+    let toV = parseInt('0x' + id.substring(36, 38));
+    const tochain = toV;//CHAINs.find(c => c.hubId == toV)
+    const vault = (actionId & 0x10) > 0
+    let ret = {id, v, created, actionId, tokenIndex, value, fromchain, tochain, vault};
+    console.log(`meson request is `, ret)
+    return ret
+}
