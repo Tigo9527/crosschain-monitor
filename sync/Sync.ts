@@ -118,11 +118,11 @@ async function check(dingToken = '') {
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
     let maxEpochInBill = await getMaxBlockOfToken(tokenAddr)
-    if (maxEpochInBill >= epoch) {
-        console.log(`use maxEpochInBill `, maxEpochInBill)
-        epoch = maxEpochInBill + 1
+    console.log(`maxEpochInBill `, maxEpochInBill, ` in config `, epoch)
+    if (maxEpochInBill > epoch) {
+        console.log(` incorrect maxEpochInBill , check previous error, or cleanup bill in DB.`)
+        process.exit(0)
     } else {
-        console.log(`maxEpochInBill `, maxEpochInBill, ` in config `, epoch)
     }
     let maxEpoch = 0;
     let preErrorEpoch = 0
