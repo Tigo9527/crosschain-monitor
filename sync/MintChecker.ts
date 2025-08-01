@@ -740,9 +740,7 @@ Block Explorer URL: https://stepscan.io/
                         delayedAtBlock, transactionHash, refId, true, refChainId, depositor)
                 } else {
                     console.log(`unknown topic ${eTopic} `)
-                    if (process.env.SKIP_TX === transactionHash ) {
-                        found = true
-                    }
+                    // do not skip here, let searchEvmTx do it.
                 }
             }
             if (found) {

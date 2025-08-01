@@ -88,6 +88,9 @@ async function check(dingToken = '') {
     } else if (cmd === 'replayDB') {
         await replayDB(checker)
         process.exit(0)
+    } else if (cmd === 'fixEpoch') {
+        await checker.getEventByEpoch(parseInt(startEpoch), range)
+        process.exit(0)
     } else if (cmd === 'checkDB') {
         await checkDB(checker)
         process.exit(0)
