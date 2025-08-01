@@ -720,7 +720,7 @@ Block Explorer URL: https://stepscan.io/
                     const depositor = eventSource;
                     const refId = id;
                     process.env.SKIP_TX = transactionHash; // force skip
-                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
                         blockNumber, transactionHash, refId, true, refChainId, depositor)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
