@@ -64,7 +64,7 @@ async function check(dingToken = '') {
         process.exit(0)
         return;
     }
-    let range = 1
+    let range = 100
     let isBNB = false
     if (tokenAddr == '0x94bd7a37d2ce24cc597e158facaa8d601083ffec') {
         // bnb catchup
@@ -113,7 +113,7 @@ async function check(dingToken = '') {
         await addMinterPlaceHolder(checker)
         process.exit(0)
     } else if (cmd === 'fixEpoch') {
-        await checker.getEventByEpoch(parseInt(startEpoch), range)
+        await checker.getEventByEpoch(parseInt(startEpoch), 1)
         process.exit(0)
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
