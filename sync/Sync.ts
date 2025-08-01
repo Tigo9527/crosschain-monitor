@@ -88,9 +88,6 @@ async function check(dingToken = '') {
     } else if (cmd === 'replayDB') {
         await replayDB(checker)
         process.exit(0)
-    } else if (cmd === 'fixEpoch') {
-        await checker.getEventByEpoch(parseInt(startEpoch), range)
-        process.exit(0)
     } else if (cmd === 'checkDB') {
         await checkDB(checker)
         process.exit(0)
@@ -114,6 +111,9 @@ async function check(dingToken = '') {
         process.exit()
     } else if (cmd === 'addMinterPlaceHolder') {
         await addMinterPlaceHolder(checker)
+        process.exit(0)
+    } else if (cmd === 'fixEpoch') {
+        await checker.getEventByEpoch(parseInt(startEpoch), range)
         process.exit(0)
     }
     let epoch = await getNumber(cursorKey, parseInt(startEpoch)) //38659021
