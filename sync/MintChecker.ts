@@ -7,6 +7,7 @@ import {fetchErc20Transfer, stripAddr} from "./EtherScan";
 import {matchFlowScan} from "./flowscan";
 import {matchKlaytnScan} from "./KlaytnScan";
 import {Log} from "@ethersproject/abstract-provider";
+import {mesonHubs} from "./mesonHubMap";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -711,12 +712,16 @@ Block Explorer URL: https://stepscan.io/
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         blockNumber, transactionHash, refId, true, refChainId, depositor)
                 } else if (eTopic === '0xd8cf6b5491e7c90a12dfa30c1e953e502e1f88ed615826fc4d92e578d0b18f16') {
+                    // meson
                     // eg https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
                     const id = eSender;
-                    const _ = parseMesonRequest(id)
-                    if (process.env.SKIP_TX === transactionHash ) {
-                        found = true
-                    }
+                    const account = eReceiver;
+                    const {value: amount, fromchain: refChainId} = parseMesonRequest(id)
+                    const depositor = eventSource;
+                    const refId = id;
+                    process.env.SKIP_TX = transactionHash; // force skip
+                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
+                        blockNumber, transactionHash, refId, true, refChainId, depositor)
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)
@@ -1052,13 +1057,13 @@ export function parseMesonRequest(id: string) {
     const actionId = parseInt('0x' + id.substring(14, 16))
     const tokenIndex = parseInt('0x' + id.substring(16, 18))
     const value = ethers.utils.formatUnits('0x' + id.substring(18, 34), 6)
-    let fromV = parseInt('0x' + id.substring(34, 36));
+    let fromV = ('0x' + id.substring(34, 36));
     // hubs https://github.com/CodeToFree/free-tunnel/blob/main/scripts/deployHub.js
-    const fromchain = fromV;// CHAINs.find(c => c.hubId === fromV)
-    let toV = parseInt('0x' + id.substring(36, 38));
-    const tochain = toV;//CHAINs.find(c => c.hubId == toV)
+    const fromchain = mesonHubs[fromV].realChainId ?? 0;
+    let toV = ('0x' + id.substring(36, 38));
+    const tochain = mesonHubs[toV].realChainId ?? 0
     const vault = (actionId & 0x10) > 0
-    let ret = {id, v, created, actionId, tokenIndex, value, fromchain, tochain, vault};
+    let ret = {id, v, created, actionId, tokenIndex, value, fromV, toV, fromchain, tochain, vault};
     console.log(`meson request is `, ret)
     return ret
 }
