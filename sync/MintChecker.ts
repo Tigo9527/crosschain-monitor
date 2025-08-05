@@ -711,9 +711,12 @@ Block Explorer URL: https://stepscan.io/
                         refChainId}`);
                     found = await this.searchCelerEvmTx(eSpaceLog.address, account, BigInt(amount), wei * sign, wei,
                         blockNumber, transactionHash, refId, true, refChainId, depositor)
-                } else if (eTopic === '0xd8cf6b5491e7c90a12dfa30c1e953e502e1f88ed615826fc4d92e578d0b18f16') {
+                } else if (eTopic === '0xd8cf6b5491e7c90a12dfa30c1e953e502e1f88ed615826fc4d92e578d0b18f16' // mint
+                    //burn https://evm.confluxscan.net/tx/0x68fe3034d5cfe158fb50f64b5b40d5bfa81ee988c15fef809b44c1555f18a923?tab=logs
+                    || eTopic === '0x3176f0038ab9592a2c2714382347b46a56d7463637897f96da7bc7422da58410'
+                ) {
                     // meson
-                    // eg https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
+                    // eg mint https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
                     const id = eSender;
                     const account = eReceiver;
                     const {value: amount, fromchain: refChainId} = parseMesonRequest(id)
