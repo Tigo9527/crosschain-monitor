@@ -13,9 +13,12 @@ export function stripAddr(hex:string) {
 }
 
 export async function listTx(who: string, host) {
-    let apiKey = process.env.ETHER_SCAN_API_KEY || ""
-    let apiKeyStr = `&apikey=${apiKey}`;
-    host = host || `https://api.etherscan.io`;
+    let apiKeyStr = "";
+    if (!host) {
+        let apiKey = process.env.ETHER_SCAN_API_KEY || ""
+        host = `https://api.etherscan.io/v2`
+        apiKeyStr = `&apikey=${apiKey}&chainid=1`
+    }
     const url = `${host}/api
    ?module=account
    &action=txlist
@@ -43,15 +46,12 @@ export async function listTx(who: string, host) {
 }
 // https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
 export async function listTransfer(who: string, etherToken: string, host) {
-    let apiKey = process.env.ETHER_SCAN_API_KEY || ""
-    let apiKeyStr = `&apikey=${apiKey}`;
-    if (host.startsWith("https://api-moonbeam.moonscan.io")) {
-       apiKeyStr = '';
+    let apiKeyStr = "";
+    if (!host) {
+        let apiKey = process.env.ETHER_SCAN_API_KEY || ""
+        host = `https://api.etherscan.io/v2`
+        apiKeyStr = `&apikey=${apiKey}&chainid=1`
     }
-    // &startblock=0
-    //     &endblock=27025780
-
-    host = host || `https://api.etherscan.io`;
     const tokenFilter = etherToken ? `&contractaddress=${etherToken}` : ''
     // host = 'https://cn.etherscan.com' // not work
     const url = `${host}/api
