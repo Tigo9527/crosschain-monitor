@@ -101,7 +101,8 @@ export class CrossEventFetcher {
 					latestBlock = await this.getLatestBlockWithRetry();
 					const tmpStartBlock = latestBlock - 100;
 					currentBlock = Math.min(tmpStartBlock, endBlock + 1);
-					console.log(`tmp ${tmpStartBlock} , end ${endBlock} , cur set to ${currentBlock}`);
+					console.log(`tmp ${tmpStartBlock} , end ${endBlock} , cur set to ${currentBlock
+						} , latest ${latestBlock}`);
 				} else {
 					currentBlock = endBlock + 1;
 				}
