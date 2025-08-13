@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "tsc-watch": "tsc-watch -p ./",
+    "mesonFetch": "tsc && node sync/fetcher/runMeson.js",
     "compile": "tsc"
   },
   "dependencies": {

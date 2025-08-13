@@ -52,6 +52,7 @@ export const ETH_POW_USDT = '0x8A496486f4c7CB840555Bc2Be327CBA1447027C3';
 export const POLYGON_USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
 export const avalanche43114_USDT = '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7';
 export const avalanche43114_USDC = '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E';
+// Arbitrum One	https://arb1.arbitrum.io/rpc	42161
 export const arbitrum42161eth = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
 export const optimism10eth = '0x4200000000000000000000000000000000000006';
 // white list of tokens on ethereum
@@ -245,7 +246,7 @@ Block Explorer URL: https://stepscan.io/
             FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), tokenAddr.toLowerCase())
             FOREIGN_TOKEN_TO_LOCAL.set(BitGert32520_USDT.toLowerCase(), tokenAddr.toLowerCase())
         } else if (tokenAddr.toLowerCase() === E_SPACE_ETH.toLowerCase()) {
-            // 42170 eth
+            // 42170 eth , Arbitrum Nova	https://nova.arbitrum.io/rpc
             FOREIGN_TOKEN_TO_LOCAL.set('0x722E8BdD2ce80A4422E880164f2079488e115365'.toLowerCase(), tokenAddr.toLowerCase())
             // on chain 2222
             FOREIGN_TOKEN_TO_LOCAL.set('0xE3F5a90F9cb311505cd691a46596599aA1A0AD7D'.toLowerCase(), tokenAddr.toLowerCase())
@@ -715,16 +716,22 @@ Block Explorer URL: https://stepscan.io/
                     //burn https://evm.confluxscan.net/tx/0x68fe3034d5cfe158fb50f64b5b40d5bfa81ee988c15fef809b44c1555f18a923?tab=logs
                     || eTopic === '0x3176f0038ab9592a2c2714382347b46a56d7463637897f96da7bc7422da58410'
                 ) {
-                    // meson
+                    // meson event
                     // eg mint https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
                     const id = eSender;
                     const account = eReceiver;
                     const {value: amount, fromchain: refChainId} = parseMesonRequest(id)
                     const depositor = eventSource;
                     const refId = id;
-                    process.env.SKIP_TX = transactionHash; // force skip
-                    found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
-                        blockNumber, transactionHash, refId, true, refChainId, depositor)
+                    // if (action === 'mint') {
+                    //     let mintBigInt = BigInt(mintV.split(".")[0]);
+                    //     const foreign20 = getBindToken(this.tokenAddr) || ""
+                    //     const txHash = searchMesonReqId(id, mintBigInt, foreign20);
+                    // } else {
+                        process.env.SKIP_TX = transactionHash; // force skip
+                        found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
+                            blockNumber, transactionHash, refId, true, refChainId, depositor)
+                    // }
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)

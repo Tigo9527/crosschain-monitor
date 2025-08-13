@@ -97,6 +97,7 @@ export class BalanceTask extends Model<IBalanceTask> implements IBalanceTask {
 }
 export const EPOCH_PREFIX_KEY = 'epoch_'
 export const LOG_SYNC_KEY = 'log_sync'
+export const HANDLED_BLOCK_OF_CHAIN = 'handledBlockOf_'
 export interface IConfig {
     name: string
     config: string
