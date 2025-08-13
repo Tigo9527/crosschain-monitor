@@ -95,14 +95,18 @@ export class CrossEventFetcher {
 					console.log(`[Chain ${this.config.chainId}] Saved ${events.length} events`);
 				}
 
-				if (this.config.hasReorgFeature && latestBlock - currentBlock < 100) {
-					console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")
-						} near latest , gap ${latestBlock - currentBlock}`)
+				if (this.config.hasReorgFeature && latestBlock - endBlock < 100) {
+					// console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")
+					// 	}] near latest , gap ${latestBlock - currentBlock}`)
+					// console.log(` latest ${latestBlock} , current ${currentBlock}`);
+
+					await this.delay(this.config.pollInterval!);
+
 					latestBlock = await this.getLatestBlockWithRetry();
-					const tmpStartBlock = latestBlock - 100;
-					currentBlock = Math.min(tmpStartBlock, endBlock + 1);
-					console.log(`tmp ${tmpStartBlock} , end ${endBlock} , cur set to ${currentBlock
-						} , latest ${latestBlock}`);
+					currentBlock = Math.min(latestBlock - 100, endBlock + 1);
+
+					// console.log(`end ${endBlock} , cur set to ${currentBlock
+					// 	} , latest ${latestBlock}`);
 				} else {
 					currentBlock = endBlock + 1;
 				}
