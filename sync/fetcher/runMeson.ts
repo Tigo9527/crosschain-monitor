@@ -30,7 +30,7 @@ async function main() {
 			erc20Address: ethers.constants.AddressZero,
 			startBlock: 127648105,
 			enable: true,
-			batchSize: 1000,
+			batchSize: 1000, pollInterval: 5000,
 			hasReorgFeature: true,
 		}
 	];
