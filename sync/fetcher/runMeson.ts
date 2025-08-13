@@ -15,14 +15,14 @@ async function main() {
 			lockContractAddress: '0xB1119Ab7fA19CC3Ec0fEE22357732fb3768C8f58',
 			erc20Address: ethers.constants.AddressZero,
 			startBlock: 23039797,
-			enable: false,
+			enable: true,
 		}, {
 			chainId: 42161,
 			rpcUrl: `${process.env.ARBITRUM_ONE_RPC}`,
 			lockContractAddress: '0xB1119Ab7fA19CC3Ec0fEE22357732fb3768C8f58',
 			erc20Address: ethers.constants.AddressZero,
 			startBlock: 363076701,
-			enable: false,
+			enable: true,
 		}, {
 			chainId: 1030,
 			rpcUrl: `${process.env.E_SPACE_RPC}`,
@@ -30,12 +30,13 @@ async function main() {
 			erc20Address: ethers.constants.AddressZero,
 			startBlock: 127648105,
 			enable: true,
+			batchSize: 1000,
 		}
 	];
 	const fetchers = chains.map(config => new CrossEventFetcher({
-		...config,
 		batchSize: 2000,
-		pollInterval: 30000
+		pollInterval: 30000,
+		...config,
 	}));
 
 	// Start all fetchers
