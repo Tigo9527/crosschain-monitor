@@ -96,6 +96,8 @@ export class CrossEventFetcher {
 				}
 
 				if (this.config.hasReorgFeature && latestBlock - currentBlock < 100) {
+					console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")
+						} near latest , gap ${latestBlock - currentBlock}`)
 					latestBlock = await this.getLatestBlockWithRetry();
 					const tmpStartBlock = latestBlock - 100;
 					currentBlock = Math.min(tmpStartBlock, endBlock + 1);
