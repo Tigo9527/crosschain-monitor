@@ -117,8 +117,9 @@ export class CrossEventFetcher {
 				console.error(`[Chain ${this.config.chainId}] Error:`, msg || error);
 				if (++this.retryCount >= this.config.maxRetries!) {
 					console.error(`[Chain ${this.config.chainId}] Max retries reached, stopping`);
-					this.stop();
-					break;
+					// this.stop();
+					// TODO send alert
+					// break;
 				}
 				await this.delay(this.config.pollInterval! * this.retryCount);
 			}
