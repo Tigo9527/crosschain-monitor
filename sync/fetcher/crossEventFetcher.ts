@@ -85,7 +85,8 @@ export class CrossEventFetcher {
 				);
 
 				if (round % 100 === 1){
-					console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")}] Processing blocks ${currentBlock}-${endBlock}`);
+					console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")
+						}] Processing blocks ${currentBlock}-${endBlock} , gap to latest: ${latestBlock - currentBlock}`);
 				}
 
 				const events = await this.fetchEvents(currentBlock, endBlock);
@@ -132,20 +133,24 @@ export class CrossEventFetcher {
 	}
 
 	private async fetchEvents(fromBlock: number, toBlock: number): Promise<ICrossReq[]> {
-		const [lockEvents, mintEvents] = await Promise.all([
-			this.contract.queryFilter(
-				this.contract.filters.TokenLockProposed(),
-				fromBlock,
-				toBlock
-			),
-			this.contract.queryFilter(
-				this.contract.filters.TokenMintExecuted(),
-				fromBlock,
-				toBlock
-			)
-		]);
+		// Get all events from the contract in single query
+		const eventsRaw = await this.contract.queryFilter(
+			{
+				address: this.contract.address,
+			},
+			fromBlock,
+			toBlock
+		);
 
-		const allEvents = [...lockEvents, ...mintEvents]
+		// Filter for only the events we care about (defined in contract ABI)
+		const filteredEvents = eventsRaw.filter(event =>
+			event.event === 'TokenLockProposed' ||
+			event.event === 'TokenBurnProposed' ||
+			event.event === 'TokenUnlockExecuted' ||
+			event.event === 'TokenMintExecuted'
+		);
+
+		const allEvents = filteredEvents
 		.sort((a, b) => a.blockNumber - b.blockNumber);
 
 		const processedEvents: ICrossReq[] = [];
