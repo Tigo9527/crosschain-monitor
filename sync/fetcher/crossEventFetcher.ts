@@ -104,8 +104,17 @@ export class CrossEventFetcher {
 				}
 				this.retryCount = 0; // Reset retry counter after successful batch
 
-			} catch (error) {
-				console.error(`[Chain ${this.config.chainId}] Error:`, error);
+			} catch (error: any) {
+				let msg = ''
+				if (error["body"]) {
+					try {
+						const json = JSON.parse(error["body"]);
+						if (json.message) {
+							msg = json.message;
+						}
+					} catch (e) {}
+				}
+				console.error(`[Chain ${this.config.chainId}] Error:`, msg || error);
 				if (++this.retryCount >= this.config.maxRetries!) {
 					console.error(`[Chain ${this.config.chainId}] Max retries reached, stopping`);
 					this.stop();
