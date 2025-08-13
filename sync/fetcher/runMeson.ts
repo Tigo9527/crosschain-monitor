@@ -31,6 +31,7 @@ async function main() {
 			startBlock: 127648105,
 			enable: true,
 			batchSize: 1000,
+			hasReorgFeature: true,
 		}
 	];
 	const fetchers = chains.map(config => new CrossEventFetcher({

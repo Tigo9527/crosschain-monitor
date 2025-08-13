@@ -12,6 +12,7 @@ export interface EventFetcherConfig {
 	maxRetries?: number;
 	startBlock?: number;
 	enable: boolean;
+	hasReorgFeature?: boolean;
 }
 
 export class CrossEventFetcher {
@@ -65,13 +66,16 @@ export class CrossEventFetcher {
 		this.running = true;
 		console.log(`Starting fetcher for chain ${this.config.chainId} from block ${startBlock}`);
 
+		let latestBlock = await this.getLatestBlockWithRetry();
 		let currentBlock = startBlock;
+		let round = 0
 		while (this.running) {
+			round ++;
 			try {
-				const latestBlock = await this.getLatestBlockWithRetry();
 
 				if (currentBlock > latestBlock) {
 					await this.delay(this.config.pollInterval!);
+					latestBlock = await this.getLatestBlockWithRetry();
 					continue;
 				}
 
@@ -80,7 +84,9 @@ export class CrossEventFetcher {
 					latestBlock
 				);
 
-				console.log(`[Chain ${this.config.chainId}] Processing blocks ${currentBlock}-${endBlock}`);
+				if (round % 100 === 1){
+					console.log(`[Chain ${(this.config.chainId).toString().padStart(6," ")}] Processing blocks ${currentBlock}-${endBlock}`);
+				}
 
 				const events = await this.fetchEvents(currentBlock, endBlock);
 				await this.saveEvents(events, endBlock);
@@ -88,7 +94,13 @@ export class CrossEventFetcher {
 					console.log(`[Chain ${this.config.chainId}] Saved ${events.length} events`);
 				}
 
-				currentBlock = endBlock + 1;
+				if (this.config.hasReorgFeature && latestBlock - currentBlock < 100) {
+					latestBlock = await this.getLatestBlockWithRetry();
+					const tmpStartBlock = latestBlock - 100;
+					currentBlock = Math.min(tmpStartBlock, endBlock + 1);
+				} else {
+					currentBlock = endBlock + 1;
+				}
 				this.retryCount = 0; // Reset retry counter after successful batch
 
 			} catch (error) {
@@ -168,6 +180,11 @@ export class CrossEventFetcher {
 				return null;
 			}
 
+			const block = await event.getBlock()
+			if (!block) {
+				console.log(`block not found ? ${event.blockHash}`)
+			}
+
 			return {
 				...baseEvent,
 				proposer: (event.event === 'TokenLockProposed'
@@ -177,7 +194,8 @@ export class CrossEventFetcher {
 				erc20: transfer.erc20,
 				from: transfer.from,
 				to: transfer.to,
-				value: transfer.value
+				value: transfer.value,
+				createdAt: block ? new Date(block.timestamp * 1000) : undefined,
 			};
 		} catch (error) {
 			console.error(`[Chain ${this.config.chainId}] Error processing event:`, error);
@@ -209,7 +227,9 @@ export class CrossEventFetcher {
 	private async saveEvents(events: ICrossReq[], endBlock: number) {
 		try {
 			await CrossReq.sequelize!.transaction(async dbTx=>{
-				await CrossReq.bulkCreate(events, {transaction: dbTx});
+				await CrossReq.bulkCreate(events, {transaction: dbTx,
+					updateOnDuplicate: this.config.hasReorgFeature ? ['updatedAt'] : undefined}
+				);
 				let posKey = HANDLED_BLOCK_OF_CHAIN+this.config.chainId;
 				await Config.update({config: (endBlock).toString()},{where: {name: posKey}, transaction: dbTx})
 			})
