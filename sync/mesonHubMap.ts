@@ -1,7 +1,7 @@
 // List of hubId
 export const mesonHubs = {
-	"0x00": {realChainId: 0, name: "  ethereum 20250105"}
-	, "0x01": {realChainId: 0, name: "  arbitrum 20250105"}
+	"0x00": {realChainId: 1, name: "  ethereum 20250105"}
+	, "0x01": {realChainId: 42161, name: "  arbitrum 20250105"}
 	, "0x02": {realChainId: 0, name: "  bnb smart chain 20250105"}
 	, "0x03": {realChainId: 0, name: " polygon"}
 	, "0x04": {realChainId: 0, name: " optimism"}

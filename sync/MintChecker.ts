@@ -720,7 +720,7 @@ Block Explorer URL: https://stepscan.io/
                     // eg mint https://evm.confluxscan.net/tx/0xa3a536c76892980d150e63a225a94626458f0c6780d908a05d7e50dce3183d02
                     const id = eSender;
                     const account = eReceiver;
-                    const {value: amount, fromchain: refChainId} = parseMesonRequest(id)
+                    const {value: amount, fromChain: refChainId} = parseMesonRequest(id)
                     const depositor = eventSource;
                     const refId = id;
                     // if (action === 'mint') {
@@ -1062,16 +1062,17 @@ async function importFromFile(checker: EventChecker, cursorKey: string) {
 export function parseMesonRequest(id: string) {
     const v = parseInt(id.substring(0, 4))
     const created = parseInt('0x' + id.substring(4, 14))
+    const createdAt = new Date(created*1000)
     const actionId = parseInt('0x' + id.substring(14, 16))
     const tokenIndex = parseInt('0x' + id.substring(16, 18))
     const value = ethers.utils.formatUnits('0x' + id.substring(18, 34), 6)
     let fromV = ('0x' + id.substring(34, 36));
     // hubs https://github.com/CodeToFree/free-tunnel/blob/main/scripts/deployHub.js
-    const fromchain = mesonHubs[fromV].realChainId ?? 0;
+    const fromChain = mesonHubs[fromV].realChainId ?? 0;
     let toV = ('0x' + id.substring(36, 38));
-    const tochain = mesonHubs[toV].realChainId ?? 0
+    const toChain = mesonHubs[toV].realChainId ?? 0
     const vault = (actionId & 0x10) > 0
-    let ret = {id, v, created, actionId, tokenIndex, value, fromV, toV, fromchain, tochain, vault};
+    let ret = {id, v, created, actionId, tokenIndex, value, fromV, toV, fromChain, toChain, vault, createdAt};
     console.log(`meson request is `, ret)
     return ret
 }

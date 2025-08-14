@@ -1,12 +1,51 @@
 import { ethers } from "ethers";
-import {CrossEventFetcher, EventFetcherConfig} from "./crossEventFetcher";
+import {convertReq, CrossEventFetcher, EventFetcherConfig} from "./crossEventFetcher";
 import {initDB} from "../../lib/DBProvider";
+import {parseMesonRequest} from "../MintChecker";
+import {CrossReq} from "../../lib/crossReq";
+import {ReqInfo} from "../../lib/crossReqIdParser";
+
+function testParseReq() {
+	const req = '0x01006889cc8c0102000000012a05f20001180000000000000000000000000000' // from 42161
+	parseMesonRequest(req)
+	parseMesonRequest('0x0100688b82b70101000000037e11d60000180000000000000000000000000000') // from 1
+}
+
+async function convertReqInfo() {
+	await setupWithDB();
+	const results = await CrossReq.findAll({
+		attributes: ['reqId'],
+		group: ['reqId'],
+		raw: true
+	});
+
+	const reqArr = results.map(r => r.reqId);
+	const parsedArr = convertReq(reqArr);
+	await ReqInfo.bulkCreate(parsedArr, {updateOnDuplicate: ['updatedAt']});
+	console.log(`req info arr length ${parsedArr.length}`);
+	return ReqInfo.sequelize!.close()
+}
 
 async function main() {
+	const [,,cmd] = process.argv;
+	if (cmd === 'testParseReq') {
+		testParseReq();
+	} else if (cmd === 'convertReqInfo') {
+		return convertReqInfo();
+	} else {
+		return runFetcher()
+	}
+}
+
+async function setupWithDB() {
 	require('dotenv/config')
 	const dbUrl = process.env.DB_URL
 	const DING = process.env.DING
 	await initDB(dbUrl, false)
+}
+
+async function runFetcher() {
+	await setupWithDB();
 	// Initialize for multiple chains
 	const chains: EventFetcherConfig[] = [
 		{

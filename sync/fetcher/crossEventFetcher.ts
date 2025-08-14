@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
 import {ICrossReq, CrossReq} from "../../lib/crossReq";
 import {Config, getNumber, HANDLED_BLOCK_OF_CHAIN} from "../../lib/Models";
+import {parseMesonRequest} from "../MintChecker";
+import {IReqInfo, ReqInfo} from "../../lib/crossReqIdParser";
 
 export interface EventFetcherConfig {
 	rpcUrl: string;
@@ -213,7 +215,7 @@ export class CrossEventFetcher {
 				proposer: (event.event === 'TokenLockProposed'
 					|| event.event === 'TokenBurnProposed') ? event.args?.proposer : null,
 				recipient: (event.event === 'TokenMintExecuted'
-					|| event.event === 'TokenMintExecuted') ? event.args?.recipient : null,
+					|| event.event === 'TokenUnlockExecuted') ? event.args?.recipient : null,
 				erc20: transfer.erc20,
 				from: transfer.from,
 				to: transfer.to,
@@ -249,10 +251,14 @@ export class CrossEventFetcher {
 
 	private async saveEvents(events: ICrossReq[], endBlock: number) {
 		try {
+			const parsedReqArr = convertReq(events.map(e=>e.reqId));
 			await CrossReq.sequelize!.transaction(async dbTx=>{
 				await CrossReq.bulkCreate(events, {transaction: dbTx,
 					updateOnDuplicate: this.config.hasReorgFeature ? ['updatedAt'] : undefined}
 				);
+
+				await ReqInfo.bulkCreate(parsedReqArr, {transaction: dbTx});
+
 				let posKey = HANDLED_BLOCK_OF_CHAIN+this.config.chainId;
 				await Config.update({config: (endBlock).toString()},{where: {name: posKey}, transaction: dbTx})
 			})
@@ -265,4 +271,15 @@ export class CrossEventFetcher {
 	private delay(ms: number): Promise<void> {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
+}
+
+export function convertReq(reqArr: string[]) {
+	return reqArr.map((r) => {
+		const parsed = parseMesonRequest(r)
+		return {
+			...parsed,
+			reqId: parsed.id,
+			id: 0
+		} as IReqInfo
+	});
 }
