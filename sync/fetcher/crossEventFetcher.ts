@@ -257,7 +257,7 @@ export class CrossEventFetcher {
 					updateOnDuplicate: this.config.hasReorgFeature ? ['updatedAt'] : undefined}
 				);
 
-				await ReqInfo.bulkCreate(parsedReqArr, {transaction: dbTx});
+				await ReqInfo.bulkCreate(parsedReqArr, {transaction: dbTx, updateOnDuplicate: ['updatedAt']});
 
 				let posKey = HANDLED_BLOCK_OF_CHAIN+this.config.chainId;
 				await Config.update({config: (endBlock).toString()},{where: {name: posKey}, transaction: dbTx})
