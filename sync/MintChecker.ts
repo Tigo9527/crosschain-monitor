@@ -55,6 +55,8 @@ export const avalanche43114_USDT = '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7';
 export const avalanche43114_USDC = '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E';
 // Arbitrum One	https://arb1.arbitrum.io/rpc	42161
 export const arbitrum42161eth = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
+export const arbitrum42161usdt = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9';
+export const arbitrum42161usdc = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
 export const optimism10eth = '0x4200000000000000000000000000000000000006';
 // white list of tokens on ethereum
 export const ETHEREUM_TOKENS = new Set<string>([
@@ -122,6 +124,8 @@ FOREIGN_TOKEN_TO_LOCAL.set(avalanche43114_USDT.toLowerCase(), E_SPACE_USDT.toLow
 FOREIGN_TOKEN_TO_LOCAL.set(avalanche43114_USDC.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_WETH_TOKEN.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(arbitrum42161eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(arbitrum42161usdt.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(arbitrum42161usdc.toLowerCase(), E_SPACE_USDC.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(optimism10eth.toLowerCase(), E_SPACE_ETH.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_WBNB.toLowerCase(), E_SPACE_BNB.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(CRONOS_BNB.toLowerCase(), E_SPACE_BNB.toLowerCase())
@@ -726,7 +730,8 @@ Block Explorer URL: https://stepscan.io/
                     const refId = id;
                     if (action === 'mint') {
                         const matchedReq = await matchReq(id);
-                        if (matchedReq) {
+                        const tokenToLocal = matchedReq ? mapForeignTokenToLocal(matchedReq.erc20) : ""
+                        if (matchedReq && tokenToLocal === this.tokenAddr) {
                             process.env.SKIP_TX = transactionHash;
                             found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
                                 blockNumber, transactionHash, refId, true, BigInt(matchedReq.chainId), depositor)
