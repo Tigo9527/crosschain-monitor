@@ -53,15 +53,15 @@ export class CrossEventFetcher {
 
 	public async start() {
 		const network = await this.provider.getNetwork();
-		console.log(`network: ${network.chainId} ${network.name}`);
+		console.log(`network: ${network.chainId} ${network.name} , one block ${this.config.oneBlock}`);
 		if (!this.config.enable) {
 			console.log(`not enable, stop`)
 			return;
 		}
 
-		let startBlock = this.config.startBlock || 0;
+		let startBlock = this.config.oneBlock || this.config.startBlock || 0;
 		// prefer DB savepoint
-		const dbPos = await getNumber(HANDLED_BLOCK_OF_CHAIN + this.config.chainId, 0);
+		const dbPos = this.config.oneBlock ? 0 : await getNumber(HANDLED_BLOCK_OF_CHAIN + this.config.chainId, 0);
 		if (dbPos > startBlock) {
 			startBlock = dbPos + 1
 		}

@@ -89,8 +89,8 @@ async function runFetcher(chain = 0, oneBlock = 0) {
 	.map(config => new CrossEventFetcher({
 		batchSize: 2000,
 		pollInterval: 30000,
-		oneBlock: oneBlock,
 		...config,
+		oneBlock: oneBlock,
 	}));
 
 	// Start all fetchers
