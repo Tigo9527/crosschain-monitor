@@ -13,6 +13,7 @@ export interface EventFetcherConfig {
 	pollInterval?: number;
 	maxRetries?: number;
 	startBlock?: number;
+	oneBlock?: number;
 	enable: boolean;
 	hasReorgFeature?: boolean;
 }
@@ -50,7 +51,7 @@ export class CrossEventFetcher {
 		);
 	}
 
-	public async start(once = false) {
+	public async start() {
 		const network = await this.provider.getNetwork();
 		console.log(`network: ${network.chainId} ${network.name}`);
 		if (!this.config.enable) {
@@ -81,7 +82,7 @@ export class CrossEventFetcher {
 					continue;
 				}
 
-				const endBlock = Math.min(
+				const endBlock = this.config.oneBlock ? currentBlock : Math.min(
 					currentBlock + this.config.batchSize! - 1,
 					latestBlock
 				);
@@ -113,7 +114,10 @@ export class CrossEventFetcher {
 					currentBlock = endBlock + 1;
 				}
 				this.retryCount = 0; // Reset retry counter after successful batch
-
+				if (this.config.oneBlock) {
+					this.running = false;
+					break;
+				}
 			} catch (error: any) {
 				let msg = ''
 				if (error["body"]) {
@@ -131,12 +135,10 @@ export class CrossEventFetcher {
 					// TODO send alert
 					// break;
 				}
-				if (once) {
-					break;
-				}
 				await this.delay(this.config.pollInterval! * this.retryCount);
 			}
 		}
+		console.log(`finished`)
 	}
 
 	public stop() {
@@ -262,8 +264,10 @@ export class CrossEventFetcher {
 
 				await ReqInfo.bulkCreate(parsedReqArr, {transaction: dbTx, updateOnDuplicate: ['updatedAt']});
 
-				let posKey = HANDLED_BLOCK_OF_CHAIN+this.config.chainId;
-				await Config.update({config: (endBlock).toString()},{where: {name: posKey}, transaction: dbTx})
+				if (!this.config.oneBlock) {
+					let posKey = HANDLED_BLOCK_OF_CHAIN + this.config.chainId;
+					await Config.update({config: (endBlock).toString()}, {where: {name: posKey}, transaction: dbTx})
+				}
 			})
 		} catch (error) {
 			console.error(`[Chain ${this.config.chainId}] Error saving events:`, error);

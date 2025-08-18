@@ -28,13 +28,13 @@ async function convertReqInfo() {
 }
 
 async function main() {
-	const [,,cmd,arg1] = process.argv;
+	const [,,cmd,arg1, arg2] = process.argv;
 	if (cmd === 'testParseReq') {
 		testParseReq();
 	} else if (cmd === 'convertReqInfo') {
 		return convertReqInfo();
 	} else if (cmd === 'fetchOnce') {
-		return runFetcher(parseInt(arg1))
+		return runFetcher(parseInt(arg1), parseInt(arg2))
 	} else if (cmd === 'testMatch') {
 		return testMatch(arg1);
 	} else {
@@ -56,7 +56,7 @@ async function setupWithDB() {
 	await initDB(dbUrl, false)
 }
 
-async function runFetcher(oneBlock = 0) {
+async function runFetcher(chain = 0, oneBlock = 0) {
 	await setupWithDB();
 	// Initialize for multiple chains
 	const chains: EventFetcherConfig[] = [
@@ -79,20 +79,22 @@ async function runFetcher(oneBlock = 0) {
 			rpcUrl: `${process.env.E_SPACE_RPC}`,
 			lockContractAddress: '0x5AEBF33255dCbfdcc0dfABf23347Eb031441Bb4e',
 			erc20Address: ethers.constants.AddressZero,
-			startBlock: oneBlock || 127648105,
+			startBlock: 127648105,
 			enable: true,
 			batchSize: 1000, pollInterval: 5000,
 			hasReorgFeature: true,
 		}
 	];
-	const fetchers = chains.map(config => new CrossEventFetcher({
+	const fetchers = chains.filter(cfg=>!chain || cfg.chainId == chain)
+	.map(config => new CrossEventFetcher({
 		batchSize: 2000,
 		pollInterval: 30000,
+		oneBlock: oneBlock,
 		...config,
 	}));
 
 	// Start all fetchers
-	fetchers.forEach(fetcher => fetcher.start(!!oneBlock));
+	fetchers.forEach(fetcher => fetcher.start());
 
 	// Graceful shutdown
 	process.on('SIGINT', () => {
