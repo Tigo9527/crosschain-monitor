@@ -50,7 +50,7 @@ export class CrossEventFetcher {
 		);
 	}
 
-	public async start() {
+	public async start(once = false) {
 		const network = await this.provider.getNetwork();
 		console.log(`network: ${network.chainId} ${network.name}`);
 		if (!this.config.enable) {
@@ -130,6 +130,9 @@ export class CrossEventFetcher {
 					// this.stop();
 					// TODO send alert
 					// break;
+				}
+				if (once) {
+					break;
 				}
 				await this.delay(this.config.pollInterval! * this.retryCount);
 			}

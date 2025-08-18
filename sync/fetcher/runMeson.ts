@@ -33,6 +33,8 @@ async function main() {
 		testParseReq();
 	} else if (cmd === 'convertReqInfo') {
 		return convertReqInfo();
+	} else if (cmd === 'fetchOnce') {
+		return runFetcher(parseInt(arg1))
 	} else if (cmd === 'testMatch') {
 		return testMatch(arg1);
 	} else {
@@ -54,7 +56,7 @@ async function setupWithDB() {
 	await initDB(dbUrl, false)
 }
 
-async function runFetcher() {
+async function runFetcher(oneBlock = 0) {
 	await setupWithDB();
 	// Initialize for multiple chains
 	const chains: EventFetcherConfig[] = [
@@ -77,7 +79,7 @@ async function runFetcher() {
 			rpcUrl: `${process.env.E_SPACE_RPC}`,
 			lockContractAddress: '0x5AEBF33255dCbfdcc0dfABf23347Eb031441Bb4e',
 			erc20Address: ethers.constants.AddressZero,
-			startBlock: 127648105,
+			startBlock: oneBlock || 127648105,
 			enable: true,
 			batchSize: 1000, pollInterval: 5000,
 			hasReorgFeature: true,
@@ -90,7 +92,7 @@ async function runFetcher() {
 	}));
 
 	// Start all fetchers
-	fetchers.forEach(fetcher => fetcher.start());
+	fetchers.forEach(fetcher => fetcher.start(!!oneBlock));
 
 	// Graceful shutdown
 	process.on('SIGINT', () => {
