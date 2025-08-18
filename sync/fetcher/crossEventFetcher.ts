@@ -36,6 +36,7 @@ export class CrossEventFetcher {
 			[
 				'event TokenLockProposed(bytes32 indexed reqId, address indexed proposer)',
 				'event TokenBurnProposed(bytes32 indexed reqId, address indexed proposer)',
+				'event TokenBurnExecuted (bytes32 indexed reqId, address indexed recipient)',
 				'event TokenUnlockExecuted (bytes32 indexed reqId, address indexed recipient)',
 				'event TokenMintExecuted(bytes32 indexed reqId, address indexed recipient)'
 			],
