@@ -8,6 +8,7 @@ import {matchFlowScan} from "./flowscan";
 import {matchKlaytnScan} from "./KlaytnScan";
 import {Log} from "@ethersproject/abstract-provider";
 import {mesonHubs} from "./mesonHubMap";
+import {matchReq} from "./fetcher/crossReqMonitor";
 export const ZERO =      '0x0000000000000000000000000000000000000000'
 export const ZERO_FULL = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ETHEREUM_USDT_TOKEN = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -723,15 +724,24 @@ Block Explorer URL: https://stepscan.io/
                     const {value: amount, fromChain: refChainId} = parseMesonRequest(id)
                     const depositor = eventSource;
                     const refId = id;
-                    // if (action === 'mint') {
-                    //     let mintBigInt = BigInt(mintV.split(".")[0]);
-                    //     const foreign20 = getBindToken(this.tokenAddr) || ""
-                    //     const txHash = searchMesonReqId(id, mintBigInt, foreign20);
-                    // } else {
+                    if (action === 'mint') {
+                        const matchedReq = await matchReq(id);
+                        if (matchedReq) {
+                            process.env.SKIP_TX = transactionHash;
+                            found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
+                                blockNumber, transactionHash, refId, true, BigInt(matchedReq.chainId), depositor)
+                        } else {
+                            console.log(`cross-chain request not matched`)
+                            found = false;
+                        }
+                        dingMsg(`cross-chain req found ? ${found}`, this.dingToken).catch(e=>{
+                            console.log(`failed to notify through ding.`, e)
+                        })
+                    } else {
                         process.env.SKIP_TX = transactionHash; // force skip
                         found = await this.searchCelerEvmTx(eSpaceLog.address, account, parseEther(amount).toBigInt(), wei * sign, wei,
                             blockNumber, transactionHash, refId, true, refChainId, depositor)
-                    // }
+                    }
                 } else if (eTopic === '0x3b40e5089937425d14cdd96947e5661868357e224af59bd8b24a4b8a330d4426') {
                     // celer case B: DelayedTransferExecuted(bytes32 id, address receiver, address token, uint256 amount)
                     const pureData = eSpaceLog.data.substring(2)

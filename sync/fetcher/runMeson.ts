@@ -4,6 +4,7 @@ import {initDB} from "../../lib/DBProvider";
 import {parseMesonRequest} from "../MintChecker";
 import {CrossReq} from "../../lib/crossReq";
 import {ReqInfo} from "../../lib/crossReqIdParser";
+import {matchReq} from "./crossReqMonitor";
 
 function testParseReq() {
 	const req = '0x01006889cc8c0102000000012a05f20001180000000000000000000000000000' // from 42161
@@ -27,14 +28,23 @@ async function convertReqInfo() {
 }
 
 async function main() {
-	const [,,cmd] = process.argv;
+	const [,,cmd,arg1] = process.argv;
 	if (cmd === 'testParseReq') {
 		testParseReq();
 	} else if (cmd === 'convertReqInfo') {
 		return convertReqInfo();
+	} else if (cmd === 'testMatch') {
+		return testMatch(arg1);
 	} else {
 		return runFetcher()
 	}
+}
+
+async function testMatch(reqId: string) {
+	await setupWithDB();
+	const req = await matchReq(reqId);
+	console.log(`matched req`, req);
+	return ReqInfo.sequelize!.close()
 }
 
 async function setupWithDB() {
