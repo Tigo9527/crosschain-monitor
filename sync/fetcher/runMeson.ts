@@ -4,12 +4,12 @@ import {initDB} from "../../lib/DBProvider";
 import {parseMesonRequest} from "../MintChecker";
 import {CrossReq} from "../../lib/crossReq";
 import {ReqInfo} from "../../lib/crossReqIdParser";
-import {matchReq} from "./crossReqMonitor";
+import {matchReq, repeatCheckCrossReq} from "./crossReqMonitor";
 
-function testParseReq() {
-	const req = '0x01006889cc8c0102000000012a05f20001180000000000000000000000000000' // from 42161
+function testParseReq(reqId: string = "") {
+	const req =  reqId || '0x01006889cc8c0102000000012a05f20001180000000000000000000000000000' // from 42161
 	parseMesonRequest(req)
-	parseMesonRequest('0x0100688b82b70101000000037e11d60000180000000000000000000000000000') // from 1
+	// parseMesonRequest('0x0100688b82b70101000000037e11d60000180000000000000000000000000000') // from 1
 }
 
 async function convertReqInfo() {
@@ -30,13 +30,16 @@ async function convertReqInfo() {
 async function main() {
 	const [,,cmd,arg1, arg2] = process.argv;
 	if (cmd === 'testParseReq') {
-		testParseReq();
+		testParseReq(arg1);
 	} else if (cmd === 'convertReqInfo') {
 		return convertReqInfo();
 	} else if (cmd === 'fetchOnce') {
 		return runFetcher(parseInt(arg1), parseInt(arg2))
 	} else if (cmd === 'testMatch') {
 		return testMatch(arg1);
+	} else if (cmd === 'runMonitor') {
+		await setupWithDB()
+		return repeatCheckCrossReq(arg1 || process.env.DEV_DING)
 	} else {
 		return runFetcher()
 	}

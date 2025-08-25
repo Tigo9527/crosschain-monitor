@@ -113,3 +113,76 @@ export function initCrossReqModel(sequelize: Sequelize) {
 		}
 	);
 }
+
+export interface ReqMonitorQueueAttributes {
+	id?: number;
+	reqId: string;
+	createdAt?: Date;
+	updatedAt?: Date;
+	lastCheckTime?: Date;
+	lastStatusTime?: Date;
+	lastAlertTime?: Date;
+	ruleAction?: string;
+	amount?: number;
+}
+
+interface ReqMonitorQueueCreationAttributes extends Optional<ReqMonitorQueueAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+
+export class ReqMonitorQueue extends Model<ReqMonitorQueueAttributes, ReqMonitorQueueCreationAttributes> implements ReqMonitorQueueAttributes {
+	public id!: number;
+	public reqId!: string;
+	public readonly createdAt!: Date;
+	public readonly updatedAt!: Date;
+	public lastCheckTime?: Date;
+	public lastStatusTime?: Date;
+	public lastAlertTime?: Date;
+	public ruleAction?: string;
+	public amount?: number;
+}
+
+export function initReqMonitorQueue(sequelize: Sequelize): void {
+	ReqMonitorQueue.init(
+		{
+			id: {
+				type: DataTypes.INTEGER,
+				autoIncrement: true,
+				primaryKey: true,
+			},
+			reqId: {
+				type: DataTypes.STRING(66),
+				allowNull: false,
+				unique: true,
+			},
+			createdAt: {
+				type: DataTypes.DATE,
+				allowNull: false,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				type: DataTypes.DATE,
+				allowNull: false,
+				defaultValue: DataTypes.NOW,
+			},
+			lastCheckTime: {
+				type: DataTypes.DATE,
+				allowNull: false,
+				defaultValue: DataTypes.NOW,
+			},
+			lastStatusTime: { type: DataTypes.DATE, allowNull: true},
+			lastAlertTime: { type: DataTypes.DATE, allowNull: true},
+			amount: { type: DataTypes.DECIMAL(36,6), allowNull: true, defaultValue: 0 },
+			ruleAction: {
+				type: DataTypes.STRING(32), allowNull: true, defaultValue: "",
+			}
+		},
+		{
+			sequelize,
+			modelName: 'ReqMonitorQueue',
+			tableName: 'req_monitor_queue',
+			timestamps: true,
+			indexes: [
+				{fields: ['lastCheckTime'],}
+			]
+		}
+	);
+}

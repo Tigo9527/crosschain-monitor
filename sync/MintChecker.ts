@@ -1074,7 +1074,7 @@ async function importFromFile(checker: EventChecker, cursorKey: string) {
 
 }
 
-export function parseMesonRequest(id: string) {
+export function parseMesonRequest(id: string, log=true) {
     const v = parseInt(id.substring(0, 4))
     const created = parseInt('0x' + id.substring(4, 14))
     const createdAt = new Date(created*1000)
@@ -1088,6 +1088,8 @@ export function parseMesonRequest(id: string) {
     const toChain = mesonHubs[toV].realChainId ?? 0
     const vault = (actionId & 0x10) > 0
     let ret = {id, v, created, actionId, tokenIndex, value, fromV, toV, fromChain, toChain, vault, createdAt};
-    console.log(`meson request is `, ret)
+    if (log) {
+        console.log(`meson request is `, ret)
+    }
     return ret
 }

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import {ICrossReq, CrossReq} from "../../lib/crossReq";
+import {ICrossReq, CrossReq, ReqMonitorQueue, ReqMonitorQueueAttributes} from "../../lib/crossReq";
 import {Config, getNumber, HANDLED_BLOCK_OF_CHAIN} from "../../lib/Models";
 import {parseMesonRequest} from "../MintChecker";
 import {IReqInfo, ReqInfo} from "../../lib/crossReqIdParser";
@@ -35,9 +35,13 @@ export class CrossEventFetcher {
 			config.lockContractAddress,
 			[
 				'event TokenLockProposed(bytes32 indexed reqId, address indexed proposer)',
+				'event TokenLockExecuted(bytes32 indexed reqId, address indexed proposer)',
 				'event TokenBurnProposed(bytes32 indexed reqId, address indexed proposer)',
-				'event TokenBurnExecuted(bytes32 indexed reqId, address indexed recipient)',
-				'event TokenUnlockExecuted (bytes32 indexed reqId, address indexed recipient)',
+				'event TokenBurnExecuted(bytes32 indexed reqId, address indexed proposer)',
+
+				'event TokenUnlockProposed(bytes32 indexed reqId, address indexed recipient)',
+				'event TokenUnlockExecuted(bytes32 indexed reqId, address indexed recipient)',
+				'event TokenMintProposed(bytes32 indexed reqId, address indexed recipient)',
 				'event TokenMintExecuted(bytes32 indexed reqId, address indexed recipient)'
 			],
 			this.provider
@@ -169,13 +173,7 @@ export class CrossEventFetcher {
 		);
 
 		// Filter for only the events we care about (defined in contract ABI)
-		const filteredEvents = eventsRaw.filter(event =>
-			event.event === 'TokenLockProposed' ||
-			event.event === 'TokenBurnProposed' ||
-			event.event === 'TokenUnlockExecuted' ||
-			event.event === 'TokenBurnExecuted' ||
-			event.event === 'TokenMintExecuted'
-		);
+		const filteredEvents = eventsRaw.filter(event => this.contract.interface.getEvent(event.topics[0]));
 
 		const allEvents = filteredEvents
 		.sort((a, b) => a.blockNumber - b.blockNumber);
@@ -219,10 +217,8 @@ export class CrossEventFetcher {
 
 			return {
 				...baseEvent,
-				proposer: (event.event === 'TokenLockProposed'
-					|| event.event === 'TokenBurnProposed') ? event.args?.proposer : null,
-				recipient: (event.event === 'TokenMintExecuted'
-					|| event.event === 'TokenUnlockExecuted') ? event.args?.recipient : null,
+				proposer: event.args?.proposer,
+				recipient: event.args?.recipient,
 				erc20: transfer.erc20,
 				from: transfer.from,
 				to: transfer.to,
@@ -259,11 +255,15 @@ export class CrossEventFetcher {
 	private async saveEvents(events: ICrossReq[], endBlock: number) {
 		try {
 			const parsedReqArr = convertReq(events.map(e=>e.reqId));
+			const checkingTaskArr = parsedReqArr.map(req=>{
+				return {reqId: req.reqId, amount: Number(req.value)} as ReqMonitorQueueAttributes
+			})
 			await CrossReq.sequelize!.transaction(async dbTx=>{
 				await CrossReq.bulkCreate(events, {transaction: dbTx,
 					updateOnDuplicate: this.config.hasReorgFeature ? ['updatedAt'] : undefined}
 				);
 
+				await ReqMonitorQueue.bulkCreate(checkingTaskArr, {transaction: dbTx, updateOnDuplicate: ['updatedAt']});
 				await ReqInfo.bulkCreate(parsedReqArr, {transaction: dbTx, updateOnDuplicate: ['updatedAt']});
 
 				if (!this.config.oneBlock) {

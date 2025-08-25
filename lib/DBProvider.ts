@@ -1,7 +1,7 @@
 import {Sequelize, Model, DataTypes} from "sequelize";
 import {Address, Balance, BalanceTask, Bill, Config, DelayedMint, Token} from "./Models";
 import {ELog} from "../sync/LogSync";
-import {initCrossReqModel} from "./crossReq";
+import {initCrossReqModel, initReqMonitorQueue} from "./crossReq";
 import {initReqInfoModel} from "./crossReqIdParser";
 
 export async function initDB(connectUrl: string = "mysql://root:asd123@localhost:3306/mydb", log=false) {
@@ -17,6 +17,7 @@ export async function initDB(connectUrl: string = "mysql://root:asd123@localhost
     DelayedMint.register(sequelize);
     Bill.register(sequelize);
     initCrossReqModel(sequelize);
+    initReqMonitorQueue(sequelize);
     initReqInfoModel(sequelize);
     ELog.register(sequelize)
     await sequelize.sync({});
