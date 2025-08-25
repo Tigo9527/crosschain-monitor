@@ -3,6 +3,7 @@ import {CrossReq, initReqMonitorQueue, ReqMonitorQueue} from "../../lib/crossReq
 import {ethers} from "ethers";
 import {IReqInfo} from "../../lib/crossReqIdParser";
 import {dingMsg} from "../../lib/Tool";
+import {Op} from "sequelize";
 
 export async function matchReq(req: string) {
 	// 1 give a req id and expected foreign token
@@ -11,7 +12,7 @@ export async function matchReq(req: string) {
 	// check source chain erc20 event: match token address and amount
 	const {fromChain, toChain, value} = parseMesonRequest(req);
 	const fromChainReq = await CrossReq.findOne({
-		where: {chainId: fromChain, reqId: req},
+		where: {chainId: fromChain, reqId: req, value: {[Op.ne]: '0'}},
 		logging: console.log,
 		raw: true,
 	})

@@ -206,8 +206,8 @@ export class CrossEventFetcher {
 		try {
 			const transfer = await this.getTransferEvent(event.transactionHash);
 			if (!transfer) {
-				console.warn(`[Chain ${this.config.chainId}] No transfer found for tx ${event.transactionHash}`);
-				return null;
+				console.warn(`[Chain ${this.config.chainId}] No transfer found for tx ${event.transactionHash
+				} event ${event.event}`);
 			}
 
 			const block = await event.getBlock()
@@ -219,10 +219,10 @@ export class CrossEventFetcher {
 				...baseEvent,
 				proposer: event.args?.proposer,
 				recipient: event.args?.recipient,
-				erc20: transfer.erc20,
-				from: transfer.from,
-				to: transfer.to,
-				value: transfer.value,
+				erc20: transfer?.erc20 || '',
+				from: transfer?.from,
+				to: transfer?.to || '',
+				value: transfer?.value || '0',
 				createdAt: block ? new Date(block.timestamp * 1000) : undefined,
 			};
 		} catch (error) {
