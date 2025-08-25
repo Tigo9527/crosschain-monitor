@@ -145,7 +145,10 @@ function matchReqPair(reqWithSameReqId: CrossReq[]) {
 		return {errorMessage: errArr.join('\n')}
 	}
 
-	let source =  parsedArr.find(row=>row.side === "source")
+	let source =
+		// find Executed first
+		parsedArr.find(row=>row.side === "source" && row.step === "Executed")
+		|| parsedArr.find(row=>row.side === "source" && row.step === "Proposed")
 		|| {step: "None", action: "Unknown"};
 	let target =
 		// find Executed first
