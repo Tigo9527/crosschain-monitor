@@ -173,7 +173,18 @@ export class CrossEventFetcher {
 		);
 
 		// Filter for only the events we care about (defined in contract ABI)
-		const filteredEvents = eventsRaw.filter(event => this.contract.interface.getEvent(event.topics[0]));
+		const filteredEvents = eventsRaw.filter(event => {
+			let match = false;
+			try {
+				match = !!this.contract.interface.getEvent(event.topics[0])
+			} catch (e) {
+				// @ts-ignore
+				if (e["reason"] === 'no matching event') {
+					console.log(`[Chain ${this.config.chainId}] No matching event , tx ${event.transactionHash}`);
+				}
+			}
+			return match;
+		});
 
 		const allEvents = filteredEvents
 		.sort((a, b) => a.blockNumber - b.blockNumber);
