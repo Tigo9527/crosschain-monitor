@@ -16,7 +16,7 @@ function App() {
     const padding = vertical ? '8px' : '10%'
   return (
     <div className="App">
-        <Title key={'t1'} level={1} style={{paddingTop: '1em'}}>Cross chain tokens</Title>
+        <Title key={'t1'} level={1} style={{paddingTop: '1em'}}>Cross-chain tokens</Title>
         <div key='divK1' style={{paddingLeft: padding, paddingRight: padding}}>
             <Collapse defaultActiveKey={['1']}>
                 <Panel header="Minter supply" key="1">
