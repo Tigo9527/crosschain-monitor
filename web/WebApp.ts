@@ -17,6 +17,7 @@ import {ethers} from "ethers";
 import {addressMap, E_SPACE_USDT, EventChecker, } from "../sync/MintChecker";
 import {formatEther} from "ethers/lib/utils";
 import {getPrice} from "../lib/Binance";
+import {regCrossReqApi} from "./crossReqApi";
 let rpc: BaseProvider
 async function init_DB() {
     const dbUrl = process.env.DB_URL
@@ -37,7 +38,11 @@ app.get('/price-info', async (req,res, next)=>{
         getPrice('BNBUSDT'),
         getPrice('CFXUSDT'),
     ]).then(arr=>res.send({list: arr}))
-        .catch(e=>next(e))
+        .catch(e=>{
+            console.log(`failed to fetch price`, e.response?.text || e.message)
+            res.send({list: []})
+            // next(e)
+        })
 })
 app.get('/sync-info', async (req,res, next)=>{
     try {
@@ -97,6 +102,9 @@ app.get('/supply', async (req, res, next) => {
     console.log(`---- /supply`)
     await getSupplyInfo().then(data=>res.send(data)).catch(next)
 })
+
+regCrossReqApi(app)
+
 //================
 app.use((err, req, res, next) => {
     console.error(`handle ${req.url}`, err)
