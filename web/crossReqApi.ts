@@ -4,7 +4,7 @@ import {matchReqPair} from "../sync/fetcher/crossReqMonitor";
 
 export function regCrossReqApi(app: any) {
 	app.get('/req', async (req, res) => {
-		const {reqId, skip = 0, limit = 10} = req.query;
+		const {reqId, offset = 0, limit = 10} = req.query;
 		let list;
 		let detail;
 		let monitorResult;
@@ -17,7 +17,7 @@ export function regCrossReqApi(app: any) {
 			matchPairResult = matchReqPair(list)
 			count = list.length;
 		} else {
-			list = await CrossReq.findAll({order: [['createdAt', 'DESC']], raw: true, offset: parseInt(skip), limit: 10});
+			list = await CrossReq.findAll({order: [['createdAt', 'DESC']], raw: true, offset: parseInt(offset), limit: 10});
 			count = await CrossReq.count();
 		}
 		res.send({list: list, detail, monitorResult, matchPairResult, count});

@@ -69,7 +69,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({data, onChang
 			dataIndex: 'type',
 			key: 'type',
 			render: (type: string) => (
-				<Tag color={type === 'TokenBurnExecuted' ? 'red' : 'blue'}>
+				<Tag>
 					{type}
 				</Tag>
 			),
