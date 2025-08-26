@@ -133,7 +133,7 @@ async function alertWithTimeCheck(timeAllow: boolean, msg: string, token?: strin
 	return dingMsg(msg, token!)
 }
 
-function matchReqPair(reqWithSameReqId: CrossReq[]) {
+export function matchReqPair(reqWithSameReqId: CrossReq[]) {
 	const parsedArr = reqWithSameReqId.map(req=>parseReq(req));
 	const errArr: string[] = [];
 	parsedArr.forEach(row=>{

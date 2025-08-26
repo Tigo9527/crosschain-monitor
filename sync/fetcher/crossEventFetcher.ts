@@ -3,6 +3,7 @@ import {ICrossReq, CrossReq, ReqMonitorQueue, ReqMonitorQueueAttributes} from ".
 import {Config, getNumber, HANDLED_BLOCK_OF_CHAIN} from "../../lib/Models";
 import {parseMesonRequest} from "../MintChecker";
 import {IReqInfo, ReqInfo} from "../../lib/crossReqIdParser";
+import {dingMsg} from "../../lib/Tool";
 
 export interface EventFetcherConfig {
 	rpcUrl: string;
@@ -135,10 +136,9 @@ export class CrossEventFetcher {
 				}
 				console.error(`[Chain ${this.config.chainId}] Error:`, msg || error);
 				if (++this.retryCount >= this.config.maxRetries!) {
-					console.error(`[Chain ${this.config.chainId}] Max retries reached, stopping`);
-					// this.stop();
-					// TODO send alert
-					// break;
+					console.error(`[Chain ${this.config.chainId}] Max retries reached `);
+					dingMsg(`[cross-event-fetcher] chain ${this.config.chainId} error : ${msg || error}`, process.env.DEV_DING || '')
+					this.retryCount = 0;
 				}
 				await this.delay(this.config.pollInterval! * this.retryCount);
 			}
