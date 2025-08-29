@@ -10,7 +10,7 @@ export async function matchReq(req: string) {
 	// find by req id
 	// find parsed req info
 	// check source chain erc20 event: match token address and amount
-	const {fromChain, toChain, value} = parseMesonRequest(req);
+	const {fromChain, toChain, value} = parseMesonRequest(req, false);
 	const fromChainReq = await CrossReq.findOne({
 		where: {chainId: fromChain, reqId: req, value: {[Op.ne]: '0'}},
 		logging: console.log,

@@ -91,6 +91,7 @@ TOKEN_BIND.set(E_SPACE_ETH.toLowerCase(), ETHEREUM_WETH_TOKEN)
 
 export const FOREIGN_TOKEN_TO_LOCAL = new Map<string, string>()
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_USD.toLowerCase(), E_SPACE_USDT.toLowerCase())
+FOREIGN_TOKEN_TO_LOCAL.set(ETHEREUM_USDT_TOKEN.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(BSC_anyUSD.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(ONT58_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
 FOREIGN_TOKEN_TO_LOCAL.set(Godwoken71402_USDT.toLowerCase(), E_SPACE_USDT.toLowerCase())
@@ -136,7 +137,7 @@ export function mapForeignTokenToLocal(foreign:string) {
     let local = FOREIGN_TOKEN_TO_LOCAL.get(foreign.toLowerCase())
     if (!local) {
         console.log(`!!!!! map foreign token to local, not found ${foreign}`)
-        console.log(`mapping is `, FOREIGN_TOKEN_TO_LOCAL)
+        // console.log(`mapping is `, FOREIGN_TOKEN_TO_LOCAL)
     }
     return local
 }
@@ -730,6 +731,7 @@ Block Explorer URL: https://stepscan.io/
                     const refId = id;
                     if (action === 'mint') {
                         const matchedReq = await matchReq(id);
+                        console.log(`meson request matched`)
                         const tokenToLocal = matchedReq ? mapForeignTokenToLocal(matchedReq.erc20) : ""
                         if (matchedReq && tokenToLocal === this.tokenAddr) {
                             process.env.SKIP_TX = transactionHash;
