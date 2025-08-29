@@ -65,10 +65,11 @@ export const ReqDetail = ({reqId}: {reqId: string}) => {
                         {/*    <Tag color="red">{transaction.type}</Tag>*/}
                         {/*</Descriptions.Item>*/}
                         <Descriptions.Item label="Chain ID">{data.detail?.fromChain} - {data.detail?.toChain}</Descriptions.Item>
-                        <Descriptions.Item label="Monitor result">{data.monitorResult?.ruleAction}</Descriptions.Item>
+                        <Descriptions.Item label="Monitor result">{data.monitorResult?.ruleAction
+                            || data.matchPairResult?.ruleAction}</Descriptions.Item>
                         <Descriptions.Item label="Matched Progress">{data.matchPairResult?.pairedStep}</Descriptions.Item>
                         <Descriptions.Item label="Created At">{data.detail?.createdAt}</Descriptions.Item>
-                        <Descriptions.Item label="Error message">{data.matchPairResult?.errorMessage}</Descriptions.Item>
+                        <Descriptions.Item label="Error message">{data.matchPairResult?.errorMessage || '-'}</Descriptions.Item>
                     </Descriptions>
                 </Card>
                 <Card title={"Events"}>

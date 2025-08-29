@@ -40,8 +40,7 @@ export const ReqIndex: React.FC = () => {
 				              onChange={(e) => setInput(e.target.value)} />
 				Link: <a href={`/?page=reqDetail&reqId=${input}`}>{input}</a>
 			</Space>
-			<div>offset {offset}</div>
-			<TransactionTable data={data} count={count+20} loading={loading} onChange={(page, pageSize)=>{
+			<TransactionTable data={data} count={count} loading={loading} onChange={(page, pageSize)=>{
 				setOffset((page - 1) * pageSize);
 			}}/>
 		</div>
