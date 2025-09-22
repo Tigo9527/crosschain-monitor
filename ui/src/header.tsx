@@ -24,7 +24,7 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ onMenuClick }) => {
 			padding: '0 24px'
 		}}>
 			<Title level={3} style={{ color: 'white', margin: 0, marginRight: '40px' }}>
-				Cross-chain Explorer
+				DeFi Monitor
 			</Title>
 
 			<Menu
@@ -43,6 +43,9 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ onMenuClick }) => {
 				</Menu.Item>
 				<Menu.Item key="tokens">
 					<a href={`/?page=tokens`}>Tokens</a>
+				</Menu.Item>
+				<Menu.Item key="PoS-Pool">
+					<a href={`/?page=pos`}>PoS Pool</a>
 				</Menu.Item>
 			</Menu>
 		</Header>

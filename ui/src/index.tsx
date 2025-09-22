@@ -6,6 +6,7 @@ import {ReqIndex} from "./cross-req/reqIndex";
 import {ReqDetail} from "./cross-req/reqDetail";
 import {HeaderMenu} from "./header";
 import { Card, Row, Col, Statistic, Typography, Button } from 'antd';
+import {PoolMain} from "./pos/poolMain";
 const { Title, Paragraph } = Typography;
 
 const container = document.getElementById('root')!;
@@ -53,6 +54,9 @@ const PageRouter = () => {
 			case 'reqDetail':
 				page = <ReqDetail reqId={map.get('reqId')} />
 				break
+			case 'pos':
+				page = <PoolMain/>
+				break;
 		}
 		setPage(page)
 	}, [window.location.search])
