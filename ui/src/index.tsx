@@ -7,6 +7,8 @@ import {ReqDetail} from "./cross-req/reqDetail";
 import {HeaderMenu} from "./header";
 import { Card, Row, Col, Statistic, Typography, Button } from 'antd';
 import {PoolMain} from "./pos/poolMain";
+import {SwapMain} from "./swap/swapMain";
+import {HolderMain} from "./balance/holderMain";
 const { Title, Paragraph } = Typography;
 
 const container = document.getElementById('root')!;
@@ -56,6 +58,12 @@ const PageRouter = () => {
 				break
 			case 'pos':
 				page = <PoolMain/>
+				break;
+			case 'swap':
+				page = <SwapMain/>
+				break
+			case 'balance':
+				page = <HolderMain/>
 				break;
 		}
 		setPage(page)

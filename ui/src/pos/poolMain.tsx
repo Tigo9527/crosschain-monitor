@@ -1,7 +1,7 @@
 import {PoolTable} from "./poolTable";
 import {useEffect, useState} from "react";
 import {Spin} from "antd";
-import {getHost} from "../common/Util";
+import {defiApiUrl, getHost} from "../common/Util";
 
 export const PoolMain=()=>{
 	const [data, setData] = useState<any[]>([]);
@@ -9,7 +9,7 @@ export const PoolMain=()=>{
 	useEffect(() => {
 		setLoading(true);
 		const fn = async() => {
-			const response = await fetch(`http://47.76.159.100/pos/list`);
+			const response = await fetch(`${defiApiUrl}/defi/api/pos/list`);
 			const result = await response.json();
 			setData(result.data.checkerList);
 		}

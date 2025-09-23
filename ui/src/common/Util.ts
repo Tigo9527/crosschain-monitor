@@ -1,4 +1,6 @@
-function getHost() {
+export const defiApiUrl = 'http://47.76.159.100'
+
+export function getHost() {
     let url = ''
     if (process.env.NODE_ENV === 'development') {
         url = 'http://localhost:3003'
@@ -8,5 +10,3 @@ function getHost() {
     }
     return url;
 }
-// const priceMap
-export {getHost}

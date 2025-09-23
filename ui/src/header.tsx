@@ -47,6 +47,12 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ onMenuClick }) => {
 				<Menu.Item key="PoS-Pool">
 					<a href={`/?page=pos`}>PoS Pool</a>
 				</Menu.Item>
+				<Menu.Item key="Swap">
+					<a href={`/?page=swap`}>Swap</a>
+				</Menu.Item>
+				<Menu.Item key="Balance">
+					<a href={`/?page=balance`}>Balance</a>
+				</Menu.Item>
 			</Menu>
 		</Header>
 	);
