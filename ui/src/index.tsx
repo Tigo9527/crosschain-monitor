@@ -9,6 +9,7 @@ import { Card, Row, Col, Statistic, Typography, Button } from 'antd';
 import {PoolMain} from "./pos/poolMain";
 import {SwapMain} from "./swap/swapMain";
 import {HolderMain} from "./balance/holderMain";
+import {SwapIndex} from "./swap/swapIndex";
 const { Title, Paragraph } = Typography;
 
 const container = document.getElementById('root')!;
@@ -60,7 +61,7 @@ const PageRouter = () => {
 				page = <PoolMain/>
 				break;
 			case 'swap':
-				page = <SwapMain/>
+				page = <SwapIndex/>
 				break
 			case 'balance':
 				page = <HolderMain/>

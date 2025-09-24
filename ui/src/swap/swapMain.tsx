@@ -38,7 +38,7 @@ export const SwapMain: React.FC = () => {
     }
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: 'px' }}>
             <h1>Token Pairs Dashboard</h1>
 
             {/* Statistics Row */}
