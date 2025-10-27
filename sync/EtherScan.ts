@@ -149,6 +149,8 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         etherToken = ''
         useInfoFromMatchedRecord = true;
         forceUseSimilar = true;
+    } else if (refChainId == BigInt(1)) {
+        providerUrl = process.env.ETH_RPC;
     } else if (refChainId == BigInt(1284)) {
         host = "https://api-moonbeam.moonscan.io"
         providerUrl = 'https://rpc.api.moonbeam.network'
