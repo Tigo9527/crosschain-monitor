@@ -1,9 +1,10 @@
 import {CrossReq, ReqMonitorQueue} from "../lib/crossReq";
 import {ReqInfo} from "../lib/crossReqIdParser";
 import {matchReqPair} from "../sync/fetcher/crossReqMonitor";
+import {app_get} from "./rest-lib";
 
 export function regCrossReqApi(app: any) {
-	app.get('/req', async (req, res) => {
+	app_get(app, '/req', async (req, res) => {
 		const {reqId, offset = 0, limit = 10} = req.query;
 		let list;
 		let detail;
