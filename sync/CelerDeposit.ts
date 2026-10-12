@@ -1,4 +1,5 @@
 import {BigNumberish, BigNumber, utils} from "ethers";
+import {CelerVaultAllowlist, isCelerVault} from "./CelerVaults";
 
 // OriginalTokenVault and OriginalTokenVaultV2 share the deposit methods.
 // V2 appends the vault address to the deposit ID and the nonce to Deposited.
@@ -33,8 +34,9 @@ export function decodeCelerDeposit(data: string) {
     }
 }
 
-export function celerDepositIds(data: string, from: string, chainId: number, to?: string | null,
-                                nativeToken?: string): string[] {
+export function celerDepositIds(data: string, from: string, chainId: number, to: string | null | undefined,
+                                vaults: CelerVaultAllowlist, nativeToken?: string): string[] {
+    if (!isCelerVault(chainId, to, vaults)) return [];
     const decoded = decodeCelerDeposit(data);
     if (!decoded || !decoded.args.mintChainId.eq(1030)) return [];
     const {amount, mintChainId, mintAccount, nonce} = decoded.args;
@@ -47,9 +49,10 @@ export function celerDepositIds(data: string, from: string, chainId: number, to?
 }
 
 export function matchesCelerDepositReceipt(tx: DepositTransaction, receipt: DepositReceipt | null,
-                                           expected: string): boolean {
+                                           expected: string, vaults: CelerVaultAllowlist): boolean {
     const decoded = decodeCelerDeposit(tx.data);
-    if (!decoded || !decoded.args.mintChainId.eq(1030) || !tx.to || !receipt || receipt.status !== 1
+    if (!decoded || !decoded.args.mintChainId.eq(1030) || !tx.to || !isCelerVault(tx.chainId, tx.to, vaults)
+        || !receipt || receipt.status !== 1
         || receipt.transactionHash.toLowerCase() !== tx.hash.toLowerCase()) {
         return false;
     }
@@ -70,7 +73,7 @@ export function matchesCelerDepositReceipt(tx: DepositTransaction, receipt: Depo
                 || (event.nonce !== undefined && !event.nonce.eq(nonce))) {
                 continue;
             }
-            const ids = celerDepositIds(tx.data, tx.from, tx.chainId, tx.to, event.token);
+            const ids = celerDepositIds(tx.data, tx.from, tx.chainId, tx.to, vaults, event.token);
             const version = event.nonce === undefined ? 0 : 1;
             if (ids[version]?.toLowerCase() === expected.toLowerCase()) {
                 return true;

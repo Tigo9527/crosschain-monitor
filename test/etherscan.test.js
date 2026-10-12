@@ -7,16 +7,15 @@ const { fetchErc20Transfer, listTx, listTransfer } = require("../sync/EtherScan.
 const f = require("./fixtures/celer-deposit");
 
 function setup(t, { rows = [f.row], tx = f.tx, receipt = f.receipt, responses } = {}) {
-    const requests = [], txCalls = [], receiptCalls = [], providerUrls = [], logs = [];
-    const previous = Object.getOwnPropertyDescriptor(ethers, "getDefaultProvider");
+    const requests = [], txCalls = [], receiptCalls = [], providerUrls = [], providers = [], logs = [];
     const savedEnv = { ETH_RPC: process.env.ETH_RPC, ETHER_SCAN_API_KEY: process.env.ETHER_SCAN_API_KEY,
-        PROXY: process.env.PROXY, DEBUG_RETRY: process.env.DEBUG_RETRY };
+        PROXY: process.env.PROXY, DEBUG_RETRY: process.env.DEBUG_RETRY, CELER_SOURCE_VAULTS: process.env.CELER_SOURCE_VAULTS };
     process.env.ETH_RPC = "https://rpc.example/private-rpc-token";
     process.env.ETHER_SCAN_API_KEY = "private-explorer-token";
     delete process.env.PROXY;
     delete process.env.DEBUG_RETRY;
+    delete process.env.CELER_SOURCE_VAULTS;
     t.after(() => {
-        Object.defineProperty(ethers, "getDefaultProvider", previous);
         for (const [key, value] of Object.entries(savedEnv)) {
             if (value === undefined) delete process.env[key]; else process.env[key] = value;
         }
@@ -27,14 +26,20 @@ function setup(t, { rows = [f.row], tx = f.tx, receipt = f.receipt, responses } 
         const body = responses ? responses(requests.at(-1)) : { status: "1", result: rows.map(row => ({ ...row })) };
         return { then: resolve => Promise.resolve({ body }).then(resolve) };
     });
-    Object.defineProperty(ethers, "getDefaultProvider", { configurable: true, value: url => {
-        providerUrls.push(url);
-        return {
-            getTransaction: async hash => { txCalls.push(hash); return typeof tx === "function" ? tx(hash) : tx; },
-            getTransactionReceipt: async hash => { receiptCalls.push(hash); return receipt; },
-        };
-    } });
-    return { requests, txCalls, receiptCalls, providerUrls, logs };
+    // Exercise the real constructors; mock only the methods that would contact RPC.
+    for (const Provider of [ethers.providers.JsonRpcProvider, ethers.providers.FallbackProvider]) {
+        t.mock.method(Provider.prototype, "getTransaction", async function (hash) {
+            providers.push(this);
+            providerUrls.push(this.connection?.url);
+            txCalls.push(hash);
+            return typeof tx === "function" ? tx(hash) : tx;
+        });
+        t.mock.method(Provider.prototype, "getTransactionReceipt", async function (hash) {
+            receiptCalls.push(hash);
+            return receipt;
+        });
+    }
+    return { requests, txCalls, receiptCalls, providerUrls, providers, logs };
 }
 
 function match(token = f.token, amount = f.minted, account = f.account, id = f.v2Id) {
@@ -45,6 +50,8 @@ test("matches the reported WETH deposit using the configured RPC", async t => {
     const calls = setup(t);
     assert.equal((await match()).hash, f.tx.hash);
     assert.deepEqual(calls.providerUrls, [process.env.ETH_RPC]);
+    assert.equal(calls.providers[0].constructor, ethers.providers.JsonRpcProvider);
+    assert.equal((await calls.providers[0].ready).chainId, 1);
     assert.deepEqual(calls.txCalls, [f.tx.hash]);
     assert.deepEqual(calls.receiptCalls, [f.tx.hash]);
     assert.equal(calls.requests[0].searchParams.get("action"), "tokentx");
@@ -59,8 +66,43 @@ test("exact amount matches use the configured RPC and verify the receipt", async
     assert.equal(calls.receiptCalls.length, 1);
 });
 
+test("uses the real default provider when ETH_RPC is not configured", async t => {
+    const calls = setup(t);
+    delete process.env.ETH_RPC;
+    assert.equal((await match()).hash, f.tx.hash);
+    assert.equal(calls.providers[0].constructor, ethers.providers.FallbackProvider);
+    assert.deepEqual(calls.providerUrls, [undefined]);
+    assert.deepEqual(calls.receiptCalls, [f.tx.hash]);
+});
+
+test("rejects explorer candidates sent to an unauthorized vault before RPC", async t => {
+    const calls = setup(t, { rows: [{ ...f.row, to: f.token }] });
+    assert.equal(await match(), null);
+    assert.equal(calls.txCalls.length, 0);
+});
+
+test("also checks the actual transaction destination against the allowlist", async t => {
+    const calls = setup(t, {
+        tx: { ...f.tx, to: f.token },
+        receipt: { ...f.receipt, logs: [{ ...f.depositLog(1), address: f.token }] },
+    });
+    assert.equal(await match(f.token, f.minted, f.account, f.v1Id), null);
+    assert.equal(calls.txCalls.length, 1);
+    assert.equal(calls.receiptCalls.length, 0);
+});
+
+test("honors an explicitly disabled source chain", async t => {
+    const calls = setup(t);
+    process.env.CELER_SOURCE_VAULTS = '{"1":[]}';
+    assert.equal(await match(), null);
+    assert.equal(calls.txCalls.length, 0);
+});
+
 test("accepts V1 deposits through the matcher", async t => {
-    setup(t, { receipt: { ...f.receipt, logs: [f.depositLog(1)] } });
+    setup(t, {
+        rows: [{ ...f.row, to: f.legacyVaultAddress }], tx: { ...f.tx, to: f.legacyVaultAddress },
+        receipt: { ...f.receipt, logs: [{ ...f.depositLog(1), address: f.legacyVaultAddress }] },
+    });
     assert.equal((await match(f.token, f.minted, f.account, f.v1Id)).hash, f.tx.hash);
 });
 
@@ -199,4 +241,33 @@ test("preserves explicit explorer-only matching for legacy chains", async t => {
     setup(t, { rows: [{ ...f.row, input: undefined }] });
     const result = await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, "", 592n);
     assert.equal(result.hash, f.tx.hash);
+});
+
+function astarDepositId(version = 2, to = f.vaultAddress) {
+    const types = ["address", "address", "uint256", "uint64", "address", "uint64", "uint64"];
+    const values = [f.account, f.token, f.amount, 1030, f.account, f.nonce, 592];
+    if (version === 2) { types.push("address"); values.push(to); }
+    return utils.solidityKeccak256(types, values);
+}
+
+test("explorer-only Celer matches require a configured source-chain vault", async t => {
+    const calls = setup(t, { rows: [{ ...f.row, input: f.tx.data }] });
+    const expected = astarDepositId();
+    assert.equal(await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, expected, 592n), null);
+    // Explicit operator configuration is the only way to trust another chain's vault.
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "592": [utils.getAddress(f.vaultAddress)] });
+    assert.equal((await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, expected, 592n)).hash, f.tx.hash);
+    assert.equal(calls.txCalls.length, 0);
+});
+
+test("explorer-only matching rejects a lookalike V1 vault with a matching ID", async t => {
+    setup(t, { rows: [{ ...f.row, to: f.token, input: f.tx.data }] });
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "592": [f.vaultAddress] });
+    assert.equal(await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, astarDepositId(1), 592n), null);
+});
+
+test("an authorized explorer-only vault still needs the matching deposit ID", async t => {
+    setup(t, { rows: [{ ...f.row, input: f.tx.data }] });
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "592": [f.vaultAddress] });
+    assert.equal(await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, f.v2Id, 592n), null);
 });

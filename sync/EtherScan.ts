@@ -4,6 +4,7 @@ import {ethers, utils} from "ethers";
 import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
 import {checkNearTxWith1030memo, convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
 import {celerDepositIds, decodeCelerDeposit, matchesCelerDepositReceipt} from "./CelerDeposit";
+import {CelerVaultAllowlist, isCelerVault, loadCelerSourceVaults} from "./CelerVaults";
 import has = Reflect.has;
 
 const superagent = require('superagent')
@@ -72,15 +73,16 @@ function scaleValue(row:any) {
     const scale18 = BigInt(value) * BigInt(Math.pow(10, 18 - tokenDecimal))
     return {timeStamp, from, scale18};
 }
-async function matchDepositId(etherTxHash:string, expect: string, chainId: number, providerUrl?: string) {
+async function matchDepositId(etherTxHash:string, expect: string, chainId: number,
+                               vaults: CelerVaultAllowlist, providerUrl?: string) {
     console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
-    const provider = ethers.getDefaultProvider(providerUrl);
+    const provider = providerUrl ? new ethers.providers.JsonRpcProvider(providerUrl, chainId) : ethers.getDefaultProvider();
     const tx = await provider.getTransaction(etherTxHash);
-    if (!tx || tx.chainId !== chainId || !decodeCelerDeposit(tx.data)) {
+    if (!tx || tx.chainId !== chainId || !isCelerVault(chainId, tx.to, vaults) || !decodeCelerDeposit(tx.data)) {
         return false;
     }
     const receipt = await provider.getTransactionReceipt(etherTxHash);
-    if (matchesCelerDepositReceipt(tx, receipt, expect)) {
+    if (matchesCelerDepositReceipt(tx, receipt, expect, vaults)) {
         console.log(`deposit id matches. ether tx ${etherTxHash}`)
         return true
     }
@@ -88,7 +90,8 @@ async function matchDepositId(etherTxHash:string, expect: string, chainId: numbe
     return false
 }
 export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
-                                         beforeTimeSec: number, refId:string, refChainId: BigInt) {
+                                         beforeTimeSec: number, refId:string, refChainId: BigInt,
+                                         vaults: CelerVaultAllowlist = loadCelerSourceVaults()) {
     address = address.toLowerCase();
     if (!etherToken) {
         console.log(`ether token is invalid, [${etherToken}]`)
@@ -198,13 +201,18 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             // Why don't token transfers have a value field?
             continue
         }
+        // Celer references require an authorized vault even on explorer-only chains.
+        // Empty references belong to the separate, legacy non-Celer matching paths.
+        if (refId && !isCelerVault(Number(refChainId), row.to, vaults)) {
+            continue;
+        }
         if (rawEth) {
             row.tokenDecimal = 18;
         }
         const {timeStamp, from, scale18} = scaleValue(row);
         if (useInfoFromMatchedRecord) {
             const decoded = decodeCelerDeposit(row.input);
-            if ((decoded && !decoded.args.mintChainId.eq(1030)) || (!decoded && !forceUseSimilar)) {
+            if ((decoded && !decoded.args.mintChainId.eq(1030)) || (!decoded && (!forceUseSimilar || refId))) {
                 continue;
             }
         }
@@ -239,7 +247,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         if (similar.fromNear) {
             return similar;
         }
-        if (forceUseSimilar){
+        if (forceUseSimilar && !refId){
             console.log(`[ ${refChainId}] take similar as match.`)
             return similar;
         }
@@ -247,12 +255,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     for (let row of candidates) {
         if (useInfoFromMatchedRecord) {
             const {from, input: data, to} = row;
-            const ids = celerDepositIds(data, from, Number(refChainId), to);
+            const ids = celerDepositIds(data, from, Number(refChainId), to, vaults);
             if (ids.some(id => id.toLowerCase() === refId.toLowerCase())) {
                 console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
-        } else if (!row.fromNear && await matchDepositId(row.hash, refId, Number(refChainId), providerUrl)) {
+        } else if (!row.fromNear && await matchDepositId(row.hash, refId, Number(refChainId), vaults, providerUrl)) {
             console.log(`matchDepositId one by one, hit`)
             return row
         }

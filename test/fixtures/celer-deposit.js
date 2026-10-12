@@ -5,6 +5,8 @@ const { utils } = require("ethers");
 const account = "0x483c2c6ee6da8b955f39635d580e659bd5a12ebe";
 const token = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 const vaultAddress = "0x7510792a3b1969f9307f3845ce88e39578f2bae1";
+const legacyVaultAddress = "0xb37d31b2a74029b5951a2778f959282e2d518595";
+const vaults = { "1": [legacyVaultAddress, vaultAddress] };
 const amount = "1590000000000000000";
 const minted = 1589769503026273530n;
 const nonce = "1791703250450";
@@ -53,4 +55,4 @@ function nativeTx() {
     };
 }
 
-module.exports = { account, token, vaultAddress, amount, minted, nonce, v1Id, v2Id, tx, receipt, beforeTime, row, abi, depositLog, nativeTx };
+module.exports = { account, token, vaultAddress, legacyVaultAddress, vaults, amount, minted, nonce, v1Id, v2Id, tx, receipt, beforeTime, row, abi, depositLog, nativeTx };
