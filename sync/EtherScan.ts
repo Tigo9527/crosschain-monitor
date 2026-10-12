@@ -3,6 +3,7 @@ import {sleep} from "../lib/Tool";
 import {ethers, utils} from "ethers";
 import {fetchEvmOS, fetchEvmOS20, parseList20Text} from "./EvmOS";
 import {checkNearTxWith1030memo, convertNearTransfer2evmTransfer, fetchNearId, fetchNearTransfer} from "./NearChain";
+import {celerDepositIds, decodeCelerDeposit, matchesCelerDepositReceipt} from "./CelerDeposit";
 import has = Reflect.has;
 
 const superagent = require('superagent')
@@ -12,73 +13,58 @@ export function stripAddr(hex:string) {
     return `0x${hex.substring(hex.length-40)}`
 }
 
-export async function listTx(who: string, host) {
+async function listAccountTransactions(who: string, host: string, etherToken?: string, earlierTimeSec?: number) {
     let apiKeyStr = "";
     if (!host) {
         let apiKey = process.env.ETHER_SCAN_API_KEY || ""
         host = `https://api.etherscan.io/v2`
         apiKeyStr = `&apikey=${apiKey}&chainid=1`
     }
-    const url = `${host}/api
-   ?module=account
-   &action=txlist
-   &address=${who}
-   &page=1
-   &offset=100
-   &sort=desc
-   ${apiKeyStr}`.replace(/[\n ]*/g,'')
-    console.log(`url ${url}`)
-    let proxy = process.env.PROXY
-    let times = 5
-    while (times > 0) {
-        times --
-        const body = await (proxy ? superagent.get(url)
-            .proxy(proxy) : superagent.get(url))
-            .then((res: any) => res.body)
-        console.log(`list tx, ether scan api result length:`, body?.result?.length)
-        if (body?.status === '1') {
-            return body
-        }
-        console.log(`ether scan return unsatisfied content`, body)
-        await sleep(6_000) // rate limit is 1/5sec
-    }
-    throw new Error(`fetch tx list from ether scan api fail.`)
-}
-// https://docs.etherscan.io/api-endpoints/accounts#get-a-list-of-erc20-token-transfer-events-by-address
-export async function listTransfer(who: string, etherToken: string, host) {
-    let apiKeyStr = "";
-    if (!host) {
-        let apiKey = process.env.ETHER_SCAN_API_KEY || ""
-        host = `https://api.etherscan.io/v2`
-        apiKeyStr = `&apikey=${apiKey}&chainid=1`
-    }
+    const action = etherToken === undefined ? 'txlist' : 'tokentx';
     const tokenFilter = etherToken ? `&contractaddress=${etherToken}` : ''
-    // host = 'https://cn.etherscan.com' // not work
-    const url = `${host}/api
-   ?module=account
-   &action=tokentx
-   ${tokenFilter}
-   &address=${who}
-   &page=1
-   &offset=100
-   &sort=desc
-   ${apiKeyStr}`.replace(/[\n ]*/g,'')
-    console.log(`url ${url}`)
-    let proxy = process.env.PROXY
-    let times = 5
-    while (times > 0) {
-        times --
-        const body = await (proxy ? superagent.get(url)
-            .proxy(proxy) : superagent.get(url))
-            .then((res: any) => res.body)
-        console.log(`list tokenTx, ether scan api result length:`, body?.result?.length)
-        if (body?.status === '1') {
-            return body
+    const result: any[] = [];
+    let previousPage = '';
+    for (let page = 1; ; page++) {
+        const url = `${host}/api?module=account&action=${action}${tokenFilter}&address=${who}&page=${page}&offset=100&sort=desc${apiKeyStr}`;
+        // Do not log URLs: explorer API keys and private RPC URLs contain credentials.
+        console.log(`list ${action}, account ${who}, page ${page}`)
+        let rows: any[] | undefined;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const request = superagent.get(url);
+            const body = await (process.env.PROXY ? request.proxy(process.env.PROXY) : request)
+                .then((res: any) => res.body);
+            if (body?.status === '1' && Array.isArray(body.result)) {
+                rows = body.result;
+                break;
+            }
+            if (body?.status === '0' && body?.message === 'No transactions found'
+                && ((Array.isArray(body.result) && body.result.length === 0) || body.result === 'No transactions found')) {
+                rows = [];
+                break;
+            }
+            if (attempt < 4) await sleep(6_000);
         }
-        console.log(`ether scan return unsatisfied content`, body)
-        await sleep(6_000) // rate limit is 1/5sec
+        if (!rows) throw new Error(`fetch ${action} from ether scan api failed`);
+        console.log(`list ${action}, ether scan api result length: ${rows.length}`);
+        const fingerprint = JSON.stringify(rows);
+        if (rows.length && fingerprint === previousPage) {
+            throw new Error(`ether scan returned the same ${action} page twice`);
+        }
+        result.push(...rows);
+        if (rows.length < 100 || earlierTimeSec === undefined
+            || rows.some(row => Number(row.timeStamp) <= earlierTimeSec)) {
+            return {status: '1', result};
+        }
+        previousPage = fingerprint;
     }
-    throw new Error(`fetch from ether scan api fail.`)
+}
+
+export async function listTx(who: string, host: string, earlierTimeSec?: number) {
+    return listAccountTransactions(who, host, undefined, earlierTimeSec);
+}
+
+export async function listTransfer(who: string, etherToken: string, host: string, earlierTimeSec?: number) {
+    return listAccountTransactions(who, host, etherToken, earlierTimeSec);
 }
 
 function scaleValue(row:any) {
@@ -86,59 +72,34 @@ function scaleValue(row:any) {
     const scale18 = BigInt(value) * BigInt(Math.pow(10, 18 - tokenDecimal))
     return {timeStamp, from, scale18};
 }
-async function matchDepositId(etherTxHash:string, expect: string, providerUrl = undefined) {
-    console.log(`try to matchDepositId, etherTxHash ${etherTxHash}, provider url [${providerUrl}]`)
-    let txInfo = await ethers.getDefaultProvider(providerUrl).getTransaction(etherTxHash).catch(err => {
-        // console.log(`ethers getTransaction fail`, err)
-        throw err
-    });
-    const {hash, data, from, chainId} = txInfo
-    return matchDepositId0(hash, data, from, chainId, etherTxHash, expect);
-}
-
-function decodeTxData(data: string) {
-    const MethodID = '0x23463624'
-    const headlessData = data.substring(MethodID.length)
-    const token = '0x' + headlessData.substring(64 * 0 + 24, 64 * 1)
-    const amount = BigInt('0x' + headlessData.substring(64 * 1, 64 * 2))
-    const mintChainId = BigInt('0x' + headlessData.substring(64 * 2, 64 * 3))
-    const mintAccount = '0x' + headlessData.substring(64 * 3 + 24, 64 * 4)
-    const nonce = BigInt('0x' + headlessData.substring(64 * 4, 64 * 5))
-    return {token, amount, mintChainId, mintAccount, nonce};
-}
-
-async function matchDepositId0(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
-    try {
-        return await matchDepositId0Unsafe(hash, data, from ,chainId, etherTxHash, expect);
-    } catch (e) {
-        console.log(`fail reason`, e)
+async function matchDepositId(etherTxHash:string, expect: string, chainId: number, providerUrl?: string) {
+    console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
+    const provider = ethers.getDefaultProvider(providerUrl);
+    const tx = await provider.getTransaction(etherTxHash);
+    if (!tx || tx.chainId !== chainId || !decodeCelerDeposit(tx.data)) {
+        return false;
     }
-    return false;
-}
-async function matchDepositId0Unsafe(hash: string, data:string, from:string, chainId:number, etherTxHash:string, expect:string) {
-    // console.log(`raw tx`, data || txInfo)
-    // Function: deposit(address _token, uint256 _amount, uint64 _mintChainId, address _mintAccount, uint64 _nonce)
-    const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
-    const hex = utils.solidityKeccak256(
-        //      0 sender  1 token    2 amount  3 mintChain 4 mintAcc  5 nonce  6 sourceChain
-        [ "address", "address","uint256","uint64",    "address",  "uint64", "uint64" ],
-        [from,       token,     amount,  mintChainId, mintAccount, nonce, chainId]
-    )
-    if (hex.toLowerCase() === expect.toLowerCase()) {
+    const receipt = await provider.getTransactionReceipt(etherTxHash);
+    if (matchesCelerDepositReceipt(tx, receipt, expect)) {
         console.log(`deposit id matches. ether tx ${etherTxHash}`)
         return true
     }
-    console.log(`not match, from ${from}, token ${token}, amount ${amount}, mint chain ${mintChainId
-    }, mintAccount ${mintAccount} nonce ${nonce}, source chain ${chainId}`)
-    console.log(`actual ${hex} vs ${expect} expect`)
+    console.log(`deposit receipt does not match, ether tx ${etherTxHash}, expected ${expect}`)
     return false
 }
 export async function fetchErc20Transfer(address: string, wantDripScale18: bigint, etherToken:string,
                                          beforeTimeSec: number, refId:string, refChainId: BigInt) {
+    address = address.toLowerCase();
     if (!etherToken) {
         console.log(`ether token is invalid, [${etherToken}]`)
         return null;
     }
+    let limitHours = 2;
+    if (refId === '0x4c925138ccbee83c011aae15417397093428eafde3cde6ad331406ec07935ca7') {
+        // Historical delayed deposit, 1030 tx 0xebde7c4c8d51911ba5017168b7624ac693d5414f503c31856160f38340b5ed55.
+        limitHours = 5;
+    }
+    const earlierTimeSec = beforeTimeSec - 3600 * limitHours;
     let host:string = '';
     let providerUrl// = undefined
     let useInfoFromMatchedRecord = false;
@@ -212,21 +173,15 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     let rawEth = false;
     if (etherToken === 'eth') {
         rawEth = true;
-        body = await listTx(address, host);
+        body = await listTx(address, host, earlierTimeSec);
         useInfoFromMatchedRecord = false;
     } else if (body) {
         // fetched
     } else {
-        body = await listTransfer(address, etherToken, host);
+        body = await listTransfer(address, etherToken, host, earlierTimeSec);
     }
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []
-    let limitHours = 2;
-    if (refId === '0x4c925138ccbee83c011aae15417397093428eafde3cde6ad331406ec07935ca7') {
-        // tmp fix 2022.12.29, 1030 tx hash 0xebde7c4c8d51911ba5017168b7624ac693d5414f503c31856160f38340b5ed55
-        limitHours = 5;
-    }
-    const earlierTimeSec = beforeTimeSec - 3600 * limitHours // recent 2 hours
     let feeFactor = 15n;
     if (refChainId === BigInt(592)) {
         feeFactor = 5n;
@@ -239,7 +194,7 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
             console.log(`debug retry, skip parse result`)
             break;
         }
-        if (!row.value) {
+        if (!row.value || row.isError === '1' || row.txreceipt_status === '0') {
             // Why don't token transfers have a value field?
             continue
         }
@@ -248,17 +203,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         }
         const {timeStamp, from, scale18} = scaleValue(row);
         if (useInfoFromMatchedRecord) {
-            const {hash, from, input: data,} = row;
-            try {
-                const {token, amount, mintChainId, mintAccount, nonce} = decodeTxData(data);
-                if (mintChainId.toString() != '1030') {
-                    continue
-                }
-            } catch (e) {
+            const decoded = decodeCelerDeposit(row.input);
+            if ((decoded && !decoded.args.mintChainId.eq(1030)) || (!decoded && !forceUseSimilar)) {
+                continue;
             }
         }
         if (scale18 >= wantDripScale18 && scale18 <= includeFee
-            && from === address
+            && from.toLowerCase() === address
             && timeStamp < beforeTimeSec && timeStamp > earlierTimeSec) {
             if (row.fromNear) {
                 let has1030memo = await checkNearTxWith1030memo(row.hash, row.fromNear);
@@ -268,12 +219,6 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
                 }
             }
             filtered.push(row);
-            if (scale18 === wantDripScale18 && !row.fromNear) {
-                console.log(`Match Exact ${scale18} vs ${wantDripScale18}`)
-                if (await matchDepositId(row.hash, refId) ) {
-                    return row;
-                }
-            }
         }
         let debug = false;
         debug && console.log(`\n value ${scale18} ${formatEther(scale18)} >= ${formatEther(wantDripScale18)} ${wantDripScale18
@@ -284,53 +229,37 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         } \n ${timeStamp} > ${earlierTimeSec} ${timeStamp > earlierTimeSec
         } ${row.timeStr} ${row.hash}`)
     }
-    if (filtered.length === 2 && rawEth) {
-        const [row0, row1] = filtered;
-        if (row0.hash === row1.hash) {
-            console.log(`raw eth, trim duplicate row`, row1)
-            filtered.pop();
-        }
-    }
-    if (filtered.length === 1) {
-        let similar = filtered[0];
+    // Explorer token-transfer results can contain several rows for one transaction.
+    const candidates = [...new Map(filtered.map(row => [row.hash.toLowerCase(), row])).values()];
+    if (candidates.length === 1) {
+        let similar = candidates[0];
         const {timeStamp, from, scale18} = scaleValue(similar);
-        console.log(`Match Similar ${scale18} vs ${wantDripScale18}, ratio ${
+        console.log(`Similar amount candidate ${scale18} vs ${wantDripScale18}, ratio ${
             parseFloat(formatEther(scale18)) / parseFloat(formatEther(wantDripScale18))}`);
-        if (rawEth || similar.fromNear) {
+        if (similar.fromNear) {
             return similar;
         }
         if (forceUseSimilar){
             console.log(`[ ${refChainId}] take similar as match.`)
             return similar;
         }
-        if (useInfoFromMatchedRecord) {
-            const {hash, from, input: data,} = similar;
-            if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
-                console.log(` ${refChainId} matchDepositId one by one, hit case 1`)
-                return similar;
-            }
-        } else if (await matchDepositId(similar.hash, refId, providerUrl) ) {
-            console.log(`[ ${refChainId}] take similar as match, case 2.`);
-            return similar;
-        }
     }
-    for (let row of filtered) {
+    for (let row of candidates) {
         if (useInfoFromMatchedRecord) {
-            const {hash, from, input: data,} = row;
-            if (await matchDepositId0(hash, data, from, Number(refChainId), hash, refId)) {
+            const {from, input: data, to} = row;
+            const ids = celerDepositIds(data, from, Number(refChainId), to);
+            if (ids.some(id => id.toLowerCase() === refId.toLowerCase())) {
                 console.log(` ${refChainId} chain matchDepositId one by one, hit`)
                 return row;
             }
-        } else if (row.fromNear || rawEth) {
-
-        } else if (await matchDepositId(row.hash, refId, providerUrl) ) {
+        } else if (!row.fromNear && await matchDepositId(row.hash, refId, Number(refChainId), providerUrl)) {
             console.log(`matchDepositId one by one, hit`)
             return row
         }
     }
     console.log(`fetchErc20Transfer from ether scan, NOT MATCH, account ${address
     }, wantDripScale18 ${wantDripScale18} ${formatEther(wantDripScale18)}`);
-    console.log(`${filtered.filter((row:any)=>row.from === address).map((row:any)=>{
+    console.log(`${candidates.map((row:any)=>{
         const {hash, timeStamp, nonce, from, to, contractAddress, value, tokenName, tokenDecimal} = row
         const fmtUnit = formatUnits(BigInt(value), parseInt(tokenDecimal))
         return `${new Date(parseInt(timeStamp)*1000).toISOString()} ${from} -> ${to

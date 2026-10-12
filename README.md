@@ -13,3 +13,13 @@ npx hardhat node
 node scripts/sample-script.js
 npx hardhat help
 ```
+
+The Celer deposit matcher has offline regression tests (Node.js 20 or newer):
+
+```shell
+npm run test:celer
+npm run compile -- --noEmit --incremental false
+```
+
+The tests include the Ethereum deposit that caused the Conflux false alert,
+V1 and V2 native/ERC20 receipt verification, and explorer pagination and retries.
