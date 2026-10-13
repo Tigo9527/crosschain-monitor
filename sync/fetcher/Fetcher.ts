@@ -1,6 +1,7 @@
 import {Contract, ethers} from "ethers";
 import {BaseProvider} from "@ethersproject/providers"
 import {Conflux, Contract as CfxContract} from "js-conflux-sdk";
+import {ERC20ABI} from "../abi/ERC20";
 
 export interface IFetcher {
     fetchTx(hash: string): Promise<any>;
@@ -9,7 +10,6 @@ export interface IFetcher {
     fetchSupply(erc20: string): Promise<bigint>
     init(): Promise<void>;
 }
-const {abi: erc20abi} = require('../../artifacts/contracts/ERC20.sol/Token20.json')
 export class ConfluxFetcher implements IFetcher {
     rpc: string
     cfx: Conflux
@@ -24,7 +24,7 @@ export class ConfluxFetcher implements IFetcher {
     }
 
     addContract(erc20: string): void {
-        const c = this.cfx.Contract({address: erc20, abi: erc20abi})
+        const c = this.cfx.Contract({address: erc20, abi: ERC20ABI})
         this.contractMap.set(erc20, c)
     }
 

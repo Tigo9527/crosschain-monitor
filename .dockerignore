@@ -1,0 +1,14 @@
+# Only send build inputs: exclude credentials, local JavaScript, data and dependencies.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!yarn.lock
+!tsconfig.json
+!lib/*.ts
+!sync/*.ts
+!sync/abi/*.ts
+!sync/fetcher/*.ts
+!web/*.ts
+!test/*.js
+!test/fixtures/*.js

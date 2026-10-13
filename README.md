@@ -1,5 +1,7 @@
 # Basic Sample Hardhat Project
 
+To run the ten backend processes under Docker Compose, see [the deployment guide](docs/docker-compose.md).
+
 This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
 
 Try running some of the following tasks:
