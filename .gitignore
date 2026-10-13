@@ -1,0 +1,10 @@
+# Backend JavaScript and source maps emitted alongside TypeScript sources.
+/lib/**/*.js
+/lib/**/*.js.map
+/sync/**/*.js
+/sync/**/*.js.map
+/web/**/*.js
+/web/**/*.js.map
+
+# TypeScript incremental build cache.
+*.tsbuildinfo
