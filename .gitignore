@@ -1,5 +1,10 @@
-# JavaScript generated from the corresponding TypeScript sources.
-/lib/DBProvider.js
-/lib/Models.js
-/sync/SupplyChecker.js
-/sync/Sync.js
+# Backend JavaScript and source maps emitted alongside TypeScript sources.
+/lib/**/*.js
+/lib/**/*.js.map
+/sync/**/*.js
+/sync/**/*.js.map
+/web/**/*.js
+/web/**/*.js.map
+
+# TypeScript incremental build cache.
+*.tsbuildinfo

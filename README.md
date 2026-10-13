@@ -14,6 +14,10 @@ node scripts/sample-script.js
 npx hardhat help
 ```
 
+Backend TypeScript sources live in `lib`, `sync`, and `web`. Run `npm run compile`
+before starting a backend entry point with Node.js. Generated JavaScript, source
+maps, and TypeScript build caches are ignored by Git; edit the TypeScript sources.
+
 The Celer deposit matcher has offline regression tests (Node.js 20 or newer):
 
 ```shell
