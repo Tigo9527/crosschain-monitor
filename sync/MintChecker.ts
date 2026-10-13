@@ -836,10 +836,10 @@ Block Explorer URL: https://stepscan.io/
         }
         let ethTokenVar = getBindToken(this.tokenAddr)!;
         const wEthToken = ethTokenVar;
-        if (this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57' // e-space USDT
+        if (this.tokenAddr.toLowerCase() === '0xa47f43de2f9623acb395ca4905746496d2014d57' // e-space ETH
             // 324 zk sync
             && (refChainId.toString()==='1' || refChainId.toString() === '324')) {
-            console.log(`it's raw eth`)
+            console.log(`search native ETH deposits first, then WETH`)
             ethTokenVar = 'eth';
         }
         let row = flowScanRow || await fetchErc20Transfer(stripAddr(depositor), wei, ethTokenVar, timestamp, refId, refChainId)
