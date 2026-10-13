@@ -1,0 +1,77 @@
+name: crosschain-monitor
+
+x-app: &app
+  image: crosschain-monitor:local
+  build:
+    context: .
+  pull_policy: never
+  init: true
+  restart: unless-stopped
+  # Linux server: preserve localhost DB_URL / PROXY and the existing web port.
+  network_mode: host
+  env_file:
+    - .env
+  stop_signal: SIGINT
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  sync-wbtc:
+    <<: *app
+    command: ["node", "sync/Sync.js", "sync", "0x1f545487c62e5acfea45dcadd9c627361d1616d8", "0"]
+
+  sync-dai:
+    <<: *app
+    # Address spelling is preserved because it is part of the database cursor key.
+    command: ["node", "sync/Sync.js", "sync", "0x74eaE367d018A5F29be559752e4B67d01cc6b151", "0"]
+
+  sync-usdt:
+    <<: *app
+    command: ["node", "sync/Sync.js", "sync", "0xfe97e85d13abd9c1c33384e796f10b73905637ce", "0"]
+
+  sync-bnb:
+    <<: *app
+    command: ["node", "sync/Sync.js", "sync", "0x94bd7a37d2ce24cc597e158facaa8d601083ffec", "0"]
+
+  sync-usdc:
+    <<: *app
+    command: ["node", "sync/Sync.js", "sync", "0x6963efed0ab40f6c3d7bda44a05dcf1437c44372", "0"]
+
+  sync-eth:
+    <<: *app
+    command: ["node", "sync/Sync.js", "sync", "0xa47f43de2f9623acb395ca4905746496d2014d57", "0"]
+
+  cfx-pool:
+    <<: *app
+    command: ["node", "sync/CfxPoolMonitor.js"]
+
+  meson-fetcher:
+    <<: *app
+    command: ["node", "sync/fetcher/runMeson.js"]
+
+  meson-monitor:
+    <<: *app
+    command: ["node", "sync/fetcher/runMeson.js", "runMonitor"]
+
+  web:
+    <<: *app
+    command: ["node", "web/WebApp.js"]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          const http = require('http');
+          const request = http.get({host: '127.0.0.1', port: process.env.WEB_PORT || 3003, path: '/'},
+          response => {response.resume(); process.exit(response.statusCode === 200 ? 0 : 1)});
+          request.setTimeout(3000, () => {request.destroy(); process.exit(1)});
+          request.on('error', () => process.exit(1));
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
