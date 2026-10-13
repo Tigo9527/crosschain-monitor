@@ -14,12 +14,15 @@ export function stripAddr(hex:string) {
     return `0x${hex.substring(hex.length-40)}`
 }
 
-async function listAccountTransactions(who: string, host: string, etherToken?: string, earlierTimeSec?: number) {
+async function listAccountTransactions(who: string, host: string, etherToken?: string, earlierTimeSec?: number,
+                                       chainId = 1) {
     let apiKeyStr = "";
+    // zkSync Era exposes an Etherscan-compatible API but is not an Etherscan V2 chain.
+    if (!host && chainId === 324) host = 'https://block-explorer-api.mainnet.zksync.io';
     if (!host) {
         let apiKey = process.env.ETHER_SCAN_API_KEY || ""
         host = `https://api.etherscan.io/v2`
-        apiKeyStr = `&apikey=${apiKey}&chainid=1`
+        apiKeyStr = `&apikey=${apiKey}&chainid=${chainId}`
     }
     const action = etherToken === undefined ? 'txlist' : 'tokentx';
     const tokenFilter = etherToken ? `&contractaddress=${etherToken}` : ''
@@ -60,12 +63,12 @@ async function listAccountTransactions(who: string, host: string, etherToken?: s
     }
 }
 
-export async function listTx(who: string, host: string, earlierTimeSec?: number) {
-    return listAccountTransactions(who, host, undefined, earlierTimeSec);
+export async function listTx(who: string, host: string, earlierTimeSec?: number, chainId = 1) {
+    return listAccountTransactions(who, host, undefined, earlierTimeSec, chainId);
 }
 
-export async function listTransfer(who: string, etherToken: string, host: string, earlierTimeSec?: number) {
-    return listAccountTransactions(who, host, etherToken, earlierTimeSec);
+export async function listTransfer(who: string, etherToken: string, host: string, earlierTimeSec?: number, chainId = 1) {
+    return listAccountTransactions(who, host, etherToken, earlierTimeSec, chainId);
 }
 
 function scaleValue(row:any) {
@@ -76,7 +79,7 @@ function scaleValue(row:any) {
 async function matchDepositId(etherTxHash:string, expect: string, chainId: number,
                                vaults: CelerVaultAllowlist, providerUrl?: string) {
     console.log(`try to matchDepositId, etherTxHash ${etherTxHash}`)
-    const provider = providerUrl ? new ethers.providers.JsonRpcProvider(providerUrl, chainId) : ethers.getDefaultProvider();
+    const provider = providerUrl ? new ethers.providers.JsonRpcProvider(providerUrl, chainId) : ethers.getDefaultProvider(chainId);
     const tx = await provider.getTransaction(etherTxHash);
     if (!tx || tx.chainId !== chainId || !isCelerVault(chainId, tx.to, vaults) || !decodeCelerDeposit(tx.data)) {
         return false;
@@ -103,8 +106,9 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         limitHours = 5;
     }
     const earlierTimeSec = beforeTimeSec - 3600 * limitHours;
+    const chainId = Number(refChainId);
     let host:string = '';
-    let providerUrl// = undefined
+    let providerUrl: string | undefined;
     let useInfoFromMatchedRecord = false;
     let forceUseSimilar = false;
     let body;
@@ -115,6 +119,13 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
         forceUseSimilar = true;
     } else if (refChainId == BigInt(1)) {
         providerUrl = process.env.ETH_RPC;
+    } else if (refChainId == BigInt(324)) {
+        providerUrl = process.env.ZKSYNC_RPC || 'https://mainnet.era.zksync.io';
+        // MintChecker binds eSpace ETH to Ethereum WETH; its fallback needs zkSync WETH here.
+        // Address published in Celer's getTransferConfigs chain_token[324].
+        if (etherToken.toLowerCase() === '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2') {
+            etherToken = '0x5aea5775959fbc2557cc8789bc1bf90a239d9a91';
+        }
     } else if (refChainId == BigInt(1284)) {
         host = "https://api-moonbeam.moonscan.io"
         providerUrl = 'https://rpc.api.moonbeam.network'
@@ -176,12 +187,12 @@ export async function fetchErc20Transfer(address: string, wantDripScale18: bigin
     let rawEth = false;
     if (etherToken === 'eth') {
         rawEth = true;
-        body = await listTx(address, host, earlierTimeSec);
+        body = await listTx(address, host, earlierTimeSec, chainId);
         useInfoFromMatchedRecord = false;
     } else if (body) {
         // fetched
     } else {
-        body = await listTransfer(address, etherToken, host, earlierTimeSec);
+        body = await listTransfer(address, etherToken, host, earlierTimeSec, chainId);
     }
     // console.log(`ether scan result:` , body)
     const filtered:any[] = []

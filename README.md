@@ -22,7 +22,8 @@ npm run compile -- --noEmit --incremental false
 ```
 
 The tests include the Ethereum deposit that caused the Conflux false alert,
-V1 and V2 native/ERC20 receipt verification, and explorer pagination and retries.
+V1 and V2 native/ERC20 receipt verification, zkSync source routing and WETH fallback,
+and explorer pagination and retries.
 
 Celer matching accepts only vaults on the source chain's allowlist. The pinned
 Ethereum defaults are `0xB37D31b2A74029B5951a2778F959282E2D518595` (V1) and
@@ -41,3 +42,15 @@ raises an error. Celer references require vault and deposit-ID verification even
 on explorer-only chains. Legacy non-Celer matching without a reference ID retains
 its existing behavior. `ETH_RPC`, when configured, is used by a `JsonRpcProvider`;
 otherwise Ethereum matching uses ethers' default provider.
+
+Source chain `324` is zkSync Era mainnet. Native ETH and ERC20 lookups use its
+[explorer API](https://block-explorer-api.mainnet.zksync.io/docs) and
+[RPC](https://docs.zksync.io/zksync-network/zksync-era/network-details)
+(`https://mainnet.era.zksync.io`). Set `ZKSYNC_RPC` to override that RPC endpoint;
+`ETH_RPC` applies only to Ethereum. The WETH fallback uses zkSync's WETH address,
+`0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91`, published in Celer's transfer
+configuration. Etherscan V2 requests for other chains use the source chain ID.
+
+zkSync Celer deposits require independently verified vault addresses under the
+`"324"` key in `CELER_SOURCE_VAULTS`. No zkSync vault is trusted by default: Celer's
+published transfer configuration currently lists no zkSync source vault.

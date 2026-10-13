@@ -8,13 +8,15 @@ const f = require("./fixtures/celer-deposit");
 
 function setup(t, { rows = [f.row], tx = f.tx, receipt = f.receipt, responses } = {}) {
     const requests = [], txCalls = [], receiptCalls = [], providerUrls = [], providers = [], logs = [];
-    const savedEnv = { ETH_RPC: process.env.ETH_RPC, ETHER_SCAN_API_KEY: process.env.ETHER_SCAN_API_KEY,
+    const savedEnv = { ETH_RPC: process.env.ETH_RPC, ZKSYNC_RPC: process.env.ZKSYNC_RPC,
+        ETHER_SCAN_API_KEY: process.env.ETHER_SCAN_API_KEY,
         PROXY: process.env.PROXY, DEBUG_RETRY: process.env.DEBUG_RETRY, CELER_SOURCE_VAULTS: process.env.CELER_SOURCE_VAULTS };
     process.env.ETH_RPC = "https://rpc.example/private-rpc-token";
     process.env.ETHER_SCAN_API_KEY = "private-explorer-token";
     delete process.env.PROXY;
     delete process.env.DEBUG_RETRY;
     delete process.env.CELER_SOURCE_VAULTS;
+    delete process.env.ZKSYNC_RPC;
     t.after(() => {
         for (const [key, value] of Object.entries(savedEnv)) {
             if (value === undefined) delete process.env[key]; else process.env[key] = value;
@@ -55,6 +57,9 @@ test("matches the reported WETH deposit using the configured RPC", async t => {
     assert.deepEqual(calls.txCalls, [f.tx.hash]);
     assert.deepEqual(calls.receiptCalls, [f.tx.hash]);
     assert.equal(calls.requests[0].searchParams.get("action"), "tokentx");
+    assert.equal(calls.requests[0].hostname, "api.etherscan.io");
+    assert.equal(calls.requests[0].searchParams.get("chainid"), "1");
+    assert.equal(calls.requests[0].searchParams.get("contractaddress"), f.token);
     assert.equal(calls.logs.join("\n").includes("private-rpc-token"), false);
     assert.equal(calls.logs.join("\n").includes("private-explorer-token"), false);
 });
@@ -110,7 +115,117 @@ test("native ETH also requires a matching successful deposit receipt", async t =
     const calls = setup(t, { tx: f.nativeTx() });
     assert.equal((await match("eth")).hash, f.tx.hash);
     assert.equal(calls.requests[0].searchParams.get("action"), "txlist");
+    assert.equal(calls.requests[0].searchParams.get("chainid"), "1");
     assert.equal(calls.receiptCalls.length, 1);
+});
+
+// Synthetic chain-324 deposits: the test explicitly trusts its fixture vault on
+// zkSync. The Ethereum fixture address is not a published zkSync vault.
+const zkSyncWeth = "0x5aea5775959fbc2557cc8789bc1bf90a239d9a91";
+function zkSyncDeposit(native = true, version = 2) {
+    const types = ["address", "address", "uint256", "uint64", "address", "uint64", "uint64"];
+    const values = [f.account, zkSyncWeth, f.amount, 1030, f.account, f.nonce, 324];
+    if (version === 2) { types.push("address"); values.push(f.vaultAddress); }
+    const id = utils.solidityKeccak256(types, values);
+    return {
+        id,
+        rows: [{ ...f.row, contractAddress: zkSyncWeth }],
+        tx: native ? { ...f.nativeTx(), chainId: 324 } : {
+            ...f.tx, chainId: 324,
+            data: f.abi.encodeFunctionData("deposit", [zkSyncWeth, f.amount, 1030, f.account, f.nonce]),
+        },
+        receipt: { ...f.receipt, logs: [f.depositLog(version, { id, token: zkSyncWeth })] },
+    };
+}
+
+function matchZkSync(token, id) {
+    return fetchErc20Transfer(f.account, f.minted, token, f.beforeTime, id, 324n);
+}
+
+for (const version of [1, 2]) {
+    test(`matches zkSync V${version} native deposits using the zkSync explorer and RPC`, async t => {
+        const deposit = zkSyncDeposit(true, version);
+        const calls = setup(t, deposit);
+        process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "324": [f.vaultAddress] });
+        assert.equal((await matchZkSync("eth", deposit.id)).hash, f.tx.hash);
+        const url = calls.requests[0];
+        assert.equal(url.origin, "https://block-explorer-api.mainnet.zksync.io");
+        assert.equal(url.pathname, "/api");
+        assert.equal(url.searchParams.get("action"), "txlist");
+        assert.equal(url.searchParams.has("apikey"), false);
+        assert.equal(url.searchParams.has("chainid"), false);
+        assert.deepEqual(calls.providerUrls, ["https://mainnet.era.zksync.io"]);
+        assert.equal(calls.providers[0].constructor, ethers.providers.JsonRpcProvider);
+        assert.equal((await calls.providers[0].ready).chainId, 324);
+        assert.deepEqual(calls.receiptCalls, [f.tx.hash]);
+    });
+}
+
+test("honors ZKSYNC_RPC without logging its credentials", async t => {
+    const deposit = zkSyncDeposit();
+    const calls = setup(t, deposit);
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "324": [f.vaultAddress] });
+    process.env.ZKSYNC_RPC = "https://zksync-rpc.example/private-zksync-token";
+    assert.equal((await matchZkSync("eth", deposit.id)).hash, f.tx.hash);
+    assert.deepEqual(calls.providerUrls, [process.env.ZKSYNC_RPC]);
+    assert.equal((await calls.providers[0].ready).chainId, 324);
+    assert.equal(calls.logs.join("\n").includes("private-zksync-token"), false);
+});
+
+test("zkSync native-to-WETH fallback uses the zkSync WETH contract and RPC", async t => {
+    const deposit = zkSyncDeposit(false);
+    const calls = setup(t, { ...deposit, responses: url => url.searchParams.get("action") === "txlist"
+        ? { status: "0", message: "No transactions found", result: [] }
+        : { status: "1", result: deposit.rows } });
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "324": [f.vaultAddress] });
+    // MintChecker passes the Ethereum WETH binding to the fallback.
+    const result = await matchZkSync("eth", deposit.id) || await matchZkSync(f.token.toUpperCase(), deposit.id);
+    assert.equal(result.hash, f.tx.hash);
+    assert.deepEqual(calls.requests.map(url => url.origin), Array(2).fill("https://block-explorer-api.mainnet.zksync.io"));
+    assert.deepEqual(calls.requests.map(url => url.searchParams.get("action")), ["txlist", "tokentx"]);
+    assert.equal(calls.requests[1].searchParams.get("contractaddress"), zkSyncWeth);
+    assert.deepEqual(calls.providerUrls, ["https://mainnet.era.zksync.io"]);
+    assert.deepEqual(calls.receiptCalls, [f.tx.hash]);
+});
+
+test("zkSync still requires a configured vault on chain 324", async t => {
+    const deposit = zkSyncDeposit();
+    const calls = setup(t, deposit);
+    assert.equal(await matchZkSync("eth", deposit.id), null);
+    assert.equal(calls.txCalls.length, 0);
+});
+
+test("rejects Ethereum RPC transactions when matching a zkSync reference", async t => {
+    const deposit = zkSyncDeposit();
+    const calls = setup(t, { ...deposit, tx: f.nativeTx() });
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "324": [f.vaultAddress] });
+    assert.equal(await matchZkSync("eth", deposit.id), null);
+    assert.equal(calls.txCalls.length, 1);
+    assert.equal(calls.receiptCalls.length, 0);
+});
+
+test("rejects a zkSync deposit with an Ethereum deposit ID", async t => {
+    const calls = setup(t, zkSyncDeposit());
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "324": [f.vaultAddress] });
+    assert.equal(await matchZkSync("eth", f.v2Id), null);
+    assert.equal(calls.receiptCalls.length, 1);
+});
+
+test("passes other source chain IDs through both Etherscan V2 actions", async t => {
+    const calls = setup(t, { rows: [] });
+    await fetchErc20Transfer(f.account, f.minted, "eth", f.beforeTime, f.v2Id, 10n);
+    await fetchErc20Transfer(f.account, f.minted, f.token, f.beforeTime, f.v2Id, 10n);
+    assert.deepEqual(calls.requests.map(url => url.searchParams.get("chainid")), ["10", "10"]);
+    assert.deepEqual(calls.requests.map(url => url.searchParams.get("action")), ["txlist", "tokentx"]);
+});
+
+test("unsupported default RPC networks fail instead of querying Ethereum", async t => {
+    const calls = setup(t);
+    process.env.CELER_SOURCE_VAULTS = JSON.stringify({ "10": [f.vaultAddress] });
+    await assert.rejects(() => fetchErc20Transfer(f.account, f.minted, "eth", f.beforeTime, f.v2Id, 10n),
+        error => error.code === "NETWORK_ERROR" && error.network === 10);
+    assert.equal(calls.txCalls.length, 0);
+    assert.equal(calls.receiptCalls.length, 0);
 });
 
 test("accepts a verified 0.01 ETH deposit after the bridge fee", async t => {
