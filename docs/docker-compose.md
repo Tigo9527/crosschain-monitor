@@ -113,9 +113,10 @@ progress remains visible in their logs and the existing `/sync-info` endpoint.
 The image runs as the `node` user and includes compiled JavaScript. `.env`, local
 dependencies, generated host JavaScript, and database files are excluded from the
 build context. The Solidity compiler and a deployment private key are not needed.
-Dependencies come from `yarn.lock`; native install scripts for the unused legacy
-SQLite/Hardhat tooling are skipped. This image supports the existing MySQL setup
-and uses the SDKs' JavaScript implementations. It does not include SQLite bindings.
+Dependencies come from `yarn.lock`; native install scripts for unused legacy
+SQLite/Hardhat tooling are skipped, while the `keccak` binding required by
+`js-conflux-sdk` is built explicitly. This image supports the existing MySQL
+setup and does not include SQLite bindings.
 
 To return to manual processes, run `docker compose down` first, compile with
 `npm run compile`, and restart the commands in the table with the same `.env`.

@@ -2,11 +2,16 @@ FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates git python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package.json yarn.lock ./
 # The legacy Hardhat development tooling declares an older Node engine range.
-# These services use MySQL and the SDKs' JavaScript implementations; skip native
-# install scripts for the unused SQLite/Hardhat tooling in the legacy lockfile.
+# Skip install scripts for unused legacy tooling, then build the native keccak
+# binding required by js-conflux-sdk at runtime.
 RUN yarn install --frozen-lockfile --non-interactive --ignore-engines --ignore-scripts \
+    && npm rebuild keccak --build-from-source \
     && yarn cache clean
 
 COPY tsconfig.json ./
