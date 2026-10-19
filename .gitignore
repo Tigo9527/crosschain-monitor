@@ -8,3 +8,9 @@
 
 # TypeScript incremental build cache.
 *.tsbuildinfo
+
+# Local dependencies and runtime credentials.
+node_modules/
+.env
+.env.*
+!.env.example
