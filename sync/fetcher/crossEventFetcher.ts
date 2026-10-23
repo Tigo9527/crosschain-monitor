@@ -19,6 +19,29 @@ export interface EventFetcherConfig {
 	hasReorgFeature?: boolean;
 }
 
+export function errorMessage(error: unknown): string {
+	if (error && typeof error === 'object') {
+		const rpcError = error as {
+			body?: unknown;
+			error?: {message?: unknown};
+			reason?: unknown;
+			message?: unknown;
+		};
+		if (typeof rpcError.body === 'string') {
+			try {
+				const body = JSON.parse(rpcError.body);
+				const message = body?.error?.message || body?.message;
+				if (typeof message === 'string') return message;
+			} catch (e) {}
+		}
+
+		for (const message of [rpcError.error?.message, rpcError.reason, rpcError.message]) {
+			if (typeof message === 'string') return message;
+		}
+	}
+	return String(error);
+}
+
 export class CrossEventFetcher {
 	private provider: ethers.providers.JsonRpcProvider;
 	private contract: ethers.Contract;
@@ -30,7 +53,7 @@ export class CrossEventFetcher {
 		this.provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
 		this.config.batchSize = config.batchSize || 100;
 		this.config.pollInterval = config.pollInterval || 15000;
-		this.config.maxRetries = config.maxRetries || 5;
+		this.config.maxRetries = config.maxRetries ?? 5;
 
 		this.contract = new ethers.Contract(
 			config.lockContractAddress,
@@ -124,23 +147,24 @@ export class CrossEventFetcher {
 					this.running = false;
 					break;
 				}
-			} catch (error: any) {
-				let msg = ''
-				if (error["body"]) {
-					try {
-						const json = JSON.parse(error["body"]);
-						if (json.message) {
-							msg = json.message;
-						}
-					} catch (e) {}
+			} catch (error: unknown) {
+				const message = errorMessage(error);
+				console.error(`[Chain ${this.config.chainId}] Error:`, message);
+
+				if (this.retryCount < this.config.maxRetries!) {
+					this.retryCount += 1;
+					const retryDelay = this.config.pollInterval! * this.retryCount;
+					console.warn(`[Chain ${this.config.chainId}] Retrying failed batch ` +
+						`(${this.retryCount}/${this.config.maxRetries}) in ${retryDelay}ms`);
+					await this.delay(retryDelay);
+					continue;
 				}
-				console.error(`[Chain ${this.config.chainId}] Error:`, msg || error);
-				if (++this.retryCount >= this.config.maxRetries!) {
-					console.error(`[Chain ${this.config.chainId}] Max retries reached `);
-					dingMsg(`[cross-event-fetcher] chain ${this.config.chainId} error : ${msg || error}`, process.env.DEV_DING || '')
-					this.retryCount = 0;
-				}
-				await this.delay(this.config.pollInterval! * this.retryCount);
+
+				console.error(`[Chain ${this.config.chainId}] Failed after ${this.config.maxRetries} retries`);
+				await dingMsg(`[cross-event-fetcher] chain ${this.config.chainId} failed after ` +
+					`${this.config.maxRetries} retries: ${message}`, process.env.DEV_DING || '');
+				this.retryCount = 0;
+				await this.delay(this.config.pollInterval!);
 			}
 		}
 		console.log(`finished`)

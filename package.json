@@ -7,6 +7,7 @@
     "tsc-watch": "tsc-watch -p ./",
     "mesonFetch": "tsc && node sync/fetcher/runMeson.js",
     "compile": "tsc",
+    "test:fetcher": "node --require ts-node/register/transpile-only --test test/cross-event-fetcher.test.js",
     "test:celer": "node --require ts-node/register/transpile-only --test test/celer-deposit.test.js test/celer-vaults.test.js test/etherscan.test.js"
   },
   "dependencies": {
